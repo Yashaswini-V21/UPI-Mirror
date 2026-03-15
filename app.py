@@ -15,6 +15,7 @@ from src.analytics import (
 )
 from src.data import load_transactions
 from src.regret import compute_regret_stats, regret_by_hour, regret_amount_correlation, top_regret_insight
+from src.merchant import top_merchants_by_spend, late_night_merchant_alerts, merchant_regret_correlation, top_late_night_insight
 from src.ui import inject_styles, render_free_stack, render_hero, render_quote, render_unique_angles
 
 
@@ -48,6 +49,10 @@ regret_stats = compute_regret_stats(transactions)
 regret_hourly = regret_by_hour(transactions)
 regret_amount = regret_amount_correlation(transactions)
 regret_headline = top_regret_insight(regret_stats)
+merchant_top = top_merchants_by_spend(transactions)
+merchant_late_night = late_night_merchant_alerts(transactions)
+merchant_regret = merchant_regret_correlation(transactions)
+merchant_headline = top_late_night_insight(merchant_late_night)
 
 top_category = "None yet"
 if not addiction_scores.empty:
@@ -71,7 +76,7 @@ with metric_columns[3]:
     top_score = int(addiction_scores.iloc[0]["score"]) if not addiction_scores.empty else 0
     st.markdown(f'<div class="metric-card"><div class="metric-label">Top habit alert</div><div class="metric-value">{top_score}/100</div><div class="metric-subtle">{top_category}</div></div>', unsafe_allow_html=True)
 
-tabs = st.tabs(["DS Features", "Regret Score", "Unique Angles", "Free Tools"])
+tabs = st.tabs(["DS Features", "Regret Score", "Merchant Insights", "Unique Angles", "Free Tools"])
 
 with tabs[0]:
     chart_left, chart_right = st.columns([1.25, 1])
@@ -210,6 +215,61 @@ with tabs[1]:
         st.info("Add a `regret` column (1–5) to your CSV to enable regret analysis.")
 
 with tabs[2]:
+    st.markdown(f"> **Late-night alert:** {merchant_headline}")
+
+    merch_left, merch_right = st.columns([1.1, 0.9])
+    with merch_left:
+        st.markdown("### Top merchants by spend")
+        st.dataframe(merchant_top, use_container_width=True, hide_index=True)
+
+    with merch_right:
+        if not merchant_late_night.empty:
+            ln_chart = px.bar(
+                merchant_late_night,
+                x="late_night_share",
+                y="merchant",
+                orientation="h",
+                color="late_night_share",
+                color_continuous_scale=["#ffbb38", "#ff5a7d"],
+                title="Late-night order share (%) by merchant",
+                labels={"late_night_share": "% after 10 PM", "merchant": ""},
+            )
+            ln_chart.update_layout(
+                paper_bgcolor="rgba(0,0,0,0)",
+                plot_bgcolor="rgba(0,0,0,0)",
+                font_color="#d9e1f2",
+                coloraxis_showscale=False,
+                margin=dict(l=10, r=10, t=50, b=10),
+            )
+            st.plotly_chart(ln_chart, use_container_width=True)
+        else:
+            st.info("No merchant with 30%+ late-night order share detected.")
+
+    if not merchant_regret.empty:
+        st.markdown("### Merchant regret ranking")
+        regret_chart = px.scatter(
+            merchant_regret,
+            x="total_spend",
+            y="avg_regret",
+            size="transaction_count",
+            text="merchant",
+            color="avg_regret",
+            color_continuous_scale=["#13d7b0", "#ffbb38", "#ff5a7d"],
+            range_color=[1, 5],
+            title="Regret vs spend per merchant (bubble size = frequency)",
+            labels={"total_spend": "Total spend (Rs.)", "avg_regret": "Avg regret (1–5)"},
+        )
+        regret_chart.update_traces(textposition="top center")
+        regret_chart.update_layout(
+            paper_bgcolor="rgba(0,0,0,0)",
+            plot_bgcolor="rgba(0,0,0,0)",
+            font_color="#d9e1f2",
+            coloraxis_showscale=False,
+            margin=dict(l=10, r=10, t=50, b=10),
+        )
+        st.plotly_chart(regret_chart, use_container_width=True)
+
+with tabs[3]:
     render_unique_angles(addiction_scores)
     st.markdown("### Why this product angle works")
     st.markdown(
@@ -221,7 +281,7 @@ with tabs[2]:
     )
     render_quote()
 
-with tabs[3]:
+with tabs[4]:
     render_free_stack()
     st.markdown("### CSV schema")
     st.code("datetime,amount,category,merchant,regret", language="text")
@@ -229,8 +289,8 @@ with tabs[3]:
     st.markdown("### Suggested next issues")
     st.markdown(
         """
-        1. Add merchant-level broke triggers like 'Swiggy after 10PM'.
-        2. Add exportable insight cards for LinkedIn and demo videos.
+        1. Add exportable insight cards for LinkedIn and demo videos.
+        2. Add a per-merchant weekly trend drill-down.
         3. Add a WhatsApp/email nudge when anomaly or high regret is detected.
         """
     )
