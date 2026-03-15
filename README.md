@@ -2,15 +2,15 @@
 
 # 🪞 UPI Mirror
 
-### *The student money shame bot — but actually useful.*
+### Behavioural Spend Intelligence for the Modern Indian Student
 
-> "I was a broke student who didn't know where the money was going.  
-> So I built a model that predicted my broke date 12 days out — accurate to within 2 days.  
-> Now I know exactly when to stop ordering Zomato."
+> *Most finance apps tell you what happened.*
+> *UPI Mirror tells you what's about to happen — and which habits are quietly making it worse.*
 
 [![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=flat-square&logo=python&logoColor=white)](https://python.org)
 [![Streamlit](https://img.shields.io/badge/Streamlit-1.55-FF4B4B?style=flat-square&logo=streamlit&logoColor=white)](https://streamlit.io)
 [![Scikit-learn](https://img.shields.io/badge/Scikit--learn-1.8-F7931E?style=flat-square&logo=scikit-learn&logoColor=white)](https://scikit-learn.org)
+[![Plotly](https://img.shields.io/badge/Plotly-6.0-3F4F75?style=flat-square&logo=plotly&logoColor=white)](https://plotly.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-13d7b0?style=flat-square)](LICENSE)
 
 **Built by [Yashaswini V](https://github.com/Yashaswini-V21)**
@@ -19,61 +19,81 @@
 
 ---
 
-## Why I Built This
+## Overview
 
-Most finance apps show you charts. They show you *what* happened. They never tell you *when* you'll be broke, *which* habits are becoming compulsive, or *why* you feel regret after every late-night Swiggy order.
+**UPI Mirror** is an end-to-end behavioural finance analytics platform built entirely on free, open-source tools. It transforms raw UPI transaction exports into a predictive intelligence layer — surfacing spending forecasts, compulsive habit scores, anomaly alerts, and merchant-level behaviour patterns that no standard banking app provides.
 
-I was that broke student. ₹18,000 budget. Gone by the 22nd. No idea why.
-
-So I built UPI Mirror — a brutally honest spending analyser that turns raw UPI transaction data into behavioural insights using real data science: linear regression, IQR anomaly detection, and addiction scoring. Personal pain → real product.
+The core insight: **the most impactful financial decisions are behavioural, not numerical.** UPI Mirror quantifies behaviour.
 
 ---
 
-## What It Does
+## What Makes It Unique
 
-| Feature | What it tells you |
-|---|---|
-| **Broke Date Predictor** | "At this rate, you'll hit your budget limit by March 22." Linear regression on daily cumulative spend. |
-| **Spending Addiction Score** | 0–100 score per category based on frequency, time consistency, amount growth, and late-night share. |
-| **Weekly Anomaly Detection** | IQR-based spike flagging. "This week's food spend is 2.8 standard deviations above normal." |
-| **Savings Simulator** | Cut Swiggy by 30% + 6% FD interest → ₹18,400 saved in 12 months. Compound interest in one chart. |
-| **Category Regret Score** | Rate regret 1–5 per category. Correlate regret vs amount vs time-of-day. |
-| **Merchant Insights** | Flag merchants where 30%+ orders are placed after 10 PM. Late-night spend breakdown. |
-| **Shareable Insight Cards** | Auto-generate a LinkedIn post from your own data. Blurred numbers — safe to post publicly. |
+Most student finance tools either:
+- Show static dashboards (pie charts, bar graphs)
+- Require paid subscriptions or bank integrations
+- Track what happened — never what's *about* to happen
+
+UPI Mirror does something different across every layer:
+
+| Layer | Standard Tools | UPI Mirror |
+|-------|---------------|------------|
+| **Prediction** | No forecasting | Linear regression → exact broke date |
+| **Behaviour** | Category totals | Multi-factor addiction scoring per category |
+| **Anomaly** | No alerts | IQR-based statistical spike detection |
+| **Emotion** | No emotional layer | Regret scores correlated with time + amount |
+| **Merchant** | Basic spend lists | Late-night pattern alerts, regret-spend scatter |
+| **Shareability** | Export raw CSV | One-click LinkedIn post generator |
+| **Access** | Paid APIs / bank login | Works on any UPI export, fully offline |
+
+> *"Behavioural data science nobody has done this way."* — built on personal transaction data, not textbook datasets.
 
 ---
 
-## Data Flow
+## Feature Set
+
+| Module | Technique | Output |
+|--------|-----------|--------|
+| **Broke Date Predictor** | Linear regression on daily cumulative spend | "You will exhaust your budget by March 22 — 7 days from now" |
+| **Spending Addiction Score** | Multi-factor scoring: frequency + consistency + amount growth + late-night share | 0–100 score per category with trend direction |
+| **Weekly Anomaly Detection** | IQR-based outlier flagging | "This week's food spend is 2.8 σ above your baseline" |
+| **Savings Simulator** | Compound interest projection | Cut one category by 30% + 6% FD → ₹18,400 in 12 months |
+| **Category Regret Score** | Regret (1–5) correlated with amount, time-of-day | "Your Food Delivery regret score is 4.2/5 after 10 PM" |
+| **Merchant Insights** | Late-night share analysis + regret-spend scatter | "Zomato: 68% of orders after 10 PM — ₹4,200 in late-night spend" |
+| **Shareable Insight Cards** | Templated post generation + CSV export | One-click LinkedIn post with blurred numbers, safe to share publicly |
+
+---
+
+## System Architecture
 
 ```mermaid
 flowchart TD
-    A([UPI CSV Upload\nor Demo Data]) --> B[src/data.py\nload_transactions]
-    B --> C{Data Router}
+    subgraph INPUT["📥 Data Input"]
+        A1([UPI CSV Upload]) 
+        A2([90-day Demo Data])
+    end
 
-    C --> D[src/analytics.py]
-    C --> E[src/regret.py]
-    C --> F[src/merchant.py]
-    C --> G[src/insights.py]
+    subgraph INGESTION["⚙️ Ingestion Layer — src/data.py"]
+        B[Schema Validation\nType Coercion\nOptional Regret Column]
+    end
 
-    D --> D1[Broke Date Predictor\nLinear Regression]
-    D --> D2[Addiction Score\nFrequency + Time + Amount]
-    D --> D3[Anomaly Detection\nIQR Flagging]
-    D --> D4[Savings Simulator\nCompound Interest]
+    subgraph ANALYTICS["🧠 Analytics Layer"]
+        direction TB
+        D["src/analytics.py\n─────────────────\n• Broke Date · Linear Regression\n• Addiction Score · Multi-factor\n• Anomaly Detection · IQR\n• Savings · Compound Interest"]
+        E["src/regret.py\n─────────────────\n• Per-category Regret Stats\n• Regret × Hour-of-Day\n• Regret × Amount Buckets"]
+        F["src/merchant.py\n─────────────────\n• Top Merchants by Spend\n• Late-night Alerts (≥30%)\n• Regret–Spend Scatter"]
+        G["src/insights.py\n─────────────────\n• LinkedIn Post Generator\n• Stats Summary CSV Export"]
+    end
 
-    E --> E1[Per-category Regret Stats]
-    E --> E2[Regret by Hour-of-Day]
-    E --> E3[Regret vs Amount Correlation]
+    subgraph PRESENTATION["🖥️ Presentation Layer"]
+        H["src/ui.py\nStyles + Component Helpers"]
+        APP["app.py · Streamlit Dashboard\n──────────────────────────────\nDS Features · Regret Score\nMerchant Insights · Insight Cards\nUnique Angles · Free Tools"]
+    end
 
-    F --> F1[Top Merchants by Spend]
-    F --> F2[Late-night Merchant Alerts]
-    F --> F3[Merchant Regret Ranking]
-
-    G --> G1[LinkedIn Post Generator]
-    G --> G2[Stats Summary CSV Export]
-
-    D1 & D2 & D3 & D4 & E1 & E2 & E3 & F1 & F2 & F3 & G1 & G2 --> H[app.py\nStreamlit Dashboard]
-
-    H --> I([6-tab UI\nDS Features · Regret Score\nMerchant Insights · Insight Cards\nUnique Angles · Free Tools])
+    A1 & A2 --> B
+    B --> D & E & F & G
+    D & E & F & G --> H
+    H --> APP
 ```
 
 ---
@@ -82,15 +102,17 @@ flowchart TD
 
 ```
 UPI-Mirror/
-├── app.py                  # Streamlit entrypoint — all tabs wired here
+│
+├── app.py                  # Streamlit entrypoint — all tabs and layout
 ├── requirements.txt        # Pinned dependencies
+│
 └── src/
-    ├── data.py             # CSV loader + 90-day demo data generator
-    ├── analytics.py        # Broke-date, addiction score, anomaly, savings
-    ├── regret.py           # Category regret stats, hour/amount correlation
-    ├── merchant.py         # Top merchants, late-night alerts, regret ranking
-    ├── insights.py         # LinkedIn card generator, CSV export
-    └── ui.py               # Streamlit styles, hero card, component helpers
+    ├── data.py             # CSV loader, schema validator, demo data generator
+    ├── analytics.py        # Broke-date predictor, addiction score, anomaly, savings
+    ├── regret.py           # Regret analytics: per-category, hourly, amount correlation
+    ├── merchant.py         # Merchant ranking, late-night alerts, regret ranking
+    ├── insights.py         # LinkedIn card generator, summary CSV export
+    └── ui.py               # CSS injection, hero card, shared UI components
 ```
 
 ---
@@ -98,71 +120,97 @@ UPI-Mirror/
 ## Quickstart
 
 ```bash
-# Clone
+# 1. Clone the repository
 git clone https://github.com/Yashaswini-V21/UPI-Mirror.git
 cd UPI-Mirror
 
-# Install
+# 2. Create a virtual environment
 python -m venv .venv
-.venv\Scripts\activate          # Windows
+.venv\Scripts\activate        # Windows
+# source .venv/bin/activate   # macOS / Linux
+
+# 3. Install dependencies
 pip install -r requirements.txt
 
-# Run
+# 4. Run the app
 streamlit run app.py
 ```
 
-Open [http://localhost:8501](http://localhost:8501) — demo data loads automatically, no CSV needed.
+Visit [http://localhost:8501](http://localhost:8501) — demo data loads automatically. No CSV required to explore the full feature set.
 
 ---
 
 ## CSV Schema
 
-Upload your own UPI data with this format:
+Bring your own UPI export. The only required columns are the first four:
 
 ```csv
 datetime,amount,category,merchant,regret
 2026-03-01 20:15:00,320.0,Food Delivery,Zomato,4
 2026-03-02 09:30:00,180.0,Cafe,Blue Tokai,2
+2026-03-03 11:00:00,640.0,Groceries,Blinkit,1
 ```
 
-| Column | Type | Required |
-|--------|------|----------|
+| Column | Format | Required |
+|--------|--------|----------|
 | `datetime` | `YYYY-MM-DD HH:MM:SS` | ✅ |
-| `amount` | float (Rs.) | ✅ |
-| `category` | string | ✅ |
-| `merchant` | string | ✅ |
-| `regret` | int 1–5 | ⬜ optional |
+| `amount` | `float` — amount in Rs. | ✅ |
+| `category` | `string` | ✅ |
+| `merchant` | `string` | ✅ |
+| `regret` | `int` 1–5 | ⬜ optional |
 
 ---
 
 ## Tech Stack
 
-| Tool | Purpose |
-|------|---------|
-| **Pandas** | Data wrangling and aggregations |
-| **Scikit-learn** | Linear regression for broke-date prediction |
-| **Streamlit** | Interactive dashboard UI |
-| **Plotly** | Charts — line, bar, scatter, area |
-| **NumPy** | Numerical support |
+| Tool | Version | Role |
+|------|---------|------|
+| **Python** | 3.11+ | Core runtime |
+| **Pandas** | 2.3 | Data wrangling, aggregations, time-series resampling |
+| **Scikit-learn** | 1.8 | Linear regression for broke-date prediction |
+| **Streamlit** | 1.55 | Interactive web dashboard with real-time sidebar controls |
+| **Plotly** | 6.0 | Line, bar, scatter, area, bubble charts |
+| **NumPy** | 2.0 | Numerical computation and array operations |
 
-Everything is free and open source. No API keys. No database. Just your own UPI data.
+**Zero paid APIs. Zero external databases. Runs fully offline on your own data.**
 
 ---
 
-## Standout Interview Angle
+## Future Enhancements
 
-> *"I built UPI Mirror because existing apps showed me charts but never predicted when I'd go broke. I needed a model that shamed me into changing."*
->
-> Personal pain → product insight → FinTech interview gold.
+| Priority | Feature | Why |
+|----------|---------|-----|
+| 🔴 High | **WhatsApp / Email nudge** when anomaly or high-regret week detected | Closes the loop from insight → behaviour change |
+| 🔴 High | **Per-merchant weekly trend drill-down** | Deeper pattern analysis per merchant |
+| 🟡 Medium | **Dark / light theme toggle** | Accessibility + demo-friendly |
+| 🟡 Medium | **Isolation Forest anomaly detection** | More robust than IQR on skewed spend distributions |
+| 🟡 Medium | **GPT-powered spend narrative** | Plain-English summary of the month's behavioural patterns |
+| 🟢 Low | **Multi-month comparison view** | Track whether habits are improving over time |
+| 🟢 Low | **PhonePe / Google Pay CSV auto-parser** | Remove manual formatting step for real UPI exports |
+| 🟢 Low | **Budget goal setting with progress tracker** | Turn insight into active financial planning |
 
-**At PhonePe or Cred:** this project demonstrates end-to-end data science thinking — feature engineering from raw transactions, regression modelling, behavioural scoring, and a deployable product — all from real personal data.
+---
+
+## Why This Project Stands Out
+
+UPI Mirror demonstrates the complete data science product lifecycle on a domain that is universally relatable:
+
+- **Feature engineering** from raw timestamped transactions — hour-of-day, weekly consistency, spend velocity, late-night flags
+- **Predictive modelling** with interpretable outputs — not accuracy scores, but actual dates and rupee amounts
+- **Behavioural scoring** using composite multi-factor algorithms built from first principles
+- **Anomaly detection** with statistical rigour — IQR with σ-based severity, not just threshold rules
+- **End-to-end deployment** — from a `.csv` file to a live interactive 6-tab dashboard
+
+> *"I built UPI Mirror because existing apps showed me charts but never predicted when I would run out of money. The model predicts a broke date 12 days out — accurate to within 2 days."*
+
+**At PhonePe, Cred, or any FinTech interview:** this project demonstrates end-to-end DS thinking — feature engineering from raw transactions, regression modelling, behavioural scoring, and a deployable product — all from real personal data.
 
 ---
 
 <div align="center">
 
-Made with personal pain by **[Yashaswini V](https://github.com/Yashaswini-V21)**
+Built by **[Yashaswini V](https://github.com/Yashaswini-V21)**
 
-*If this resonated, star the repo ⭐ and build your own version.*
+*Star the repo ⭐ if this helped you think differently about your own spending.*
 
 </div>
