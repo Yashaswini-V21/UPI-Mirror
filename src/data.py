@@ -8,6 +8,7 @@ import pandas as pd
 
 
 EXPECTED_COLUMNS = ["datetime", "amount", "category", "merchant"]
+OPTIONAL_COLUMNS = ["regret"]
 
 
 def _build_sample_transactions() -> pd.DataFrame:
@@ -15,6 +16,7 @@ def _build_sample_transactions() -> pd.DataFrame:
     end_date = datetime.now().replace(hour=20, minute=0, second=0, microsecond=0)
     start_date = end_date - timedelta(days=89)
 
+    # base_regret: typical regret (1-5) for this category — used to generate realistic demo scores
     category_profiles = [
         {
             "category": "Food Delivery",
@@ -22,6 +24,7 @@ def _build_sample_transactions() -> pd.DataFrame:
             "amount_range": (180, 420),
             "hours": [12, 13, 20, 21, 22, 23],
             "weight": 0.30,
+            "base_regret": 4,
         },
         {
             "category": "Cafe",
@@ -29,6 +32,7 @@ def _build_sample_transactions() -> pd.DataFrame:
             "amount_range": (120, 280),
             "hours": [9, 10, 11, 16, 17, 18],
             "weight": 0.12,
+            "base_regret": 2,
         },
         {
             "category": "Groceries",
@@ -36,6 +40,7 @@ def _build_sample_transactions() -> pd.DataFrame:
             "amount_range": (250, 980),
             "hours": [10, 11, 18, 19, 20],
             "weight": 0.18,
+            "base_regret": 1,
         },
         {
             "category": "Commute",
@@ -43,6 +48,7 @@ def _build_sample_transactions() -> pd.DataFrame:
             "amount_range": (80, 320),
             "hours": [8, 9, 18, 19, 21],
             "weight": 0.15,
+            "base_regret": 2,
         },
         {
             "category": "Shopping",
@@ -50,6 +56,7 @@ def _build_sample_transactions() -> pd.DataFrame:
             "amount_range": (350, 1800),
             "hours": [14, 15, 19, 20, 22],
             "weight": 0.10,
+            "base_regret": 3,
         },
         {
             "category": "Entertainment",
@@ -57,6 +64,7 @@ def _build_sample_transactions() -> pd.DataFrame:
             "amount_range": (99, 799),
             "hours": [18, 19, 20, 21, 22],
             "weight": 0.08,
+            "base_regret": 2,
         },
         {
             "category": "Bills",
@@ -64,6 +72,7 @@ def _build_sample_transactions() -> pd.DataFrame:
             "amount_range": (299, 1450),
             "hours": [9, 10, 11],
             "weight": 0.07,
+            "base_regret": 1,
         },
     ]
 
@@ -90,12 +99,20 @@ def _build_sample_transactions() -> pd.DataFrame:
             if category == "Shopping" and current.day > 24:
                 amount += rng.randint(150, 500)
 
+            # regret is higher late at night and when amount is outsized
+            base_regret = int(profile["base_regret"])
+            regret_bump = 1 if hour >= 22 else 0
+            regret_bump += 1 if amount > (profile["amount_range"][1] * 0.8) else 0
+            raw_regret = base_regret + regret_bump + rng.choice([-1, 0, 0, 1])
+            regret = min(max(raw_regret, 1), 5)
+
             rows.append(
                 {
                     "datetime": current.replace(hour=hour, minute=minute),
                     "amount": float(amount),
                     "category": category,
                     "merchant": rng.choice(profile["merchants"]),
+                    "regret": regret,
                 }
             )
 
@@ -129,5 +146,7 @@ def load_transactions(uploaded_file) -> pd.DataFrame:
     frame["datetime"] = pd.to_datetime(frame["datetime"])
     frame["amount"] = pd.to_numeric(frame["amount"], errors="coerce")
     frame = frame.dropna(subset=["datetime", "amount", "category", "merchant"])
+    if "regret" in frame.columns:
+        frame["regret"] = pd.to_numeric(frame["regret"], errors="coerce").clip(1, 5)
     frame = frame.sort_values("datetime").reset_index(drop=True)
     return frame
