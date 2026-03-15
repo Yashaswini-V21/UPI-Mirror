@@ -1,19 +1,22 @@
 <div align="center">
 
-# 🪞 UPI Mirror
+# 💳 UPI Mirror
 
-### Behavioural Spend Intelligence for the Modern Indian Student
+### Predictive Behavioural Finance Intelligence from UPI Data
 
-> *Most finance apps tell you what happened.*
-> *UPI Mirror tells you what's about to happen — and which habits are quietly making it worse.*
+> *Most expense tools report the past.*
+> *UPI Mirror predicts risk, explains behaviour, and helps prevent repeat spending mistakes.*
 
 [![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=flat-square&logo=python&logoColor=white)](https://python.org)
 [![Streamlit](https://img.shields.io/badge/Streamlit-1.55-FF4B4B?style=flat-square&logo=streamlit&logoColor=white)](https://streamlit.io)
 [![Scikit-learn](https://img.shields.io/badge/Scikit--learn-1.8-F7931E?style=flat-square&logo=scikit-learn&logoColor=white)](https://scikit-learn.org)
 [![Plotly](https://img.shields.io/badge/Plotly-6.0-3F4F75?style=flat-square&logo=plotly&logoColor=white)](https://plotly.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-13d7b0?style=flat-square)](LICENSE)
+[![Status](https://img.shields.io/badge/Status-In%20Progress-f59e0b?style=flat-square)](#)
 
 **Built by [Yashaswini V](https://github.com/Yashaswini-V21)**
+
+**Project Status:** In Progress (active development)
 
 </div>
 
@@ -24,6 +27,22 @@
 **UPI Mirror** is an end-to-end behavioural finance analytics platform built entirely on free, open-source tools. It transforms raw UPI transaction exports into a predictive intelligence layer — surfacing spending forecasts, compulsive habit scores, anomaly alerts, and merchant-level behaviour patterns that no standard banking app provides.
 
 The core insight: **the most impactful financial decisions are behavioural, not numerical.** UPI Mirror quantifies behaviour.
+
+---
+
+## What This Project Does
+
+UPI Mirror turns a simple UPI transaction CSV into a complete behavioural intelligence report.
+
+You can use it to:
+- Predict when your monthly budget is likely to run out
+- Identify categories that behave like spending addictions
+- Catch abnormal weekly spikes before they become a pattern
+- Measure post-purchase regret by category, amount, and hour
+- Discover merchants driving late-night, high-regret spends
+- Generate safe-to-share insight cards for resumes and LinkedIn
+
+In short: it is not a passive expense tracker, it is an **early warning + behaviour correction system** for personal finance.
 
 ---
 
@@ -96,6 +115,16 @@ flowchart TD
     H --> APP
 ```
 
+### Data Flow (Step-by-Step)
+
+1. User uploads UPI CSV (or uses auto-generated 90-day demo data).
+2. `src/data.py` validates schema, parses datetimes, and standardizes types.
+3. `src/analytics.py` computes broke-date forecast, addiction score, anomaly flags, and savings simulation.
+4. `src/regret.py` computes regret intensity and time/amount relationships.
+5. `src/merchant.py` computes merchant-level late-night and regret-linked spend patterns.
+6. `src/insights.py` converts outputs into shareable summaries and LinkedIn-ready text.
+7. `app.py` + `src/ui.py` present all outputs in a multi-tab interactive dashboard.
+
 ---
 
 ## Project Structure
@@ -117,24 +146,46 @@ UPI-Mirror/
 
 ---
 
-## Quickstart
+## Quickstart (Professional Setup)
+
+### 1. Prerequisites
+
+- Python 3.11 or above
+- Git
+- Terminal / PowerShell
+
+### 2. Clone Repository
 
 ```bash
-# 1. Clone the repository
 git clone https://github.com/Yashaswini-V21/UPI-Mirror.git
 cd UPI-Mirror
+```
 
-# 2. Create a virtual environment
+### 3. Create and Activate Virtual Environment
+
+```bash
+# Windows
 python -m venv .venv
-.venv\Scripts\activate        # Windows
-# source .venv/bin/activate   # macOS / Linux
+.venv\Scripts\activate
 
-# 3. Install dependencies
+# macOS / Linux
+python -m venv .venv
+source .venv/bin/activate
+```
+
+### 4. Install Dependencies
+
+```bash
 pip install -r requirements.txt
+```
 
-# 4. Run the app
+### 5. Launch Dashboard
+
+```bash
 streamlit run app.py
 ```
+
+### 6. Open in Browser
 
 Visit [http://localhost:8501](http://localhost:8501) — demo data loads automatically. No CSV required to explore the full feature set.
 
@@ -191,19 +242,22 @@ datetime,amount,category,merchant,regret
 
 ---
 
-## Why This Project Stands Out
+## Practical Impact
 
-UPI Mirror demonstrates the complete data science product lifecycle on a domain that is universally relatable:
+UPI Mirror is designed to support real spending decisions, not just reporting.
 
-- **Feature engineering** from raw timestamped transactions — hour-of-day, weekly consistency, spend velocity, late-night flags
-- **Predictive modelling** with interpretable outputs — not accuracy scores, but actual dates and rupee amounts
-- **Behavioural scoring** using composite multi-factor algorithms built from first principles
-- **Anomaly detection** with statistical rigour — IQR with σ-based severity, not just threshold rules
-- **End-to-end deployment** — from a `.csv` file to a live interactive 6-tab dashboard
+- **Before overspending:** broke-date prediction warns when current pace is unsafe
+- **During the month:** anomaly alerts catch unusual jumps early
+- **After transactions:** regret analysis identifies repeat triggers
+- **At merchant level:** late-night and high-regret patterns reveal where leakage happens
+- **For communication:** shareable cards convert analysis into resume/LinkedIn-ready proof
 
-> *"I built UPI Mirror because existing apps showed me charts but never predicted when I would run out of money. The model predicts a broke date 12 days out — accurate to within 2 days."*
+### How This Is Different
 
-**At PhonePe, Cred, or any FinTech interview:** this project demonstrates end-to-end DS thinking — feature engineering from raw transactions, regression modelling, behavioural scoring, and a deployable product — all from real personal data.
+- It is behaviour-first, not category-chart-first
+- It gives forward-looking signals, not only historical summaries
+- It combines forecasting, anomaly detection, regret analytics, and communication in one app
+- It runs fully offline on plain CSV input with no paid APIs
 
 ---
 
