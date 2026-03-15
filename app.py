@@ -16,6 +16,7 @@ from src.analytics import (
 from src.data import load_transactions
 from src.regret import compute_regret_stats, regret_by_hour, regret_amount_correlation, top_regret_insight
 from src.merchant import top_merchants_by_spend, late_night_merchant_alerts, merchant_regret_correlation, top_late_night_insight
+from src.insights import generate_linkedin_card, generate_summary_stats
 from src.ui import inject_styles, render_free_stack, render_hero, render_quote, render_unique_angles
 
 
@@ -54,6 +55,34 @@ merchant_late_night = late_night_merchant_alerts(transactions)
 merchant_regret = merchant_regret_correlation(transactions)
 merchant_headline = top_late_night_insight(merchant_late_night)
 
+_top_addiction_category = str(addiction_scores.iloc[0]["category"]) if not addiction_scores.empty else "N/A"
+_top_addiction_score = int(addiction_scores.iloc[0]["score"]) if not addiction_scores.empty else 0
+_late_night_merchant = str(merchant_late_night.iloc[0]["merchant"]) if not merchant_late_night.empty else None
+_late_night_share = float(merchant_late_night.iloc[0]["late_night_share"]) if not merchant_late_night.empty else 0.0
+_top_regret_category = str(regret_stats.iloc[0]["category"]) if not regret_stats.empty else None
+_top_regret_score = float(regret_stats.iloc[0]["mean_regret"]) if not regret_stats.empty else 0.0
+
+linkedin_card = generate_linkedin_card(
+    current_spend=current_spend,
+    monthly_budget=monthly_budget,
+    broke_date=prediction["predicted_date"],
+    top_addiction_category=_top_addiction_category,
+    top_addiction_score=_top_addiction_score,
+    late_night_merchant=_late_night_merchant,
+    late_night_share=_late_night_share,
+    top_regret_category=_top_regret_category,
+    top_regret_score=_top_regret_score,
+)
+summary_df = generate_summary_stats(
+    transactions=transactions,
+    current_spend=current_spend,
+    monthly_budget=monthly_budget,
+    prediction=prediction,
+    addiction_scores=addiction_scores,
+    regret_stats=regret_stats,
+    merchant_late_night=merchant_late_night,
+)
+
 top_category = "None yet"
 if not addiction_scores.empty:
     top_category = str(addiction_scores.iloc[0]["category"])
@@ -76,7 +105,7 @@ with metric_columns[3]:
     top_score = int(addiction_scores.iloc[0]["score"]) if not addiction_scores.empty else 0
     st.markdown(f'<div class="metric-card"><div class="metric-label">Top habit alert</div><div class="metric-value">{top_score}/100</div><div class="metric-subtle">{top_category}</div></div>', unsafe_allow_html=True)
 
-tabs = st.tabs(["DS Features", "Regret Score", "Merchant Insights", "Unique Angles", "Free Tools"])
+tabs = st.tabs(["DS Features", "Regret Score", "Merchant Insights", "Insight Cards", "Unique Angles", "Free Tools"])
 
 with tabs[0]:
     chart_left, chart_right = st.columns([1.25, 1])
@@ -270,6 +299,29 @@ with tabs[2]:
         st.plotly_chart(regret_chart, use_container_width=True)
 
 with tabs[3]:
+    st.markdown("### Post your data. Go viral.")
+    st.markdown(
+        "Copy the post below, blur your numbers manually, and post on LinkedIn. "
+        "This exact angle gets traction in student and fresher communities every time."
+    )
+    st.text_area("LinkedIn post (copy and edit as needed)", value=linkedin_card, height=280)
+
+    st.markdown("### Download your full stats summary")
+    csv_bytes = summary_df.to_csv(index=False).encode("utf-8")
+    st.download_button(
+        label="Download insight_summary.csv",
+        data=csv_bytes,
+        file_name="upi_mirror_insight_summary.csv",
+        mime="text/csv",
+    )
+
+    st.markdown("### Your headline numbers (blurred for sharing)")
+    blur_cols = st.columns(3)
+    blur_cols[0].metric("Month spend", "Rs. ██,███")
+    blur_cols[1].metric("Broke date", prediction["predicted_date"].strftime("%d %b") if prediction["predicted_date"] else "Safe")
+    blur_cols[2].metric("Top habit", f"{_top_addiction_category} ({_top_addiction_score}/100)")
+
+with tabs[4]:
     render_unique_angles(addiction_scores)
     st.markdown("### Why this product angle works")
     st.markdown(
@@ -281,7 +333,7 @@ with tabs[3]:
     )
     render_quote()
 
-with tabs[4]:
+with tabs[5]:
     render_free_stack()
     st.markdown("### CSV schema")
     st.code("datetime,amount,category,merchant,regret", language="text")
@@ -289,8 +341,8 @@ with tabs[4]:
     st.markdown("### Suggested next issues")
     st.markdown(
         """
-        1. Add exportable insight cards for LinkedIn and demo videos.
-        2. Add a per-merchant weekly trend drill-down.
-        3. Add a WhatsApp/email nudge when anomaly or high regret is detected.
+        1. Add a per-merchant weekly trend drill-down.
+        2. Add a WhatsApp/email nudge when anomaly or high regret is detected.
+        3. Add dark/light theme toggle.
         """
     )
