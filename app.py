@@ -14,6 +14,7 @@ from src.analytics import (
     simulate_savings,
 )
 from src.data import load_transactions
+from src.regret import compute_regret_stats, regret_by_hour, regret_amount_correlation, top_regret_insight
 from src.ui import inject_styles, render_free_stack, render_hero, render_quote, render_unique_angles
 
 
@@ -43,6 +44,10 @@ prediction = predict_broke_date(transactions, monthly_budget=monthly_budget, ref
 addiction_scores = compute_addiction_scores(transactions)
 weekly = detect_weekly_anomalies(transactions)
 savings = simulate_savings(current_spend, cut_percent=cut_percent, annual_interest_rate=annual_interest_rate, months=months)
+regret_stats = compute_regret_stats(transactions)
+regret_hourly = regret_by_hour(transactions)
+regret_amount = regret_amount_correlation(transactions)
+regret_headline = top_regret_insight(regret_stats)
 
 top_category = "None yet"
 if not addiction_scores.empty:
@@ -66,7 +71,7 @@ with metric_columns[3]:
     top_score = int(addiction_scores.iloc[0]["score"]) if not addiction_scores.empty else 0
     st.markdown(f'<div class="metric-card"><div class="metric-label">Top habit alert</div><div class="metric-value">{top_score}/100</div><div class="metric-subtle">{top_category}</div></div>', unsafe_allow_html=True)
 
-tabs = st.tabs(["DS Features", "Unique Angles", "Free Tools"])
+tabs = st.tabs(["DS Features", "Regret Score", "Unique Angles", "Free Tools"])
 
 with tabs[0]:
     chart_left, chart_right = st.columns([1.25, 1])
@@ -151,6 +156,60 @@ with tabs[0]:
     st.plotly_chart(savings_chart, use_container_width=True)
 
 with tabs[1]:
+    st.markdown(f"> **Shame bot says:** {regret_headline}")
+
+    if not regret_stats.empty:
+        reg_left, reg_right = st.columns([1.1, 0.9])
+        with reg_left:
+            st.markdown("### Regret score by category")
+            st.dataframe(regret_stats, use_container_width=True, hide_index=True)
+
+        with reg_right:
+            if not regret_hourly.empty:
+                hour_chart = px.bar(
+                    regret_hourly,
+                    x="hour",
+                    y="mean_regret",
+                    color="mean_regret",
+                    color_continuous_scale=["#13d7b0", "#ffbb38", "#ff5a7d"],
+                    range_color=[1, 5],
+                    title="Regret by time of day",
+                    labels={"hour": "Hour", "mean_regret": "Avg regret"},
+                )
+                hour_chart.update_layout(
+                    paper_bgcolor="rgba(0,0,0,0)",
+                    plot_bgcolor="rgba(0,0,0,0)",
+                    font_color="#d9e1f2",
+                    coloraxis_showscale=False,
+                    margin=dict(l=10, r=10, t=50, b=10),
+                )
+                st.plotly_chart(hour_chart, use_container_width=True)
+
+        if not regret_amount.empty:
+            st.markdown("### Does spending more = more regret?")
+            amt_chart = px.bar(
+                regret_amount,
+                x="amount_bucket",
+                y="mean_regret",
+                color="mean_regret",
+                text="mean_regret",
+                color_continuous_scale=["#13d7b0", "#ffbb38", "#ff5a7d"],
+                range_color=[1, 5],
+                title="Regret vs spend amount bucket",
+                labels={"amount_bucket": "Spend level", "mean_regret": "Avg regret (1–5)"},
+            )
+            amt_chart.update_layout(
+                paper_bgcolor="rgba(0,0,0,0)",
+                plot_bgcolor="rgba(0,0,0,0)",
+                font_color="#d9e1f2",
+                coloraxis_showscale=False,
+                margin=dict(l=10, r=10, t=50, b=10),
+            )
+            st.plotly_chart(amt_chart, use_container_width=True)
+    else:
+        st.info("Add a `regret` column (1–5) to your CSV to enable regret analysis.")
+
+with tabs[2]:
     render_unique_angles(addiction_scores)
     st.markdown("### Why this product angle works")
     st.markdown(
@@ -162,15 +221,16 @@ with tabs[1]:
     )
     render_quote()
 
-with tabs[2]:
+with tabs[3]:
     render_free_stack()
     st.markdown("### CSV schema")
-    st.code("datetime,amount,category,merchant", language="text")
+    st.code("datetime,amount,category,merchant,regret", language="text")
+    st.markdown("`regret` is optional (1–5 integer). Omitting it disables the Regret Score tab.")
     st.markdown("### Suggested next issues")
     st.markdown(
         """
-        1. Add a regret score input after each food order.
-        2. Add merchant-level broke triggers like 'Swiggy after 10PM'.
-        3. Add exportable insight cards for LinkedIn and demo videos.
+        1. Add merchant-level broke triggers like 'Swiggy after 10PM'.
+        2. Add exportable insight cards for LinkedIn and demo videos.
+        3. Add a WhatsApp/email nudge when anomaly or high regret is detected.
         """
     )
