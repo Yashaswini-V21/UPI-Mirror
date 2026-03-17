@@ -13,7 +13,9 @@ from src.analytics import (
     predict_broke_date,
     simulate_savings,
 )
+from src.coach_agent import run_spending_coach_agent
 from src.data import load_transactions
+from src.lightning import agentlightning_is_available, record_coach_trace
 from src.regret import compute_regret_stats, regret_by_hour, regret_amount_correlation, top_regret_insight
 from src.merchant import top_merchants_by_spend, late_night_merchant_alerts, merchant_regret_correlation, top_late_night_insight
 from src.insights import generate_linkedin_card, generate_summary_stats
@@ -54,6 +56,16 @@ merchant_top = top_merchants_by_spend(transactions)
 merchant_late_night = late_night_merchant_alerts(transactions)
 merchant_regret = merchant_regret_correlation(transactions)
 merchant_headline = top_late_night_insight(merchant_late_night)
+coach_result = run_spending_coach_agent(
+    transactions=transactions,
+    monthly_budget=monthly_budget,
+    prediction=prediction,
+    addiction_scores=addiction_scores,
+    weekly=weekly,
+    regret_stats=regret_stats,
+    merchant_late_night=merchant_late_night,
+)
+agentlightning_enabled = agentlightning_is_available()
 
 _top_addiction_category = str(addiction_scores.iloc[0]["category"]) if not addiction_scores.empty else "N/A"
 _top_addiction_score = int(addiction_scores.iloc[0]["score"]) if not addiction_scores.empty else 0
@@ -105,7 +117,7 @@ with metric_columns[3]:
     top_score = int(addiction_scores.iloc[0]["score"]) if not addiction_scores.empty else 0
     st.markdown(f'<div class="metric-card"><div class="metric-label">Top habit alert</div><div class="metric-value">{top_score}/100</div><div class="metric-subtle">{top_category}</div></div>', unsafe_allow_html=True)
 
-tabs = st.tabs(["DS Features", "Regret Score", "Merchant Insights", "Insight Cards", "Unique Angles", "Free Tools"])
+tabs = st.tabs(["DS Features", "Regret Score", "Merchant Insights", "Coach Agent", "Insight Cards", "Unique Angles", "Free Tools"])
 
 with tabs[0]:
     chart_left, chart_right = st.columns([1.25, 1])
@@ -299,6 +311,49 @@ with tabs[2]:
         st.plotly_chart(regret_chart, use_container_width=True)
 
 with tabs[3]:
+    st.markdown(f"### {coach_result.title}")
+    provider_line = f"Narrative source: {coach_result.narrative_provider} · {coach_result.narrative_model}"
+    st.caption(provider_line)
+
+    coach_cols = st.columns(4)
+    coach_cols[0].metric("Coach status", coach_result.status.title())
+    coach_cols[1].metric("Anomaly", "Yes" if coach_result.anomaly_detected else "No")
+    coach_cols[2].metric("Repeat pattern", "Yes" if coach_result.repeat_pattern_detected else "No")
+    coach_cols[3].metric(
+        f"Suggested {coach_result.limit_window} cap",
+        f"Rs. {coach_result.suggested_limit:,.0f}" if coach_result.suggested_limit > 0 else "Track only",
+    )
+
+    st.markdown("### Daily narrative")
+    st.info(coach_result.narrative)
+
+    st.markdown("### Personalised nudge")
+    st.markdown(coach_result.nudge)
+
+    st.markdown("### Agent flow")
+    for action in coach_result.actions:
+        st.markdown(f"- {action}")
+
+    if agentlightning_enabled:
+        if st.button("Capture Agent Lightning trace", use_container_width=True):
+            st.session_state["coach_trace_result"] = record_coach_trace(coach_result)
+
+        trace_result = st.session_state.get("coach_trace_result")
+        if trace_result is not None:
+            status_callout = st.success if trace_result.enabled else st.warning
+            status_callout(trace_result.message)
+            if trace_result.enabled:
+                st.caption(
+                    "Trace spans: {} · Reward: {:.1f} · Rollout: {}".format(
+                        trace_result.span_count,
+                        trace_result.reward,
+                        trace_result.rollout_id,
+                    )
+                )
+    else:
+        st.info("Install the updated requirements to enable Agent Lightning trace capture for coach runs.")
+
+with tabs[4]:
     st.markdown("### Post your data. Go viral.")
     st.markdown(
         "Copy the post below, blur your numbers manually, and post on LinkedIn. "
@@ -321,7 +376,7 @@ with tabs[3]:
     blur_cols[1].metric("Broke date", prediction["predicted_date"].strftime("%d %b") if prediction["predicted_date"] else "Safe")
     blur_cols[2].metric("Top habit", f"{_top_addiction_category} ({_top_addiction_score}/100)")
 
-with tabs[4]:
+with tabs[5]:
     render_unique_angles(addiction_scores)
     st.markdown("### Why this product angle works")
     st.markdown(
@@ -333,7 +388,7 @@ with tabs[4]:
     )
     render_quote()
 
-with tabs[5]:
+with tabs[6]:
     render_free_stack()
     st.markdown("### CSV schema")
     st.code("datetime,amount,category,merchant,regret", language="text")
@@ -341,8 +396,8 @@ with tabs[5]:
     st.markdown("### Suggested next issues")
     st.markdown(
         """
-        1. Add a per-merchant weekly trend drill-down.
-        2. Add a WhatsApp/email nudge when anomaly or high regret is detected.
-        3. Add dark/light theme toggle.
+        1. Persist daily coach memory to a local store or database.
+        2. Add WhatsApp/email delivery for the coach nudge.
+        3. Add user feedback capture so Agent Lightning rewards come from real actions.
         """
     )
