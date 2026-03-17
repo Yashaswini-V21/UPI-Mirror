@@ -80,7 +80,7 @@ UPI Mirror does something different across every layer:
 | **Category Regret Score** | Regret (1–5) correlated with amount, time-of-day | "Your Food Delivery regret score is 4.2/5 after 10 PM" |
 | **Merchant Insights** | Late-night share analysis + regret-spend scatter | "Zomato: 68% of orders after 10 PM — ₹4,200 in late-night spend" |
 | **Spending Coach Agent** | LangGraph workflow + Groq narrative + Agent Lightning trace hooks | Daily coach state: anomaly → repeat pattern → nudge → limit suggestion |
-| **Coach Memory** | JSON snapshot store, 30-day rolling history | 7-day status chart in the Coach tab — stable / watch / critical per day |
+| **Coach Memory** | JSON snapshot store, 30-day rolling history, isolated by upload hash | 7-day status chart and feedback history stay scoped to the active dataset |
 | **Feedback Rewards** | Thumbs-up / thumbs-down on each nudge | user_reward (+1 / −1) written back to the snapshot and used as Agent Lightning reward when available |
 | **Delivery Channels** | WhatsApp/email deep-link drafts generated from live coach output | Send today's nudge outside the dashboard in one click |
 | **Shareable Insight Cards** | Templated post generation + CSV export | One-click LinkedIn post with blurred numbers, safe to share publicly |
@@ -141,7 +141,7 @@ flowchart TD
 5. `src/merchant.py` computes merchant-level late-night and regret-linked spend patterns.
 6. `src/narrative.py` builds a plain-English daily narrative using Groq when available and falls back to a deterministic template otherwise.
 7. `src/coach_agent.py` runs a LangGraph coach workflow: anomaly detected → repeat pattern check → personalised nudge → limit suggestion.
-8. `src/coach_memory.py` appends the result to a local JSON file so the 7-day status chart in the Coach tab always reflects real history.
+8. `src/coach_memory.py` appends snapshots to dataset-scoped memory files (keyed by upload hash) so histories never leak across sessions.
 9. `src/lightning.py` records coach traces and emits reward to Agent Lightning; it prefers `user_reward` when available and falls back to heuristic urgency otherwise.
 10. The user can accept or dismiss the nudge — `record_feedback()` writes `user_reward` (±1.0) back into the same snapshot and that signal is reused in trace capture.
 11. `src/delivery.py` builds WhatsApp and email deep links from the live nudge so the message can be sent outside the app.
@@ -270,13 +270,13 @@ Groq is optional. Without an API key, the coach falls back to a local rule-based
 
 ## Product Roadmap
 
-The core agent layer is live: coach workflow, memory, user feedback rewards, and Agent Lightning trace capture are all integrated.
+The core agent layer is live: coach workflow, dataset-isolated memory, user feedback rewards, delivery links, and Agent Lightning trace capture are integrated.
 
 Next product milestones:
 
-1. Isolate memory per user/upload context to support multi-session usage safely.
-2. Add test coverage for coach routing, reward paths, and fallback behavior.
-3. Auto-send scheduling layer for daily nudges (instead of manual click-through drafts).
+1. Add test coverage for coach routing, reward paths, and memory isolation behavior.
+2. Auto-send scheduling layer for daily nudges (instead of manual click-through drafts).
+3. Add optional encrypted-at-rest memory storage for privacy-sensitive usage.
 4. Publish a polished demo walkthrough with screenshots and contribution templates.
 
 ---

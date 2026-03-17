@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import os
 from datetime import datetime
 
@@ -44,6 +45,13 @@ except ValueError as exc:
     st.error(str(exc))
     st.stop()
 
+if uploaded_file is None:
+    memory_source_key = "demo"
+else:
+    file_name = os.path.splitext(uploaded_file.name)[0].strip().lower().replace(" ", "_") or "upload"
+    file_fingerprint = hashlib.sha1(uploaded_file.getvalue()).hexdigest()[:12]
+    memory_source_key = f"{file_name}_{file_fingerprint}"
+
 transactions = transactions.copy()
 transactions["datetime"] = pd.to_datetime(transactions["datetime"])
 transactions["date"] = transactions["datetime"].dt.date
@@ -72,8 +80,8 @@ coach_result = run_spending_coach_agent(
     merchant_late_night=merchant_late_night,
 )
 agentlightning_enabled = agentlightning_is_available()
-save_snapshot(coach_result.as_dict())
-coach_history = load_history(last_n=7)
+save_snapshot(coach_result.as_dict(), source_key=memory_source_key)
+coach_history = load_history(last_n=7, source_key=memory_source_key)
 
 _top_addiction_category = str(addiction_scores.iloc[0]["category"]) if not addiction_scores.empty else "N/A"
 _top_addiction_score = int(addiction_scores.iloc[0]["score"]) if not addiction_scores.empty else 0
@@ -322,6 +330,7 @@ with tabs[3]:
     st.markdown(f"### {coach_result.title}")
     provider_line = f"Narrative source: {coach_result.narrative_provider} · {coach_result.narrative_model}"
     st.caption(provider_line)
+    st.caption(f"Memory scope: {memory_source_key}")
 
     coach_cols = st.columns(4)
     coach_cols[0].metric("Coach status", coach_result.status.title())
@@ -352,13 +361,14 @@ with tabs[3]:
     st.markdown("### Did this nudge help?")
     _today_str = datetime.now().date().isoformat()
     _fb_cols = st.columns(2)
-    if _fb_cols[0].button("\U0001f44d  I'll try it", use_container_width=True, key="fb_accept"):
-        record_feedback(_today_str, accepted=True)
-        st.session_state["nudge_feedback"] = "accepted"
-    if _fb_cols[1].button("\U0001f44e  Not for me", use_container_width=True, key="fb_dismiss"):
-        record_feedback(_today_str, accepted=False)
-        st.session_state["nudge_feedback"] = "dismissed"
-    _fb = st.session_state.get("nudge_feedback")
+    _feedback_state_key = f"nudge_feedback::{memory_source_key}"
+    if _fb_cols[0].button("\U0001f44d  I'll try it", use_container_width=True, key=f"fb_accept::{memory_source_key}"):
+        record_feedback(_today_str, accepted=True, source_key=memory_source_key)
+        st.session_state[_feedback_state_key] = "accepted"
+    if _fb_cols[1].button("\U0001f44e  Not for me", use_container_width=True, key=f"fb_dismiss::{memory_source_key}"):
+        record_feedback(_today_str, accepted=False, source_key=memory_source_key)
+        st.session_state[_feedback_state_key] = "dismissed"
+    _fb = st.session_state.get(_feedback_state_key)
     if _fb == "accepted":
         st.success("Great — marked as accepted. Reward +1.0 saved alongside today's snapshot.")
     elif _fb == "dismissed":
@@ -407,7 +417,7 @@ with tabs[3]:
 
     if agentlightning_enabled:
         if st.button("Capture Agent Lightning trace", use_container_width=True):
-            reward_snapshots = load_history(last_n=30)
+            reward_snapshots = load_history(last_n=30, source_key=memory_source_key)
             reward_history = [
                 float(s["user_reward"])
                 for s in reward_snapshots
