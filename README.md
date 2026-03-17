@@ -274,10 +274,10 @@ The core agent layer is live: coach workflow, dataset-isolated memory, user feed
 
 Next product milestones:
 
-1. Add test coverage for coach routing, reward paths, and memory isolation behavior.
-2. Auto-send scheduling layer for daily nudges (instead of manual click-through drafts).
-3. Add optional encrypted-at-rest memory storage for privacy-sensitive usage.
-4. Publish a polished demo walkthrough with screenshots and contribution templates.
+1. Auto-send scheduling layer for daily nudges (instead of manual click-through drafts).
+2. Add optional encrypted-at-rest memory storage for privacy-sensitive usage.
+3. Expand evaluation with scenario-based coaching quality benchmarks.
+4. Add CI checks for tests and linting.
 
 ---
 
@@ -293,6 +293,38 @@ Next product milestones:
 | Low | Multi-month comparison view | Shows habit improvement or decline across months |
 | Low | PhonePe / Google Pay CSV auto-parser | Reduces manual cleanup for real exports |
 | Low | Budget goal tracker | Turns diagnostics into a simple action plan |
+
+---
+
+## Tests and Evaluation
+
+Unit tests are now included for the coach logic and fallback narrative path.
+
+Covered in `tests/`:
+- Anomaly routing and anomaly status behavior
+- Deterministic fallback narrative when Groq is unavailable
+- Weekly limit suggestion calculation
+- Reward scoring paths for stable vs anomaly/repeat states
+
+Run tests locally:
+
+```bash
+pytest -q
+```
+
+---
+
+## Demo and Screenshots
+
+- Demo script: `docs/DEMO_WALKTHROUGH.md`
+- Screenshot guide: `docs/screenshots/README.md`
+
+Recommended screenshot set:
+- Dashboard overview
+- Coach Agent tab
+- Regret tab
+- Merchant tab
+- Delivery action links
 
 ---
 
