@@ -82,6 +82,7 @@ UPI Mirror does something different across every layer:
 | **Spending Coach Agent** | LangGraph workflow + Groq narrative + Agent Lightning trace hooks | Daily coach state: anomaly → repeat pattern → nudge → limit suggestion |
 | **Coach Memory** | JSON snapshot store, 30-day rolling history | 7-day status chart in the Coach tab — stable / watch / critical per day |
 | **Feedback Rewards** | Thumbs-up / thumbs-down on each nudge | user_reward (+1 / −1) written back to the snapshot and used as Agent Lightning reward when available |
+| **Delivery Channels** | WhatsApp/email deep-link drafts generated from live coach output | Send today's nudge outside the dashboard in one click |
 | **Shareable Insight Cards** | Templated post generation + CSV export | One-click LinkedIn post with blurred numbers, safe to share publicly |
 
 ---
@@ -112,6 +113,7 @@ flowchart TD
         J["src/coach_agent.py\n─────────────────\n• LangGraph Spending Coach\n• Anomaly → Pattern → Nudge → Limit"]
         K["src/coach_memory.py\n─────────────────\n• Daily JSON Snapshot Store\n• 7-day Status History"]
         L["src/lightning.py\n─────────────────\n• Agent Lightning Traces\n• Reward Span Capture"]
+        M["src/delivery.py\n─────────────────\n• WhatsApp Draft Link\n• Email Draft Link"]
     end
 
     subgraph PRESENTATION["🖥️ Presentation Layer"]
@@ -123,8 +125,10 @@ flowchart TD
     B --> D & E & F & G
     D & E & F & G --> I
     I --> J --> K
+    J --> M
     D & E & F & G --> H
     J --> H
+    M --> H
     H --> APP
 ```
 
@@ -140,7 +144,8 @@ flowchart TD
 8. `src/coach_memory.py` appends the result to a local JSON file so the 7-day status chart in the Coach tab always reflects real history.
 9. `src/lightning.py` records coach traces and emits reward to Agent Lightning; it prefers `user_reward` when available and falls back to heuristic urgency otherwise.
 10. The user can accept or dismiss the nudge — `record_feedback()` writes `user_reward` (±1.0) back into the same snapshot and that signal is reused in trace capture.
-11. `app.py` + `src/ui.py` present all outputs in a multi-tab interactive dashboard.
+11. `src/delivery.py` builds WhatsApp and email deep links from the live nudge so the message can be sent outside the app.
+12. `app.py` + `src/ui.py` present all outputs in a multi-tab interactive dashboard.
 
 ---
 
@@ -161,6 +166,7 @@ UPI-Mirror/
     ├── coach_agent.py      # LangGraph spending coach workflow
     ├── coach_memory.py     # Daily JSON snapshot store — 30-day rolling history
     ├── lightning.py        # Agent Lightning trace capture for coach runs
+    ├── delivery.py         # WhatsApp/email delivery-link generator for coach nudges
     ├── insights.py         # LinkedIn card generator, summary CSV export
     └── ui.py               # CSS injection, hero card, shared UI components
 ```
@@ -262,51 +268,31 @@ Groq is optional. Without an API key, the coach falls back to a local rule-based
 
 ---
 
-## 8-Issue Delivery Plan
+## Product Roadmap
 
-If you want to build this cleanly through your own GitHub workflow, split it into eight small issues and merge them one by one.
+The core agent layer is live: coach workflow, memory, user feedback rewards, and Agent Lightning trace capture are all integrated.
 
-1. **Issue 1 — Spending Coach Agent** ✅
-    LangGraph coach workflow, Groq narrative, Agent Lightning trace hooks, and the Coach Agent tab in Streamlit.
-2. **Issue 2 — Daily Coach Memory** ✅
-    Persist daily snapshots to a local JSON file; surface a 7-day bar chart inside the Coach Agent tab.
-3. **Issue 3 — User Feedback Rewards** ✅
-    Accept / dismiss buttons on the nudge; `user_reward` (±1.0) written back into the snapshot alongside `user_feedback`.
-4. **Issue 4 — Agent Lightning RL Loop** ✅
-    Trace capture now prefers stored `user_reward` when available, falls back to heuristic reward when not, and logs reward source/history metadata with spans.
-5. **Issue 5 — Delivery Channel**
-    Send the daily nudge via WhatsApp or email so the coach works without opening the dashboard.
-6. **Issue 6 — Multi-session Isolation**
-    Scope memory snapshots per CSV hash so different users or different uploads don't overwrite each other.
-7. **Issue 7 — Tests and Evaluation**
-    Add unit tests for anomaly routing, fallback narratives, limit suggestions, and reward scoring.
-8. **Issue 8 — README, Demo, and Polish**
-    Finalize docs, screenshots, sample walkthrough, and issue templates for contributors.
+Next product milestones:
 
-### Recommended GitHub Workflow
-
-1. Create one GitHub issue per scope above.
-2. Create a branch from `main` for each issue, for example `feat/issue-2-langgraph-coach`.
-3. Build only that slice, open a PR, and reference the issue in the PR description.
-4. Review the PR against one acceptance checklist, not the whole product.
-5. Merge after validation, then open the next branch from updated `main`.
-
-That keeps the project explainable in interviews and easier to demo: every issue becomes one story, one PR, one merge.
+1. Isolate memory per user/upload context to support multi-session usage safely.
+2. Add test coverage for coach routing, reward paths, and fallback behavior.
+3. Auto-send scheduling layer for daily nudges (instead of manual click-through drafts).
+4. Publish a polished demo walkthrough with screenshots and contribution templates.
 
 ---
 
 ## Future Enhancements
 
-| Priority | Feature | Why |
-|----------|---------|-----|
-| 🔴 High | **WhatsApp / Email nudge** when anomaly or high-regret week detected | Closes the loop from insight → behaviour change |
-| 🔴 High | **Per-merchant weekly trend drill-down** | Deeper pattern analysis per merchant |
-| 🟡 Medium | **Dark / light theme toggle** | Accessibility + demo-friendly |
-| 🟡 Medium | **Isolation Forest anomaly detection** | More robust than IQR on skewed spend distributions |
-| 🟡 Medium | **GPT-powered spend narrative** | Plain-English summary of the month's behavioural patterns |
-| 🟢 Low | **Multi-month comparison view** | Track whether habits are improving over time |
-| 🟢 Low | **PhonePe / Google Pay CSV auto-parser** | Remove manual formatting step for real UPI exports |
-| 🟢 Low | **Budget goal setting with progress tracker** | Turn insight into active financial planning |
+| Priority | Feature | Why it matters |
+|----------|---------|----------------|
+| High | WhatsApp / Email nudge delivery | Closes the loop from insight to behavior change |
+| High | Per-merchant weekly trend drill-down | Makes merchant-level habit shifts visible over time |
+| Medium | Isolation Forest anomaly detection | Improves robustness when spend data is heavily skewed |
+| Medium | Narrative quality tuning from reward history | Uses feedback-driven reward traces to improve nudge relevance |
+| Medium | Light and dark theme toggle | Better accessibility and demo flexibility |
+| Low | Multi-month comparison view | Shows habit improvement or decline across months |
+| Low | PhonePe / Google Pay CSV auto-parser | Reduces manual cleanup for real exports |
+| Low | Budget goal tracker | Turns diagnostics into a simple action plan |
 
 ---
 
