@@ -58,6 +58,23 @@ def load_history(last_n: int = 7) -> list[dict[str, Any]]:
     return snapshots[-last_n:]
 
 
+def record_feedback(date_str: str, accepted: bool) -> None:
+    """
+    Save the user's response to the coach nudge for a given date.
+
+    Sets ``user_feedback`` to "accepted" or "dismissed" and writes a
+    ``user_reward`` of +1.0 or −1.0 so Agent Lightning can use real
+    human signal instead of the heuristic reward.
+    """
+    snapshots = _load_raw()
+    for snapshot in snapshots:
+        if snapshot.get("date") == date_str:
+            snapshot["user_feedback"] = "accepted" if accepted else "dismissed"
+            snapshot["user_reward"] = 1.0 if accepted else -1.0
+            break
+    _save_raw(snapshots)
+
+
 def clear_memory() -> None:
     """Wipe the memory file — useful for testing or a fresh start."""
     if _MEMORY_FILE.exists():

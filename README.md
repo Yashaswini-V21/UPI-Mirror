@@ -81,6 +81,7 @@ UPI Mirror does something different across every layer:
 | **Merchant Insights** | Late-night share analysis + regret-spend scatter | "Zomato: 68% of orders after 10 PM — ₹4,200 in late-night spend" |
 | **Spending Coach Agent** | LangGraph workflow + Groq narrative + Agent Lightning trace hooks | Daily coach state: anomaly → repeat pattern → nudge → limit suggestion |
 | **Coach Memory** | JSON snapshot store, 30-day rolling history | 7-day status chart in the Coach tab — stable / watch / critical per day |
+| **Feedback Rewards** | Thumbs-up / thumbs-down on each nudge | user_reward (+1 / −1) written back to the snapshot; feeds the RL loop in Issue 4 |
 | **Shareable Insight Cards** | Templated post generation + CSV export | One-click LinkedIn post with blurred numbers, safe to share publicly |
 
 ---
@@ -138,7 +139,8 @@ flowchart TD
 7. `src/coach_agent.py` runs a LangGraph coach workflow: anomaly detected → repeat pattern check → personalised nudge → limit suggestion.
 8. `src/coach_memory.py` appends the result to a local JSON file so the 7-day status chart in the Coach tab always reflects real history.
 9. `src/lightning.py` optionally records the coach run as Agent Lightning spans so future reward tuning has structured traces.
-9. `app.py` + `src/ui.py` present all outputs in a multi-tab interactive dashboard.
+10. The user can accept or dismiss the nudge — `record_feedback()` writes `user_reward` (±1.0) back into the same snapshot so the signal is ready for the RL loop.
+11. `app.py` + `src/ui.py` present all outputs in a multi-tab interactive dashboard.
 
 ---
 
@@ -268,14 +270,14 @@ If you want to build this cleanly through your own GitHub workflow, split it int
     LangGraph coach workflow, Groq narrative, Agent Lightning trace hooks, and the Coach Agent tab in Streamlit.
 2. **Issue 2 — Daily Coach Memory** ✅
     Persist daily snapshots to a local JSON file; surface a 7-day bar chart inside the Coach Agent tab.
-3. **Issue 3 — User Feedback Rewards**
-    Let the user dismiss or accept a nudge; convert that signal into a reward score stored alongside the snapshot.
+3. **Issue 3 — User Feedback Rewards** ✅
+    Accept / dismiss buttons on the nudge; `user_reward` (±1.0) written back into the snapshot alongside `user_feedback`.
 4. **Issue 4 — Agent Lightning RL Loop**
-    Feed stored rewards + Coach Lightning spans back into Agent Lightning so the nudge prompt can improve over time.
-5. **Issue 5 — User Feedback Rewards**
-    Capture whether the user followed a nudge and convert that into a reward signal.
-6. **Issue 6 — Agent Lightning Integration**
-    Record LangGraph coach runs as spans/rewards so the agent can later be optimized with trace data.
+    Feed stored `user_reward` values + Lightning spans back into the coach so nudge quality improves over time.
+5. **Issue 5 — Delivery Channel**
+    Send the daily nudge via WhatsApp or email so the coach works without opening the dashboard.
+6. **Issue 6 — Multi-session Isolation**
+    Scope memory snapshots per CSV hash so different users or different uploads don't overwrite each other.
 7. **Issue 7 — Tests and Evaluation**
     Add unit tests for anomaly routing, fallback narratives, limit suggestions, and reward scoring.
 8. **Issue 8 — README, Demo, and Polish**

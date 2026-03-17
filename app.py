@@ -14,7 +14,7 @@ from src.analytics import (
     simulate_savings,
 )
 from src.coach_agent import run_spending_coach_agent
-from src.coach_memory import load_history, save_snapshot
+from src.coach_memory import load_history, record_feedback, save_snapshot
 from src.data import load_transactions
 from src.lightning import agentlightning_is_available, record_coach_trace
 from src.regret import compute_regret_stats, regret_by_hour, regret_amount_correlation, top_regret_insight
@@ -333,6 +333,21 @@ with tabs[3]:
     st.markdown("### Personalised nudge")
     st.markdown(coach_result.nudge)
 
+    st.markdown("### Did this nudge help?")
+    _today_str = datetime.now().date().isoformat()
+    _fb_cols = st.columns(2)
+    if _fb_cols[0].button("\U0001f44d  I'll try it", use_container_width=True, key="fb_accept"):
+        record_feedback(_today_str, accepted=True)
+        st.session_state["nudge_feedback"] = "accepted"
+    if _fb_cols[1].button("\U0001f44e  Not for me", use_container_width=True, key="fb_dismiss"):
+        record_feedback(_today_str, accepted=False)
+        st.session_state["nudge_feedback"] = "dismissed"
+    _fb = st.session_state.get("nudge_feedback")
+    if _fb == "accepted":
+        st.success("Great — marked as accepted. Reward +1.0 saved alongside today's snapshot.")
+    elif _fb == "dismissed":
+        st.warning("Got it — marked as dismissed. Reward \u22121.0 saved so the coach can learn from this.")
+
     st.markdown("### Agent flow")
     for action in coach_result.actions:
         st.markdown(f"- {action}")
@@ -361,9 +376,14 @@ with tabs[3]:
             yaxis=dict(tickvals=[0, 1, 2], ticktext=["Stable", "Watch", "Critical"]),
         )
         st.plotly_chart(history_chart, use_container_width=True)
+        _history_cols = ["date", "status", "top_category", "suggested_limit", "reward_signal"]
+        _col_rename = {"top_category": "focus category", "suggested_limit": "cap (Rs.)", "reward_signal": "urgency"}
+        if "user_feedback" in history_df.columns:
+            _history_cols.append("user_feedback")
+            _col_rename["user_feedback"] = "your call"
         st.dataframe(
-            history_df[["date", "status", "top_category", "suggested_limit", "reward_signal"]]
-            .rename(columns={"top_category": "focus category", "suggested_limit": "cap (Rs.)", "reward_signal": "urgency"})
+            history_df[_history_cols]
+            .rename(columns=_col_rename)
             .sort_values("date", ascending=False),
             use_container_width=True,
             hide_index=True,
@@ -431,8 +451,8 @@ with tabs[6]:
     st.markdown("### Suggested next issues")
     st.markdown(
         """
-        1. Persist daily coach memory to a local store or database.
-        2. Add WhatsApp/email delivery for the coach nudge.
-        3. Add user feedback capture so Agent Lightning rewards come from real actions.
+        1. Add WhatsApp/email delivery for the coach nudge.
+        2. Feed user_reward from feedback into Agent Lightning's RL loop.
+        3. Multi-user sessions — isolate memory per uploaded CSV hash.
         """
     )
