@@ -79,7 +79,8 @@ UPI Mirror does something different across every layer:
 | **Savings Simulator** | Compound interest projection | Cut one category by 30% + 6% FD → ₹18,400 in 12 months |
 | **Category Regret Score** | Regret (1–5) correlated with amount, time-of-day | "Your Food Delivery regret score is 4.2/5 after 10 PM" |
 | **Merchant Insights** | Late-night share analysis + regret-spend scatter | "Zomato: 68% of orders after 10 PM — ₹4,200 in late-night spend" |
-| **Spending Coach Agent** | LangGraph workflow + Groq narrative + Agent Lightning trace hooks | Daily coach state: anomaly -> repeat pattern -> nudge -> limit |
+| **Spending Coach Agent** | LangGraph workflow + Groq narrative + Agent Lightning trace hooks | Daily coach state: anomaly → repeat pattern → nudge → limit suggestion |
+| **Coach Memory** | JSON snapshot store, 30-day rolling history | 7-day status chart in the Coach tab — stable / watch / critical per day |
 | **Shareable Insight Cards** | Templated post generation + CSV export | One-click LinkedIn post with blurred numbers, safe to share publicly |
 
 ---
@@ -108,7 +109,8 @@ flowchart TD
     subgraph AGENT["🤖 Agent Layer"]
         I["src/narrative.py\n─────────────────\n• Groq Narrative\n• Deterministic Fallback"]
         J["src/coach_agent.py\n─────────────────\n• LangGraph Spending Coach\n• Anomaly → Pattern → Nudge → Limit"]
-        K["src/lightning.py\n─────────────────\n• Agent Lightning Traces\n• Reward Span Capture"]
+        K["src/coach_memory.py\n─────────────────\n• Daily JSON Snapshot Store\n• 7-day Status History"]
+        L["src/lightning.py\n─────────────────\n• Agent Lightning Traces\n• Reward Span Capture"]
     end
 
     subgraph PRESENTATION["🖥️ Presentation Layer"]
@@ -134,7 +136,8 @@ flowchart TD
 5. `src/merchant.py` computes merchant-level late-night and regret-linked spend patterns.
 6. `src/narrative.py` builds a plain-English daily narrative using Groq when available and falls back to a deterministic template otherwise.
 7. `src/coach_agent.py` runs a LangGraph coach workflow: anomaly detected → repeat pattern check → personalised nudge → limit suggestion.
-8. `src/lightning.py` optionally records the coach run as Agent Lightning spans so future reward tuning has structured traces.
+8. `src/coach_memory.py` appends the result to a local JSON file so the 7-day status chart in the Coach tab always reflects real history.
+9. `src/lightning.py` optionally records the coach run as Agent Lightning spans so future reward tuning has structured traces.
 9. `app.py` + `src/ui.py` present all outputs in a multi-tab interactive dashboard.
 
 ---
@@ -154,6 +157,7 @@ UPI-Mirror/
     ├── merchant.py         # Merchant ranking, late-night alerts, regret ranking
     ├── narrative.py        # Groq narrative generation with deterministic fallback
     ├── coach_agent.py      # LangGraph spending coach workflow
+    ├── coach_memory.py     # Daily JSON snapshot store — 30-day rolling history
     ├── lightning.py        # Agent Lightning trace capture for coach runs
     ├── insights.py         # LinkedIn card generator, summary CSV export
     └── ui.py               # CSS injection, hero card, shared UI components
@@ -260,14 +264,14 @@ Groq is optional. Without an API key, the coach falls back to a local rule-based
 
 If you want to build this cleanly through your own GitHub workflow, split it into eight small issues and merge them one by one.
 
-1. **Issue 1 — Groq Narrative Layer**
-    Add `src/narrative.py`, environment-variable handling, and deterministic fallback text.
-2. **Issue 2 — LangGraph Coach State**
-    Define coach state, node functions, and the anomaly → pattern → nudge → limit graph.
-3. **Issue 3 — Streamlit Coach Tab**
-    Add a new dashboard tab showing coach status, narrative, nudge, and limit suggestion.
-4. **Issue 4 — Daily Memory / Persistence**
-    Persist coach snapshots across runs instead of keeping them only in the current app session.
+1. **Issue 1 — Spending Coach Agent** ✅
+    LangGraph coach workflow, Groq narrative, Agent Lightning trace hooks, and the Coach Agent tab in Streamlit.
+2. **Issue 2 — Daily Coach Memory** ✅
+    Persist daily snapshots to a local JSON file; surface a 7-day bar chart inside the Coach Agent tab.
+3. **Issue 3 — User Feedback Rewards**
+    Let the user dismiss or accept a nudge; convert that signal into a reward score stored alongside the snapshot.
+4. **Issue 4 — Agent Lightning RL Loop**
+    Feed stored rewards + Coach Lightning spans back into Agent Lightning so the nudge prompt can improve over time.
 5. **Issue 5 — User Feedback Rewards**
     Capture whether the user followed a nudge and convert that into a reward signal.
 6. **Issue 6 — Agent Lightning Integration**

@@ -14,6 +14,7 @@ from src.analytics import (
     simulate_savings,
 )
 from src.coach_agent import run_spending_coach_agent
+from src.coach_memory import load_history, save_snapshot
 from src.data import load_transactions
 from src.lightning import agentlightning_is_available, record_coach_trace
 from src.regret import compute_regret_stats, regret_by_hour, regret_amount_correlation, top_regret_insight
@@ -66,6 +67,8 @@ coach_result = run_spending_coach_agent(
     merchant_late_night=merchant_late_night,
 )
 agentlightning_enabled = agentlightning_is_available()
+save_snapshot(coach_result.as_dict())
+coach_history = load_history(last_n=7)
 
 _top_addiction_category = str(addiction_scores.iloc[0]["category"]) if not addiction_scores.empty else "N/A"
 _top_addiction_score = int(addiction_scores.iloc[0]["score"]) if not addiction_scores.empty else 0
@@ -333,6 +336,38 @@ with tabs[3]:
     st.markdown("### Agent flow")
     for action in coach_result.actions:
         st.markdown(f"- {action}")
+
+    if coach_history:
+        st.markdown("### Last 7 days — coach status history")
+        history_df = pd.DataFrame(coach_history)
+        history_df["date"] = pd.to_datetime(history_df["date"])
+        status_map = {"stable": 0, "watch": 1, "critical": 2}
+        history_df["status_level"] = history_df["status"].map(status_map).fillna(0)
+        history_chart = px.bar(
+            history_df,
+            x="date",
+            y="status_level",
+            color="status",
+            color_discrete_map={"stable": "#13d7b0", "watch": "#ffbb38", "critical": "#ff5a7d"},
+            labels={"date": "", "status_level": "Risk level", "status": "Status"},
+            title="Daily coach status (0 = stable, 1 = watch, 2 = critical)",
+        )
+        history_chart.update_layout(
+            paper_bgcolor="rgba(0,0,0,0)",
+            plot_bgcolor="rgba(0,0,0,0)",
+            font_color="#d9e1f2",
+            showlegend=True,
+            margin=dict(l=10, r=10, t=50, b=10),
+            yaxis=dict(tickvals=[0, 1, 2], ticktext=["Stable", "Watch", "Critical"]),
+        )
+        st.plotly_chart(history_chart, use_container_width=True)
+        st.dataframe(
+            history_df[["date", "status", "top_category", "suggested_limit", "reward_signal"]]
+            .rename(columns={"top_category": "focus category", "suggested_limit": "cap (Rs.)", "reward_signal": "urgency"})
+            .sort_values("date", ascending=False),
+            use_container_width=True,
+            hide_index=True,
+        )
 
     if agentlightning_enabled:
         if st.button("Capture Agent Lightning trace", use_container_width=True):
