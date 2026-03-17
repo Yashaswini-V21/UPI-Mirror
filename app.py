@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from datetime import datetime
 
 import pandas as pd
@@ -16,6 +17,7 @@ from src.analytics import (
 from src.coach_agent import run_spending_coach_agent
 from src.coach_memory import load_history, record_feedback, save_snapshot
 from src.data import load_transactions
+from src.delivery import build_coach_delivery_message, build_mailto_url, build_whatsapp_url, default_delivery_targets
 from src.lightning import agentlightning_is_available, record_coach_trace
 from src.regret import compute_regret_stats, regret_by_hour, regret_amount_correlation, top_regret_insight
 from src.merchant import top_merchants_by_spend, late_night_merchant_alerts, merchant_regret_correlation, top_late_night_insight
@@ -32,6 +34,9 @@ monthly_budget = st.sidebar.number_input("Monthly budget (Rs.)", min_value=1000,
 cut_percent = st.sidebar.slider("Cut-back target (%)", min_value=5, max_value=60, value=25, step=5)
 annual_interest_rate = st.sidebar.slider("Savings interest / FD rate (%)", min_value=1.0, max_value=12.0, value=6.0, step=0.5)
 months = st.sidebar.slider("Projection window (months)", min_value=3, max_value=24, value=12, step=1)
+default_email_target, default_whatsapp_target = default_delivery_targets()
+delivery_email = st.sidebar.text_input("Nudge email target (optional)", value=default_email_target)
+delivery_whatsapp = st.sidebar.text_input("WhatsApp number with country code (optional)", value=default_whatsapp_target)
 
 try:
     transactions = load_transactions(uploaded_file)
@@ -332,6 +337,17 @@ with tabs[3]:
 
     st.markdown("### Personalised nudge")
     st.markdown(coach_result.nudge)
+
+    st.markdown("### Share this nudge")
+    delivery_message = build_coach_delivery_message(coach_result)
+    delivery_subject = f"UPI Mirror Coach - {coach_result.status.title()}"
+    whatsapp_url = build_whatsapp_url(delivery_message, phone_number=delivery_whatsapp)
+    mailto_url = build_mailto_url(delivery_subject, delivery_message, recipient_email=delivery_email)
+    delivery_cols = st.columns(2)
+    delivery_cols[0].link_button("Open WhatsApp draft", whatsapp_url, use_container_width=True)
+    delivery_cols[1].link_button("Open email draft", mailto_url, use_container_width=True)
+    st.caption("Tip: set COACH_WHATSAPP_NUMBER and COACH_EMAIL_TO in your environment to prefill delivery targets.")
+    st.text_area("Message preview", value=delivery_message, height=150)
 
     st.markdown("### Did this nudge help?")
     _today_str = datetime.now().date().isoformat()
