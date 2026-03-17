@@ -79,6 +79,7 @@ UPI Mirror does something different across every layer:
 | **Savings Simulator** | Compound interest projection | Cut one category by 30% + 6% FD → ₹18,400 in 12 months |
 | **Category Regret Score** | Regret (1–5) correlated with amount, time-of-day | "Your Food Delivery regret score is 4.2/5 after 10 PM" |
 | **Merchant Insights** | Late-night share analysis + regret-spend scatter | "Zomato: 68% of orders after 10 PM — ₹4,200 in late-night spend" |
+| **Spending Coach Agent** | LangGraph workflow + Groq narrative + Agent Lightning trace hooks | Daily coach state: anomaly -> repeat pattern -> nudge -> limit |
 | **Shareable Insight Cards** | Templated post generation + CSV export | One-click LinkedIn post with blurred numbers, safe to share publicly |
 
 ---
@@ -104,14 +105,23 @@ flowchart TD
         G["src/insights.py\n─────────────────\n• LinkedIn Post Generator\n• Stats Summary CSV Export"]
     end
 
+    subgraph AGENT["🤖 Agent Layer"]
+        I["src/narrative.py\n─────────────────\n• Groq Narrative\n• Deterministic Fallback"]
+        J["src/coach_agent.py\n─────────────────\n• LangGraph Spending Coach\n• Anomaly → Pattern → Nudge → Limit"]
+        K["src/lightning.py\n─────────────────\n• Agent Lightning Traces\n• Reward Span Capture"]
+    end
+
     subgraph PRESENTATION["🖥️ Presentation Layer"]
         H["src/ui.py\nStyles + Component Helpers"]
-        APP["app.py · Streamlit Dashboard\n──────────────────────────────\nDS Features · Regret Score\nMerchant Insights · Insight Cards\nUnique Angles · Free Tools"]
+        APP["app.py · Streamlit Dashboard\n──────────────────────────────\nDS Features · Regret Score\nMerchant Insights · Coach Agent\nInsight Cards · Unique Angles · Free Tools"]
     end
 
     A1 & A2 --> B
     B --> D & E & F & G
+    D & E & F & G --> I
+    I --> J --> K
     D & E & F & G --> H
+    J --> H
     H --> APP
 ```
 
@@ -122,8 +132,10 @@ flowchart TD
 3. `src/analytics.py` computes broke-date forecast, addiction score, anomaly flags, and savings simulation.
 4. `src/regret.py` computes regret intensity and time/amount relationships.
 5. `src/merchant.py` computes merchant-level late-night and regret-linked spend patterns.
-6. `src/insights.py` converts outputs into shareable summaries and LinkedIn-ready text.
-7. `app.py` + `src/ui.py` present all outputs in a multi-tab interactive dashboard.
+6. `src/narrative.py` builds a plain-English daily narrative using Groq when available and falls back to a deterministic template otherwise.
+7. `src/coach_agent.py` runs a LangGraph coach workflow: anomaly detected → repeat pattern check → personalised nudge → limit suggestion.
+8. `src/lightning.py` optionally records the coach run as Agent Lightning spans so future reward tuning has structured traces.
+9. `app.py` + `src/ui.py` present all outputs in a multi-tab interactive dashboard.
 
 ---
 
@@ -140,6 +152,9 @@ UPI-Mirror/
     ├── analytics.py        # Broke-date predictor, addiction score, anomaly, savings
     ├── regret.py           # Regret analytics: per-category, hourly, amount correlation
     ├── merchant.py         # Merchant ranking, late-night alerts, regret ranking
+    ├── narrative.py        # Groq narrative generation with deterministic fallback
+    ├── coach_agent.py      # LangGraph spending coach workflow
+    ├── lightning.py        # Agent Lightning trace capture for coach runs
     ├── insights.py         # LinkedIn card generator, summary CSV export
     └── ui.py               # CSS injection, hero card, shared UI components
 ```
@@ -185,6 +200,15 @@ pip install -r requirements.txt
 streamlit run app.py
 ```
 
+### 5.1 Optional AI Environment Variables
+
+```bash
+# Groq narrative provider
+set GROQ_API_KEY=your_groq_key_here
+```
+
+If `GROQ_API_KEY` is missing, the Spending Coach still runs using a deterministic narrative fallback.
+
 ### 6. Open in Browser
 
 Visit [http://localhost:8501](http://localhost:8501) — demo data loads automatically. No CSV required to explore the full feature set.
@@ -222,8 +246,46 @@ datetime,amount,category,merchant,regret
 | **Streamlit** | 1.55 | Interactive web dashboard with real-time sidebar controls |
 | **Plotly** | 6.0 | Line, bar, scatter, area, bubble charts |
 | **NumPy** | 2.0 | Numerical computation and array operations |
+| **LangGraph** | 0.2+ | Stateful spending coach workflow |
+| **Groq via langchain-groq** | 0.2+ | Plain-English spending narrative generation |
+| **Agent Lightning** | 0.3+ | Trace capture and future reward optimization loop |
 
 **Zero paid APIs. Zero external databases. Runs fully offline on your own data.**
+
+Groq is optional. Without an API key, the coach falls back to a local rule-based narrative. Agent Lightning is also optional at runtime; it is used to capture coach traces for future optimization rather than to power the dashboard itself.
+
+---
+
+## 8-Issue Delivery Plan
+
+If you want to build this cleanly through your own GitHub workflow, split it into eight small issues and merge them one by one.
+
+1. **Issue 1 — Groq Narrative Layer**
+    Add `src/narrative.py`, environment-variable handling, and deterministic fallback text.
+2. **Issue 2 — LangGraph Coach State**
+    Define coach state, node functions, and the anomaly → pattern → nudge → limit graph.
+3. **Issue 3 — Streamlit Coach Tab**
+    Add a new dashboard tab showing coach status, narrative, nudge, and limit suggestion.
+4. **Issue 4 — Daily Memory / Persistence**
+    Persist coach snapshots across runs instead of keeping them only in the current app session.
+5. **Issue 5 — User Feedback Rewards**
+    Capture whether the user followed a nudge and convert that into a reward signal.
+6. **Issue 6 — Agent Lightning Integration**
+    Record LangGraph coach runs as spans/rewards so the agent can later be optimized with trace data.
+7. **Issue 7 — Tests and Evaluation**
+    Add unit tests for anomaly routing, fallback narratives, limit suggestions, and reward scoring.
+8. **Issue 8 — README, Demo, and Polish**
+    Finalize docs, screenshots, sample walkthrough, and issue templates for contributors.
+
+### Recommended GitHub Workflow
+
+1. Create one GitHub issue per scope above.
+2. Create a branch from `main` for each issue, for example `feat/issue-2-langgraph-coach`.
+3. Build only that slice, open a PR, and reference the issue in the PR description.
+4. Review the PR against one acceptance checklist, not the whole product.
+5. Merge after validation, then open the next branch from updated `main`.
+
+That keeps the project explainable in interviews and easier to demo: every issue becomes one story, one PR, one merge.
 
 ---
 
