@@ -391,7 +391,20 @@ with tabs[3]:
 
     if agentlightning_enabled:
         if st.button("Capture Agent Lightning trace", use_container_width=True):
-            st.session_state["coach_trace_result"] = record_coach_trace(coach_result)
+            reward_snapshots = load_history(last_n=30)
+            reward_history = [
+                float(s["user_reward"])
+                for s in reward_snapshots
+                if s.get("user_reward") is not None
+            ]
+            reward_override = reward_history[-1] if reward_history else None
+            reward_source = "user_feedback" if reward_override is not None else "heuristic"
+            st.session_state["coach_trace_result"] = record_coach_trace(
+                coach_result,
+                reward_override=reward_override,
+                reward_source=reward_source,
+                reward_history=reward_history,
+            )
 
         trace_result = st.session_state.get("coach_trace_result")
         if trace_result is not None:
@@ -399,12 +412,16 @@ with tabs[3]:
             status_callout(trace_result.message)
             if trace_result.enabled:
                 st.caption(
-                    "Trace spans: {} · Reward: {:.1f} · Rollout: {}".format(
+                    "Trace spans: {} · Reward: {:.1f} · Source: {} · History points: {} · Rollout: {}".format(
                         trace_result.span_count,
                         trace_result.reward,
+                        trace_result.reward_source,
+                        trace_result.reward_history_count,
                         trace_result.rollout_id,
                     )
                 )
+                if trace_result.reward_history_count > 0:
+                    st.caption("Average user reward in history: {:.2f}".format(trace_result.reward_history_mean))
     else:
         st.info("Install the updated requirements to enable Agent Lightning trace capture for coach runs.")
 
@@ -452,7 +469,7 @@ with tabs[6]:
     st.markdown(
         """
         1. Add WhatsApp/email delivery for the coach nudge.
-        2. Feed user_reward from feedback into Agent Lightning's RL loop.
-        3. Multi-user sessions — isolate memory per uploaded CSV hash.
+        2. Multi-user sessions — isolate memory per uploaded CSV hash.
+        3. Auto-capture traces after feedback so no manual click is needed.
         """
     )

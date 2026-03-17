@@ -12,6 +12,9 @@ class LightningTraceResult:
     enabled: bool
     message: str
     reward: float = 0.0
+    reward_source: str = "heuristic"
+    reward_history_count: int = 0
+    reward_history_mean: float = 0.0
     span_count: int = 0
     rollout_id: str | None = None
     attempt_id: str | None = None
@@ -26,7 +29,12 @@ def agentlightning_is_available() -> bool:
         return False
 
 
-async def _record_trace_async(coach_result: SpendingCoachResult) -> LightningTraceResult:
+async def _record_trace_async(
+    coach_result: SpendingCoachResult,
+    reward_override: float | None = None,
+    reward_source: str = "heuristic",
+    reward_history: list[float] | None = None,
+) -> LightningTraceResult:
     try:
         from agentlightning import InMemoryLightningStore, OtelTracer, emit_reward
     except ImportError:
@@ -38,7 +46,16 @@ async def _record_trace_async(coach_result: SpendingCoachResult) -> LightningTra
     try:
         tracer = OtelTracer()
         store = InMemoryLightningStore()
-        rollout = await store.start_rollout(input=coach_result.as_dict())
+        final_reward = float(reward_override) if reward_override is not None else float(coach_result.reward_signal)
+        history = reward_history or []
+        history_mean = (sum(history) / len(history)) if history else 0.0
+        rollout_input = {
+            **coach_result.as_dict(),
+            "reward_source": reward_source,
+            "reward_history_count": len(history),
+            "reward_history_mean": round(history_mean, 3),
+        }
+        rollout = await store.start_rollout(input=rollout_input)
 
         with tracer.lifespan(store):
             async with tracer.trace_context(
@@ -63,13 +80,16 @@ async def _record_trace_async(coach_result: SpendingCoachResult) -> LightningTra
                 with otel_tracer.start_as_current_span("suggest_limit"):
                     pass
 
-                emit_reward(coach_result.reward_signal)
+                emit_reward(final_reward)
 
         spans = await store.query_spans(rollout_id=rollout.rollout_id)
         return LightningTraceResult(
             enabled=True,
             message="Agent Lightning trace captured for the latest coach run.",
-            reward=coach_result.reward_signal,
+            reward=final_reward,
+            reward_source=reward_source,
+            reward_history_count=len(history),
+            reward_history_mean=history_mean,
             span_count=len(spans),
             rollout_id=rollout.rollout_id,
             attempt_id=rollout.attempt.attempt_id,
@@ -81,5 +101,17 @@ async def _record_trace_async(coach_result: SpendingCoachResult) -> LightningTra
         )
 
 
-def record_coach_trace(coach_result: SpendingCoachResult) -> LightningTraceResult:
-    return asyncio.run(_record_trace_async(coach_result))
+def record_coach_trace(
+    coach_result: SpendingCoachResult,
+    reward_override: float | None = None,
+    reward_source: str = "heuristic",
+    reward_history: list[float] | None = None,
+) -> LightningTraceResult:
+    return asyncio.run(
+        _record_trace_async(
+            coach_result,
+            reward_override=reward_override,
+            reward_source=reward_source,
+            reward_history=reward_history,
+        )
+    )
