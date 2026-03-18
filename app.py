@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import os
 from datetime import datetime
+from pathlib import Path
 
 import pandas as pd
 import plotly.express as px
@@ -23,7 +24,7 @@ from src.lightning import agentlightning_is_available, record_coach_trace
 from src.regret import compute_regret_stats, regret_by_hour, regret_amount_correlation, top_regret_insight
 from src.merchant import top_merchants_by_spend, late_night_merchant_alerts, merchant_regret_correlation, top_late_night_insight
 from src.insights import generate_linkedin_card, generate_summary_stats
-from src.ui import inject_styles, render_free_stack, render_hero, render_quote, render_unique_angles
+from src.ui import inject_styles, render_free_stack, render_hero, render_how_it_works, render_quote, render_unique_angles
 
 
 st.set_page_config(page_title="UPI Mirror", page_icon="chart_with_upwards_trend", layout="wide")
@@ -31,6 +32,15 @@ inject_styles()
 
 st.sidebar.markdown("## Configure the mirror")
 uploaded_file = st.sidebar.file_uploader("Upload UPI CSV", type=["csv"])
+sample_data_path = Path("sample_data") / "upi_sample_transactions.csv"
+if sample_data_path.exists():
+    st.sidebar.download_button(
+        label="Download sample CSV",
+        data=sample_data_path.read_bytes(),
+        file_name="upi_sample_transactions.csv",
+        mime="text/csv",
+        use_container_width=True,
+    )
 monthly_budget = st.sidebar.number_input("Monthly budget (Rs.)", min_value=1000, value=18000, step=500)
 cut_percent = st.sidebar.slider("Cut-back target (%)", min_value=5, max_value=60, value=25, step=5)
 annual_interest_rate = st.sidebar.slider("Savings interest / FD rate (%)", min_value=1.0, max_value=12.0, value=6.0, step=0.5)
@@ -116,9 +126,12 @@ if not addiction_scores.empty:
     top_category = str(addiction_scores.iloc[0]["category"])
 
 render_hero(current_spend=current_spend, projected_month_end=float(prediction["projected_month_end"]))
+render_how_it_works(using_demo_data=uploaded_file is None)
 
 if uploaded_file is None:
     st.info("Showing deterministic demo data for the last 90 days. Upload your own CSV with columns: datetime, amount, category, merchant.")
+else:
+    st.success("Your CSV is loaded and analyzed live across all tabs.")
 
 metric_columns = st.columns(4)
 with metric_columns[0]:
@@ -382,6 +395,8 @@ with tabs[3]:
         st.markdown("### Last 7 days — coach status history")
         history_df = pd.DataFrame(coach_history)
         history_df["date"] = pd.to_datetime(history_df["date"])
+        if "top_category" not in history_df.columns and "suggested_category" in history_df.columns:
+            history_df["top_category"] = history_df["suggested_category"]
         status_map = {"stable": 0, "watch": 1, "critical": 2}
         history_df["status_level"] = history_df["status"].map(status_map).fillna(0)
         history_chart = px.bar(
@@ -402,8 +417,13 @@ with tabs[3]:
             yaxis=dict(tickvals=[0, 1, 2], ticktext=["Stable", "Watch", "Critical"]),
         )
         st.plotly_chart(history_chart, use_container_width=True)
-        _history_cols = ["date", "status", "top_category", "suggested_limit", "reward_signal"]
+        _history_cols = ["date", "status", "suggested_limit", "reward_signal"]
+        if "top_category" in history_df.columns:
+            _history_cols.insert(2, "top_category")
+        elif "suggested_category" in history_df.columns:
+            _history_cols.insert(2, "suggested_category")
         _col_rename = {"top_category": "focus category", "suggested_limit": "cap (Rs.)", "reward_signal": "urgency"}
+        _col_rename["suggested_category"] = "focus category"
         if "user_feedback" in history_df.columns:
             _history_cols.append("user_feedback")
             _col_rename["user_feedback"] = "your call"

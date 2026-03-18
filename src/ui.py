@@ -8,27 +8,26 @@ def inject_styles() -> None:
     st.markdown(
         """
         <style>
-            @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;600&display=swap');
+            @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap');
 
             :root {
-                --bg: #08111f;
-                --panel: #0e1728;
-                --panel-soft: rgba(18, 30, 52, 0.76);
-                --copy: #d9e1f2;
-                --muted: #7f8aa6;
-                --line: rgba(112, 130, 168, 0.22);
-                --teal: #13d7b0;
-                --teal-soft: rgba(19, 215, 176, 0.16);
-                --amber: #ffbb38;
-                --rose: #ff5a7d;
+                --copy: #f7f8ff;
+                --muted: #f6d8bb;
+                --line: rgba(255, 255, 255, 0.20);
+                --panel: rgba(20, 29, 59, 0.65);
+                --panel-strong: rgba(14, 21, 44, 0.84);
+                --mint: #72f4d2;
+                --gold: #ffd46b;
+                --coral: #ff8f79;
             }
 
             .stApp {
                 background:
-                    radial-gradient(circle at top right, rgba(19, 215, 176, 0.08), transparent 30%),
-                    radial-gradient(circle at 15% 10%, rgba(255, 90, 125, 0.08), transparent 24%),
-                    linear-gradient(180deg, #070d17 0%, #0b1321 100%);
+                    radial-gradient(1100px 550px at 10% -15%, rgba(255, 180, 108, 0.50), transparent 58%),
+                    radial-gradient(760px 420px at 95% 8%, rgba(96, 221, 207, 0.42), transparent 52%),
+                    linear-gradient(145deg, #14192f 0%, #253e73 42%, #2f6a96 100%);
                 color: var(--copy);
+                font-family: 'Plus Jakarta Sans', sans-serif;
             }
 
             [data-testid="stHeader"] {
@@ -36,24 +35,26 @@ def inject_styles() -> None:
             }
 
             [data-testid="stSidebar"] {
-                background: rgba(7, 13, 23, 0.9);
-                border-right: 1px solid var(--line);
+                background: linear-gradient(170deg, rgba(17, 24, 49, 0.97), rgba(20, 39, 76, 0.94));
+                border-right: 1px solid rgba(255, 255, 255, 0.14);
             }
 
             .hero-card,
             .metric-card,
             .content-card,
+            .how-card,
             .quote-card {
                 border: 1px solid var(--line);
-                background: linear-gradient(180deg, rgba(11, 20, 34, 0.92), rgba(9, 16, 28, 0.92));
+                background: linear-gradient(180deg, var(--panel-strong), var(--panel));
                 border-radius: 22px;
                 padding: 1.35rem 1.4rem;
-                box-shadow: 0 20px 40px rgba(0, 0, 0, 0.24);
+                box-shadow: 0 22px 46px rgba(0, 0, 0, 0.26);
+                backdrop-filter: blur(6px);
             }
 
             .eyebrow {
-                color: var(--amber);
-                font-family: 'IBM Plex Mono', monospace;
+                color: var(--gold);
+                font-family: 'JetBrains Mono', monospace;
                 font-size: 0.72rem;
                 letter-spacing: 0.24em;
                 text-transform: uppercase;
@@ -61,19 +62,19 @@ def inject_styles() -> None:
             }
 
             .hero-title {
-                font-family: 'Space Grotesk', sans-serif;
+                font-family: 'Plus Jakarta Sans', sans-serif;
                 font-size: clamp(2.2rem, 3vw, 3.7rem);
                 line-height: 1.02;
-                font-weight: 700;
+                font-weight: 800;
                 margin: 0;
-                color: #f3f7ff;
+                color: #ffffff;
             }
 
             .hero-copy,
             .body-copy {
                 color: var(--muted);
-                font-size: 1.04rem;
-                line-height: 1.75;
+                font-size: 1rem;
+                line-height: 1.72;
                 margin-top: 0.9rem;
             }
 
@@ -85,53 +86,89 @@ def inject_styles() -> None:
             }
 
             .badge {
-                font-family: 'IBM Plex Mono', monospace;
+                font-family: 'JetBrains Mono', monospace;
                 font-size: 0.72rem;
-                border: 1px solid var(--line);
+                border: 1px solid rgba(255, 255, 255, 0.2);
                 border-radius: 999px;
                 padding: 0.32rem 0.7rem;
-                color: #e8eeff;
-                background: rgba(255, 255, 255, 0.02);
+                color: #f6f7ff;
+                background: rgba(255, 255, 255, 0.08);
             }
 
             .metric-label {
                 color: var(--muted);
-                font-family: 'IBM Plex Mono', monospace;
+                font-family: 'JetBrains Mono', monospace;
                 text-transform: uppercase;
                 letter-spacing: 0.16em;
                 font-size: 0.72rem;
             }
 
             .metric-value {
-                color: #f8fbff;
-                font-family: 'Space Grotesk', sans-serif;
+                color: #ffffff;
+                font-family: 'Plus Jakarta Sans', sans-serif;
                 font-size: 2rem;
-                font-weight: 700;
+                font-weight: 800;
                 margin-top: 0.5rem;
             }
 
             .metric-subtle {
-                color: var(--teal);
+                color: var(--mint);
                 margin-top: 0.4rem;
                 font-size: 0.9rem;
             }
 
             .section-title {
-                font-family: 'IBM Plex Mono', monospace;
+                font-family: 'JetBrains Mono', monospace;
                 text-transform: uppercase;
                 letter-spacing: 0.22em;
-                color: #92a0be;
+                color: #d6e4ff;
                 font-size: 0.75rem;
                 margin-bottom: 0.8rem;
             }
 
+            .how-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+                gap: 0.8rem;
+                margin-top: 0.7rem;
+            }
+
+            .how-step {
+                border: 1px solid rgba(255, 255, 255, 0.16);
+                border-radius: 14px;
+                padding: 0.8rem 0.9rem;
+                background: rgba(255, 255, 255, 0.06);
+            }
+
+            .how-step .step-no {
+                font-family: 'JetBrains Mono', monospace;
+                font-size: 0.68rem;
+                color: var(--gold);
+                letter-spacing: 0.16em;
+                text-transform: uppercase;
+            }
+
+            .how-step .step-title {
+                margin-top: 0.35rem;
+                font-weight: 700;
+                font-size: 0.98rem;
+                color: #ffffff;
+            }
+
+            .how-step .step-copy {
+                margin-top: 0.3rem;
+                color: var(--muted);
+                font-size: 0.88rem;
+                line-height: 1.5;
+            }
+
             .quote-card {
-                border-left: 4px solid var(--teal);
-                background: linear-gradient(180deg, rgba(5, 40, 36, 0.7), rgba(8, 30, 30, 0.72));
+                border-left: 4px solid var(--mint);
+                background: linear-gradient(180deg, rgba(12, 54, 70, 0.72), rgba(22, 41, 70, 0.7));
             }
 
             .quote-card p {
-                color: #b7f8eb;
+                color: #cefff5;
                 font-size: 1.1rem;
                 line-height: 1.7;
                 margin: 0;
@@ -142,23 +179,35 @@ def inject_styles() -> None:
             }
 
             .stTabs [data-baseweb="tab"] {
-                font-family: 'IBM Plex Mono', monospace;
+                font-family: 'JetBrains Mono', monospace;
                 font-size: 0.78rem;
                 letter-spacing: 0.2em;
                 text-transform: uppercase;
-                color: #76829e;
+                color: #f0d8bf;
                 padding-bottom: 1rem;
             }
 
             .stTabs [aria-selected="true"] {
-                color: var(--teal);
-                border-bottom: 2px solid var(--teal);
+                color: var(--mint);
+                border-bottom: 2px solid var(--mint);
             }
 
             div[data-testid="stMetric"] {
                 background: transparent;
                 border: none;
                 padding: 0;
+            }
+
+            [data-testid="stExpander"] {
+                border: 1px solid rgba(255, 255, 255, 0.16);
+                border-radius: 14px;
+                background: rgba(16, 27, 54, 0.62);
+            }
+
+            @media (max-width: 768px) {
+                .hero-title {
+                    font-size: 2rem;
+                }
             }
         </style>
         """,
@@ -171,15 +220,15 @@ def render_hero(current_spend: float, projected_month_end: float) -> None:
         f"""
         <div class="hero-card">
             <div class="badge-row">
-                <span class="badge">Personal pain</span>
-                <span class="badge">FinTech</span>
-                <span class="badge">Built from your own data</span>
+                <span class="badge">Behavior Intelligence</span>
+                <span class="badge">Consumer FinTech</span>
+                <span class="badge">Made for launch</span>
             </div>
             <div class="eyebrow">UPI Mirror</div>
-            <h1 class="hero-title">Student money shame bot, but actually useful.</h1>
+            <h1 class="hero-title">SaaS-grade personal finance coach from raw UPI data.</h1>
             <p class="hero-copy">
-                Brutally honest UPI spend tracker with a broke-date predictor, spending addiction score,
-                anomaly detection, and a savings simulator. Upload a CSV or start with demo data.
+                Turn daily transactions into a live risk board with broke-date forecasting,
+                behavior scoring, anomaly routing, and action-ready nudges.
             </p>
             <p class="body-copy">
                 This month you have already spent <strong>Rs. {current_spend:,.0f}</strong>.
@@ -202,6 +251,45 @@ def render_free_stack() -> None:
                 <span class="badge">Streamlit</span>
                 <span class="badge">Plotly</span>
                 <span class="badge">Your own UPI data</span>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def render_how_it_works(using_demo_data: bool) -> None:
+    source_badge = "Using built-in demo dataset" if using_demo_data else "Using uploaded CSV"
+    st.markdown(
+        f"""
+        <div class="how-card">
+            <div class="section-title">How it works</div>
+            <div class="badge-row">
+                <span class="badge">{source_badge}</span>
+                <span class="badge">Realtime in-memory analysis</span>
+                <span class="badge">No external DB needed</span>
+            </div>
+            <div class="how-grid">
+                <div class="how-step">
+                    <div class="step-no">Step 1</div>
+                    <div class="step-title">Ingest</div>
+                    <div class="step-copy">Upload CSV with datetime, amount, category, merchant, regret.</div>
+                </div>
+                <div class="how-step">
+                    <div class="step-no">Step 2</div>
+                    <div class="step-title">Analyze</div>
+                    <div class="step-copy">Model computes risk, spikes, category intensity, and regret context.</div>
+                </div>
+                <div class="how-step">
+                    <div class="step-no">Step 3</div>
+                    <div class="step-title">Coach</div>
+                    <div class="step-copy">Agent sets status, builds narrative, and suggests a weekly cap.</div>
+                </div>
+                <div class="how-step">
+                    <div class="step-no">Step 4</div>
+                    <div class="step-title">Act</div>
+                    <div class="step-copy">Open WhatsApp or email draft and send the nudge in one click.</div>
+                </div>
             </div>
         </div>
         """,
