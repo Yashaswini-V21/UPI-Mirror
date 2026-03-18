@@ -3,6 +3,9 @@ __pycache__/
 .venv/
 venv/
 .env
+.git/
+.gitignore
 .streamlit/
 .pytest_cache/
 .coach_memory/
+docs/screenshots/

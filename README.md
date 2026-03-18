@@ -10,25 +10,28 @@
 
 <strong>UPI Mirror turns transaction history into risk forecasting, behavior diagnosis, and daily intervention.</strong>
 
-If this project helps you,  star the repository.
+✨ Built to be portfolio-ready, product-thinking-first, and practical for real user behavior signals.
+
+If this project helps you, please star the repository.
 
 </div>
 
 ## Contents
 
 - [1) Product Snapshot](#1-product-snapshot)
+- [Why Star This Repo](#why-star-this-repo)
 - [2) Why It Is Different](#2-why-it-is-different)
 - [3) System Architecture](#3-system-architecture)
 - [4) End-to-End Data Flow](#4-end-to-end-data-flow)
 - [5) Core Modules](#5-core-modules)
 - [6) Quickstart](#6-quickstart)
 - [7) Configuration](#7-configuration)
+- [Sample Data and Demo Mode](#sample-data-and-demo-mode)
 - [8) Testing and Evaluation](#8-testing-and-evaluation)
-- [9) Demo Assets](#9-demo-assets)
-- [10) Tech Stack](#10-tech-stack)
-- [11) Roadmap](#11-roadmap)
-- [12) Repository Layout](#12-repository-layout)
-- [13) License](#13-license)
+- [9) Tech Stack](#9-tech-stack)
+- [10) Future Enhancements](#10-future-enhancements)
+- [11) Repository Layout](#11-repository-layout)
+- [12) License](#12-license)
 
 ## 1) Product Snapshot
 
@@ -39,6 +42,19 @@ UPI Mirror focuses on pre-failure behavioral detection.
 - Action Layer: daily nudge + suggested cap + delivery links
 - Learning Signal: accept or dismiss nudge feedback as reward
 - Traceability: reward-aware agent trace capture for later optimization
+
+## Why Star This Repo
+
+UPI Mirror is not just a dashboard clone. It demonstrates a full product loop:
+
+- deterministic analytics pipeline with explainable features
+- agent decision layer with actionable intervention outputs
+- reward capture from user feedback for learning-oriented traces
+- demo-ready UX and shareable outputs for portfolios/interviews
+
+If you want a project that shows both product thinking and engineering depth, this repo is a strong reference.
+
+💡 Star this repo if you like practical ML + agent workflows in a real product context.
 
 
 
@@ -162,6 +178,7 @@ Each module has one clear role in the overall product loop.
 - Real feedback loop instead of one-way recommendation engine
 - Strong separation of analytics, agent, delivery, and UI concerns
 - Unit test coverage for core coaching logic and fallback paths
+- 🚀 Fast to demo, easy to explain, and strong for internships/hackathons
 
 ## 6) Quickstart
 
@@ -206,6 +223,22 @@ Notes:
 - If GROQ_API_KEY is missing, narrative generation uses deterministic fallback.
 - Default memory mode isolates snapshots using upload-scoped keys.
 
+## Sample Data and Demo Mode
+
+No CSV? The app still runs with deterministic demo transactions.
+
+- Default mode without upload: built-in 90-day dataset from `src/data.py`
+- Downloadable starter file: `sample_data/upi_sample_transactions.csv`
+- Required columns for custom uploads: `datetime, amount, category, merchant`
+- Optional column: `regret` (1-5)
+
+How it works in demo mode:
+
+1. Open app.
+2. Use demo mode directly or download and upload the sample CSV.
+3. Set budget/cutback sliders.
+4. Review coach status, narrative, and delivery links.
+
 ## 8) Testing and Evaluation
 
 Run tests before every PR to keep behavior stable.
@@ -224,40 +257,23 @@ Run:
 pytest -q
 ```
 
-## 9) Demo Assets
-
-Use these files for consistent portfolio and product demos.
-
-- docs/DEMO_WALKTHROUGH.md
-- docs/screenshots/README.md
-
-Suggested screenshot pack:
-
-- dashboard-overview
-- coach-agent-tab
-- regret-insights-tab
-- merchant-insights-tab
-- delivery-links
-
 ## About the Project
 
 UPI Mirror is built as a practical behavioral finance product, not a static chart dashboard.
 It combines forecasting, behavioral diagnostics, intervention design, and user feedback loops so outputs are actionable, measurable, and demo-ready.
 
-## 10) Tech Stack
+## 9) Tech Stack
 
 This stack is chosen for speed, clarity, and practical delivery.
 
-- Python 3.11+
-- Streamlit
-- Pandas
-- NumPy
-- scikit-learn
-- Plotly
-- LangGraph
-- langchain-groq
-- Agent Lightning
-- pytest
+| Stack Area | Tools | Role in Product |
+|---|---|---|
+| Core Runtime | Python 3.11+ | Single-language rapid product iteration |
+| App Interface | Streamlit, Plotly | Interactive dashboard and visual storytelling |
+| Data and Modeling | Pandas, NumPy, scikit-learn | Reliable feature engineering and forecasting baseline |
+| Agent Layer | LangGraph, langchain-groq (optional) | Deterministic coaching workflow + optional LLM narrative |
+| Learning and Observability | Agent Lightning | Reward-aware trace capture for agent runs |
+| Quality | pytest | Lightweight regression checks for core behavior |
 
 ### Tech Stack Alignment by Layer
 
@@ -281,7 +297,7 @@ This stack is chosen for speed, clarity, and practical delivery.
 | Delivery Channel | deep-link drafts first | Zero-cost action path before infra scaling |
 | Verification | local pytest suite | Fast feedback loop before PR/merge |
 
-## 11) Roadmap
+## 10) Future Enhancements
 
 These are the next high-impact upgrades.
 
@@ -289,8 +305,14 @@ These are the next high-impact upgrades.
 - optional encryption-at-rest for memory snapshots
 - scenario benchmark suite for coaching quality
 - CI checks for tests and linting
+- production hosting pack (Dockerfile + render.yaml + health checks)
+- staging and production deployment workflow with release tags
+- uptime monitoring and basic error alerting for hosted app
+- production system architecture diagram (hosted runtime, monitoring, and logs)
+- updated end-to-end data flow diagram for deployed mode and feedback loop lifecycle
+- 🧩 architecture decision records for major model/agent tradeoffs
 
-## 12) Repository Layout
+## 11) Repository Layout
 
 The structure keeps analytics, agent logic, and UI concerns separated.
 
@@ -319,9 +341,16 @@ UPI-Mirror/
 |     |- README.md
 ```
 
-## 13) License
+## 12) License
 
 MIT license keeps usage simple for personal and commercial learning projects.
+
+MIT
+
+## Final Note
+
+UPI Mirror is a practical end-to-end build: data pipeline, behavioral analytics, agent-driven intervention, and user feedback loop in one product.
+If this helps your learning or inspires your own build, consider starring and forking the project.
 
 ---
 
@@ -330,6 +359,6 @@ MIT license keeps usage simple for personal and commercial learning projects.
 <strong>Built and maintained by @Yashaswini-V21</strong><br/>
 UPI Mirror is an open project focused on predictive personal finance and behavior-driven intervention design.
 
-If you like this work, star this repository: https://github.com/Yashaswini-V21/UPI-Mirror
+If you like this work, please star this repository: https://github.com/Yashaswini-V21/UPI-Mirror
 
 </div>
