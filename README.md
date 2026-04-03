@@ -2,17 +2,19 @@
 
 <img src="https://capsule-render.vercel.app/api?type=waving&color=0:1f3a8a,30:0ea5e9,60:06b6d4,100:10b981&height=190&section=header&text=UPI%20Mirror&fontSize=54&fontColor=ffffff&animation=fadeIn&fontAlignY=35&desc=Predictive%20Behavioral%20Finance%20from%20UPI%20Data&descAlignY=58&descSize=18" width="100%" alt="UPI Mirror Banner"/>
 
+[![Status](https://img.shields.io/badge/Status-%F0%9F%9F%A1%20Still%20in%20Progress-yellow?style=flat-square)](#milestones)
 [![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=for-the-badge&logo=python&logoColor=white)](#tech-stack)
 [![Streamlit](https://img.shields.io/badge/Streamlit-Dashboard-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)](#quickstart)
 [![LangGraph](https://img.shields.io/badge/LangGraph-Coach%20Workflow-111827?style=for-the-badge)](#system-architecture)
 [![Agent%20Lightning](https://img.shields.io/badge/Agent%20Lightning-Reward%20Tracing-2563eb?style=for-the-badge)](#tests-and-evaluation)
 [![License](https://img.shields.io/badge/License-MIT-10b981?style=for-the-badge)](#license)
+[![Milestone](https://img.shields.io/badge/Milestone-3%2F8-10b981?style=for-the-badge)](#project-backlog)
 
-<strong>UPI Mirror turns transaction history into risk forecasting, behavior diagnosis, and daily intervention.</strong>
+<strong>I built this because I couldn't track where my money actually went—so I turned my UPI data into a personal finance coach.</strong>
 
-✨ Built to be portfolio-ready, product-thinking-first, and practical for real user behavior signals.
+It started as a simple question: *Can I predict when I'll run out of money each month?* Then it became: *Can I understand my habits and get nudges before I overspend?* So I kept building.
 
-If this project helps you, please star the repository.
+**Where I am:** Milestone 3 of 8 | Mostly working, constantly improving | **[See BACKLOG.md](BACKLOG.md) for what's next**
 
 </div>
 
@@ -21,6 +23,7 @@ If this project helps you, please star the repository.
 - [1) Product Snapshot](#1-product-snapshot)
 - [Why Star This Repo](#why-star-this-repo)
 - [2) Why It Is Different](#2-why-it-is-different)
+- [Milestones & Roadmap](#milestones--roadmap)
 - [3) System Architecture](#3-system-architecture)
 - [4) End-to-End Data Flow](#4-end-to-end-data-flow)
 - [5) Core Modules](#5-core-modules)
@@ -43,18 +46,17 @@ UPI Mirror focuses on pre-failure behavioral detection.
 - Learning Signal: accept or dismiss nudge feedback as reward
 - Traceability: reward-aware agent trace capture for later optimization
 
-## Why Star This Repo
+## Why I Built This
 
-UPI Mirror is not just a dashboard clone. It demonstrates a full product loop:
+I'm a Data Science student who got tired of generic expense trackers. They just show you charts, not *why* you overspend.
 
-- deterministic analytics pipeline with explainable features
-- agent decision layer with actionable intervention outputs
-- reward capture from user feedback for learning-oriented traces
-- demo-ready UX and shareable outputs for portfolios/interviews
+So I built something that:
+- **Predicts when I'll run out of money** (before it happens)
+- **Finds my spending habits** (Food Delivery at 11 PM? Yeah, I see it)
+- **Learns from my feedback** (rejected nudges don't repeat)
+- **Explains its reasoning** (not a black box)
 
-If you want a project that shows both product thinking and engineering depth, this repo is a strong reference.
-
-💡 Star this repo if you like practical ML + agent workflows in a real product context.
+This is mostly for me to understand my own behavior. But if you're curious about AI, data science, or want to try it, go ahead.
 
 
 
@@ -70,6 +72,21 @@ UPI Mirror answers "what is likely next" and "what should be done now".
 | Intervention | none | daily nudge + weekly cap recommendation |
 | Learning Loop | no user signal | accepted/dismissed feedback to reward |
 | Actionability | passive dashboard | WhatsApp/email delivery drafts |
+
+## What I'm Building (Roadmap)
+
+**Right now:** M1–M3 working locally | M4 coming next
+
+| Phase | What It Does | Status |
+|-------|-------------|--------|
+| **M1: The Math** | Broke-date forecasting, habit scoring, anomaly detection | ✅ Works |
+| **M2: The Coach** | Takes signals → turns them into nudges you might actually listen to | ✅ Works |
+| **M3: Real Data** | PDF parsing, explainability, better error handling | ✅ Works |
+| **M4: What-if** | Sliders to see "if I cut 25%, when do I break even?" | 📋 Next |
+| **M5: Learning** | Learns from feedback—nudges get better over time | 📋 Building |
+| **M6–M8** | API, mobile, multi-user (someday, maybe) | 🔮 Future |
+
+**[Full thinking is in BACKLOG.md →](BACKLOG.md)**
 
 ## 3) System Architecture
 
@@ -172,13 +189,15 @@ Each module has one clear role in the overall product loop.
 | Delivery Layer | prefilled WhatsApp/email drafts | moves action outside dashboard |
 | Insight Layer | shareable cards and exports | portfolio and reporting ready |
 
-## Additional Highlights
+## What's Interesting About It
 
-- Local-first operation with optional AI enhancement
-- Real feedback loop instead of one-way recommendation engine
-- Strong separation of analytics, agent, delivery, and UI concerns
-- Unit test coverage for core coaching logic and fallback paths
-- 🚀 Fast to demo, easy to explain, and strong for internships/hackathons
+- **Works without the internet** (no API needed unless you want Groq LLM suggestions)
+- **Actually learns** (not just a recommendation box)
+- **You can see *why* it made a decision** (not a black box)
+- **Handles real messy data** (PDFs from Google Pay, Paytm, PhonePe)
+- **25+ tests** so it doesn't break when I try new things
+- **Parses your UPI PDFs** (no manual CSV conversion)
+- **Tells you which signals mattered** (anomaly? regret? time of day?)
 
 ## 6) Quickstart
 
@@ -203,6 +222,18 @@ streamlit run app.py
 ```bash
 pytest -q
 ```
+
+### Using your real UPI data
+
+**Option A: Upload CSV**
+- Export UPI history as CSV with columns: `datetime, amount, category, merchant, regret (optional)`
+- Upload in the **CSV Upload** tab
+
+**Option B: Upload PDF Statement (New)**
+- Download PDF from Google Pay, Paytm, or PhonePe
+- System auto-extracts date, amount, merchant
+- Select **PDF Statement** tab and upload
+- Categories auto-inferred from merchant names using heuristics
 
 ## 7) Configuration
 
@@ -250,12 +281,35 @@ Unit coverage includes:
 - limit suggestion logic
 - reward scoring behavior
 - narrative fallback path when Groq is not configured
+- **NEW: comprehensive edge cases** (empty data, single transaction, missing columns)
+- **NEW: addiction score calculation robustness**
 
 Run:
 
 ```bash
 pytest -q
 ```
+
+### Model Quality Dashboard
+
+A new **Model Quality** tab provides visibility into the combined AI+ML+DS pipeline:
+
+- **Data Science Signal Coverage:** Percentage of behavioral features populated
+- **Machine Learning Forecast Readiness:** Accuracy confidence and days-to-broke-date availability
+- **AI Actionability:** Whether narrative and nudge outputs are usable
+- **Learning Loop Strength:** Real user feedback sampled and feedback acceptance rate
+- **Platform Score:** Weighted composite of all layers
+
+### Decision Explainability
+
+The **Coach Agent** tab now includes an expandable **📊 Decision Explainability** section that shows:
+
+- Which signals fired (anomaly, repeat pattern, category regret, days left)
+- Raw signal values
+- Weight contribution to final decision
+- Human-readable interpretation of each signal
+
+This makes the black box transparent for judges and users.
 
 ## About the Project
 

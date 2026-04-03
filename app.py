@@ -20,7 +20,10 @@ from src.coach_agent import run_spending_coach_agent
 from src.coach_memory import load_history, record_feedback, save_snapshot
 from src.data import load_transactions
 from src.delivery import build_coach_delivery_message, build_mailto_url, build_whatsapp_url, default_delivery_targets
+from src.evaluation import build_quality_breakdown, compute_quality_snapshot
+from src.explainability import build_explainability_table, explain_coach_decision
 from src.lightning import agentlightning_is_available, record_coach_trace
+from src.pdf_parser import PDF_AVAILABLE, parse_upi_pdf
 from src.regret import compute_regret_stats, regret_by_hour, regret_amount_correlation, top_regret_insight
 from src.merchant import top_merchants_by_spend, late_night_merchant_alerts, merchant_regret_correlation, top_late_night_insight
 from src.insights import generate_linkedin_card, generate_summary_stats
@@ -31,7 +34,25 @@ st.set_page_config(page_title="UPI Mirror", page_icon="chart_with_upwards_trend"
 inject_styles()
 
 st.sidebar.markdown("## Configure the mirror")
-uploaded_file = st.sidebar.file_uploader("Upload UPI CSV", type=["csv"])
+
+uploaded_file = None
+if PDF_AVAILABLE:
+    upload_choice = st.sidebar.radio("Upload format", ["CSV", "PDF Statement"], horizontal=False)
+    if upload_choice == "CSV":
+        uploaded_file = st.sidebar.file_uploader("Upload UPI CSV", type=["csv"], key="csv_uploader")
+    else:
+        pdf_file = st.sidebar.file_uploader("Upload UPI PDF Statement", type=["pdf"], key="pdf_uploader")
+        if pdf_file:
+            try:
+                transactions_pdf = parse_upi_pdf(pdf_file.getvalue())
+                uploaded_file = "pdf_loaded"
+                st.sidebar.success(f"✓ Parsed {len(transactions_pdf)} transactions from PDF")
+            except ValueError as exc:
+                st.sidebar.error(str(exc))
+                st.stop()
+else:
+    uploaded_file = st.sidebar.file_uploader("Upload UPI CSV", type=["csv"])
+
 sample_data_path = Path("sample_data") / "upi_sample_transactions.csv"
 if sample_data_path.exists():
     st.sidebar.download_button(
@@ -50,7 +71,10 @@ delivery_email = st.sidebar.text_input("Nudge email target (optional)", value=de
 delivery_whatsapp = st.sidebar.text_input("WhatsApp number with country code (optional)", value=default_whatsapp_target)
 
 try:
-    transactions = load_transactions(uploaded_file)
+    if uploaded_file == "pdf_loaded":
+        transactions = transactions_pdf
+    else:
+        transactions = load_transactions(uploaded_file)
 except ValueError as exc:
     st.error(str(exc))
     st.stop()
@@ -92,6 +116,17 @@ coach_result = run_spending_coach_agent(
 agentlightning_enabled = agentlightning_is_available()
 save_snapshot(coach_result.as_dict(), source_key=memory_source_key)
 coach_history = load_history(last_n=7, source_key=memory_source_key)
+quality_snapshot = compute_quality_snapshot(
+    transactions=transactions,
+    prediction=prediction,
+    addiction_scores=addiction_scores,
+    regret_stats=regret_stats,
+    merchant_late_night=merchant_late_night,
+    weekly=weekly,
+    coach_result=coach_result,
+    coach_history=coach_history,
+)
+quality_breakdown = build_quality_breakdown(quality_snapshot)
 
 _top_addiction_category = str(addiction_scores.iloc[0]["category"]) if not addiction_scores.empty else "N/A"
 _top_addiction_score = int(addiction_scores.iloc[0]["score"]) if not addiction_scores.empty else 0
@@ -146,9 +181,20 @@ with metric_columns[3]:
     top_score = int(addiction_scores.iloc[0]["score"]) if not addiction_scores.empty else 0
     st.markdown(f'<div class="metric-card"><div class="metric-label">Top habit alert</div><div class="metric-value">{top_score}/100</div><div class="metric-subtle">{top_category}</div></div>', unsafe_allow_html=True)
 
-tabs = st.tabs(["DS Features", "Regret Score", "Merchant Insights", "Coach Agent", "Insight Cards", "Unique Angles", "Free Tools"])
+tab_features, tab_regret, tab_merchant, tab_coach, tab_quality, tab_cards, tab_angles, tab_tools = st.tabs(
+    [
+        "DS Features",
+        "Regret Score",
+        "Merchant Insights",
+        "Coach Agent",
+        "Model Quality",
+        "Insight Cards",
+        "Unique Angles",
+        "Free Tools",
+    ]
+)
 
-with tabs[0]:
+with tab_features:
     chart_left, chart_right = st.columns([1.25, 1])
     with chart_left:
         daily_spend = (
@@ -230,7 +276,7 @@ with tabs[0]:
     )
     st.plotly_chart(savings_chart, use_container_width=True)
 
-with tabs[1]:
+with tab_regret:
     st.markdown(f"> **Shame bot says:** {regret_headline}")
 
     if not regret_stats.empty:
@@ -284,7 +330,7 @@ with tabs[1]:
     else:
         st.info("Add a `regret` column (1–5) to your CSV to enable regret analysis.")
 
-with tabs[2]:
+with tab_merchant:
     st.markdown(f"> **Late-night alert:** {merchant_headline}")
 
     merch_left, merch_right = st.columns([1.1, 0.9])
@@ -339,7 +385,7 @@ with tabs[2]:
         )
         st.plotly_chart(regret_chart, use_container_width=True)
 
-with tabs[3]:
+with tab_coach:
     st.markdown(f"### {coach_result.title}")
     provider_line = f"Narrative source: {coach_result.narrative_provider} · {coach_result.narrative_model}"
     st.caption(provider_line)
@@ -353,6 +399,10 @@ with tabs[3]:
         f"Suggested {coach_result.limit_window} cap",
         f"Rs. {coach_result.suggested_limit:,.0f}" if coach_result.suggested_limit > 0 else "Track only",
     )
+
+    with st.expander("📊 Decision explainability", expanded=False):
+        explanation = explain_coach_decision(coach_result, dict(coach_result.as_dict()))
+        st.markdown(build_explainability_table(explanation))
 
     st.markdown("### Daily narrative")
     st.info(coach_result.narrative)
@@ -471,7 +521,27 @@ with tabs[3]:
     else:
         st.info("Install the updated requirements to enable Agent Lightning trace capture for coach runs.")
 
-with tabs[4]:
+with tab_quality:
+    st.markdown("### AI + ML + DS quality score")
+    score_cols = st.columns(4)
+    score_cols[0].metric("Platform score", f"{quality_snapshot['platform_score']:.1f}/100")
+    score_cols[1].metric("DS coverage", f"{quality_snapshot['ds_signal_coverage']:.1f}%")
+    score_cols[2].metric("ML readiness", f"{quality_snapshot['ml_forecast_readiness']:.1f}%")
+    score_cols[3].metric("AI actionability", f"{quality_snapshot['ai_actionability']:.1f}%")
+
+    learn_cols = st.columns(2)
+    learn_cols[0].metric("Nudge acceptance", f"{quality_snapshot['nudge_acceptance_rate']:.1f}%")
+    learn_cols[1].metric("Feedback samples", str(quality_snapshot["feedback_samples"]))
+
+    st.markdown("### Layer breakdown")
+    st.dataframe(quality_breakdown, use_container_width=True, hide_index=True)
+
+    st.markdown("### Combined pipeline contract")
+    st.markdown(
+        "Data Science generates behavior signals, Machine Learning estimates spend risk, and the AI coach turns that context into an actionable nudge and limit."
+    )
+
+with tab_cards:
     st.markdown("### Post your data. Go viral.")
     st.markdown(
         "Copy the post below, blur your numbers manually, and post on LinkedIn. "
@@ -494,7 +564,7 @@ with tabs[4]:
     blur_cols[1].metric("Broke date", prediction["predicted_date"].strftime("%d %b") if prediction["predicted_date"] else "Safe")
     blur_cols[2].metric("Top habit", f"{_top_addiction_category} ({_top_addiction_score}/100)")
 
-with tabs[5]:
+with tab_angles:
     render_unique_angles(addiction_scores)
     st.markdown("### Why this product angle works")
     st.markdown(
@@ -506,7 +576,7 @@ with tabs[5]:
     )
     render_quote()
 
-with tabs[6]:
+with tab_tools:
     render_free_stack()
     st.markdown("### CSV schema")
     st.code("datetime,amount,category,merchant,regret", language="text")

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from typing import Any
 
@@ -107,11 +108,26 @@ def record_coach_trace(
     reward_source: str = "heuristic",
     reward_history: list[float] | None = None,
 ) -> LightningTraceResult:
-    return asyncio.run(
-        _record_trace_async(
-            coach_result,
-            reward_override=reward_override,
-            reward_source=reward_source,
-            reward_history=reward_history,
-        )
+    coroutine = _record_trace_async(
+        coach_result,
+        reward_override=reward_override,
+        reward_source=reward_source,
+        reward_history=reward_history,
     )
+    try:
+        asyncio.get_running_loop()
+    except RuntimeError:
+        return asyncio.run(coroutine)
+
+    with ThreadPoolExecutor(max_workers=1) as executor:
+        future = executor.submit(
+            lambda: asyncio.run(
+                _record_trace_async(
+                    coach_result,
+                    reward_override=reward_override,
+                    reward_source=reward_source,
+                    reward_history=reward_history,
+                )
+            )
+        )
+        return future.result()

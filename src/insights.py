@@ -60,7 +60,7 @@ def generate_linkedin_card(
         "#DataScience #FinTech #BuildInPublic #UPIMirror",
     ]
 
-    return "\n".join(line for line in lines if line or lines.index(line) in (1, 7))
+    return "\n".join(line for line in lines if line)
 
 
 def generate_summary_stats(
