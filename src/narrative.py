@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+import logging
 import os
 from dataclasses import dataclass
 from typing import Any
 
 
 DEFAULT_GROQ_MODEL = "llama-3.3-70b-versatile"
+LOGGER = logging.getLogger(__name__)
 
 
 @dataclass(slots=True)
@@ -117,5 +119,6 @@ def generate_spending_narrative(
             model=model,
             used_fallback=False,
         )
-    except Exception:
+    except Exception as exc:
+        LOGGER.warning("Groq narrative generation failed, using fallback: %s", exc)
         return _build_fallback_narrative(context)

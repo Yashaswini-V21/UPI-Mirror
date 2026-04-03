@@ -145,7 +145,14 @@ def load_transactions(uploaded_file) -> pd.DataFrame:
     frame = frame.copy()
     frame["datetime"] = pd.to_datetime(frame["datetime"])
     frame["amount"] = pd.to_numeric(frame["amount"], errors="coerce")
+    frame["category"] = frame["category"].astype(str).str.strip()
+    frame["merchant"] = frame["merchant"].astype(str).str.strip()
     frame = frame.dropna(subset=["datetime", "amount", "category", "merchant"])
+    frame = frame[(frame["category"] != "") & (frame["merchant"] != "")]
+    if frame.empty:
+        raise ValueError(
+            "CSV has no valid rows after cleaning. Ensure datetime, amount, category, and merchant are populated."
+        )
     if "regret" in frame.columns:
         frame["regret"] = pd.to_numeric(frame["regret"], errors="coerce").clip(1, 5)
     frame = frame.sort_values("datetime").reset_index(drop=True)

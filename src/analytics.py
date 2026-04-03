@@ -94,9 +94,15 @@ def compute_addiction_scores(transactions: pd.DataFrame) -> pd.DataFrame:
         .reset_index()
         .set_index("category")
     )
+    previous_14 = spend_windows.get("previous_14", None)
+    if previous_14 is None:
+        previous_14 = pd.Series(1.0, index=spend_windows.index)
+    else:
+        previous_14 = previous_14.replace(0, 1)
+    
     spend_windows["trend_ratio"] = (
-        (spend_windows.get("recent_14", 0) - spend_windows.get("previous_14", 0))
-        / spend_windows.get("previous_14", 1).replace(0, 1)
+        (spend_windows.get("recent_14", 0) - previous_14)
+        / previous_14
     ).clip(lower=0, upper=2)
 
     max_count = max(float(category_counts.max()), 1.0)
