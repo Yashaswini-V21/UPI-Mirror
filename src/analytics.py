@@ -1,10 +1,93 @@
 from __future__ import annotations
 
+import json
 from calendar import monthrange
 from datetime import datetime
+from pathlib import Path
 
 import pandas as pd
 from sklearn.linear_model import LinearRegression
+
+
+_SCENARIO_DIR = Path(".coach_memory")
+_SCENARIO_MAX_SAVED = 5
+
+
+def _clean_transactions(df: pd.DataFrame) -> pd.DataFrame:
+    frame = df.copy()
+    if "datetime" not in frame.columns:
+        raise ValueError("df must contain a datetime column")
+    if "amount" not in frame.columns:
+        raise ValueError("df must contain an amount column")
+    if "category" not in frame.columns:
+        raise ValueError("df must contain a category column")
+
+    frame["datetime"] = pd.to_datetime(frame["datetime"], errors="coerce")
+    frame["amount"] = pd.to_numeric(frame["amount"], errors="coerce")
+    frame = frame.dropna(subset=["datetime", "amount", "category"]).copy()
+    frame["category"] = frame["category"].astype(str)
+    frame = frame.sort_values("datetime").reset_index(drop=True)
+    return frame
+
+
+def _reference_date_for_frame(frame: pd.DataFrame) -> datetime:
+    if frame.empty:
+        return datetime.now()
+    latest = frame["datetime"].max()
+    if isinstance(latest, pd.Timestamp):
+        return latest.to_pydatetime()
+    if isinstance(latest, datetime):
+        return latest
+    return datetime.now()
+
+
+def _current_month_frame(df: pd.DataFrame, reference_date: datetime | None = None) -> tuple[pd.DataFrame, datetime]:
+    frame = _clean_transactions(df)
+    ref_date = reference_date or _reference_date_for_frame(frame)
+    month_mask = frame["datetime"].dt.to_period("M") == ref_date.strftime("%Y-%m")
+    month_df = frame.loc[month_mask].copy()
+    return month_df, ref_date
+
+
+def _current_balance(month_df: pd.DataFrame, budget: float) -> float:
+    return max(float(budget) - float(month_df["amount"].sum()), 0.0)
+
+
+def _daily_burn_rate(month_df: pd.DataFrame, days_in_period: int) -> float:
+    if days_in_period <= 0:
+        return 0.0
+    return float(month_df["amount"].sum()) / float(days_in_period)
+
+
+def _days_left_from_balance(balance: float, burn_rate: float, fallback_days: int) -> float:
+    if balance <= 0:
+        return 0.0
+    if burn_rate <= 0:
+        return float(fallback_days)
+    return max(balance / burn_rate, 0.0)
+
+
+def _scenario_path(upload_id: str) -> Path:
+    return _SCENARIO_DIR / f"{upload_id}_scenarios.json"
+
+
+def _load_scenario_records(upload_id: str) -> list[dict[str, object]]:
+    path = _scenario_path(upload_id)
+    if not path.exists():
+        return []
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return []
+    if not isinstance(data, list):
+        return []
+    return [item for item in data if isinstance(item, dict)]
+
+
+def _save_scenario_records(upload_id: str, records: list[dict[str, object]]) -> None:
+    _SCENARIO_DIR.mkdir(parents=True, exist_ok=True)
+    path = _scenario_path(upload_id)
+    path.write_text(json.dumps(records, indent=2, ensure_ascii=False, default=str), encoding="utf-8")
 
 
 def month_to_date_spend(transactions: pd.DataFrame, reference_date: datetime | None = None) -> float:
@@ -99,7 +182,7 @@ def compute_addiction_scores(transactions: pd.DataFrame) -> pd.DataFrame:
         previous_14 = pd.Series(1.0, index=spend_windows.index)
     else:
         previous_14 = previous_14.replace(0, 1)
-    
+
     spend_windows["trend_ratio"] = (
         (spend_windows.get("recent_14", 0) - previous_14)
         / previous_14
@@ -174,3 +257,106 @@ def simulate_savings(
         )
 
     return pd.DataFrame(rows)
+
+
+def simulate_scenario(df: pd.DataFrame, budget: float, cutback_pct: float, cutback_category: str) -> dict[str, object]:
+    month_df, reference_date = _current_month_frame(df)
+    if cutback_category not in set(month_df["category"].astype(str).unique()):
+        raise ValueError("cutback_category must exist in df['category']")
+
+    days_in_period = monthrange(reference_date.year, reference_date.month)[1]
+    current_balance = _current_balance(month_df, budget)
+    original_burn_rate = _daily_burn_rate(month_df, days_in_period)
+    original_days_left = _days_left_from_balance(current_balance, original_burn_rate, days_in_period)
+
+    category_mask = month_df["category"].astype(str) == str(cutback_category)
+    original_category_total = float(month_df.loc[category_mask, "amount"].sum())
+
+    if cutback_pct == 0:
+        return {
+            "original_days_left": round(original_days_left, 2),
+            "new_days_left": round(original_days_left, 2),
+            "days_gained": 0,
+            "new_monthly_savings": 0.0,
+            "new_suggested_cap": round(original_category_total, 2),
+            "scenario_impact": "neutral",
+        }
+
+    reduced_spend = original_category_total * (1 - (cutback_pct / 100.0))
+    burn_reduction = (original_category_total - reduced_spend) / float(days_in_period)
+    new_burn_rate = max(original_burn_rate - burn_reduction, 0.0)
+    new_days_left = _days_left_from_balance(current_balance, new_burn_rate, days_in_period)
+
+    days_gained = max(round(new_days_left - original_days_left, 2), 0.0)
+    new_monthly_savings = max(round(original_category_total - reduced_spend, 2), 0.0)
+    new_suggested_cap = round(reduced_spend, 2)
+    scenario_impact = "positive" if new_days_left > original_days_left else "negative" if new_days_left < original_days_left else "neutral"
+
+    return {
+        "original_days_left": round(original_days_left, 2),
+        "new_days_left": round(new_days_left, 2),
+        "days_gained": days_gained,
+        "new_monthly_savings": new_monthly_savings,
+        "new_suggested_cap": new_suggested_cap,
+        "scenario_impact": scenario_impact,
+    }
+
+
+def compute_projection_bands(df: pd.DataFrame, budget: float, days: int = 30) -> dict[str, object]:
+    month_df, reference_date = _current_month_frame(df)
+    current_balance = _current_balance(month_df, budget)
+    current_days = max(reference_date.day, 1)
+    burn_rate = _daily_burn_rate(month_df, current_days)
+    best_burn_rate = max(burn_rate * 0.85, 0.0)
+    worst_burn_rate = burn_rate * 1.15
+
+    day_points = list(range(1, days + 1))
+
+    def _project_curve(rate: float) -> list[float]:
+        return [round(max(current_balance - (rate * day), 0.0), 2) for day in day_points]
+
+    def _broke_date(curve: list[float]) -> int:
+        for index, value in enumerate(curve, start=1):
+            if value <= 0:
+                return index
+        return days
+
+    base_curve = _project_curve(burn_rate)
+    best_curve = _project_curve(best_burn_rate)
+    worst_curve = _project_curve(worst_burn_rate)
+
+    return {
+        "days": day_points,
+        "base": base_curve,
+        "best_case": best_curve,
+        "worst_case": worst_curve,
+        "broke_date_base": _broke_date(base_curve),
+        "broke_date_best": _broke_date(best_curve),
+        "broke_date_worst": _broke_date(worst_curve),
+    }
+
+
+def save_scenario(upload_id: str, label: str, scenario_result: dict[str, object]) -> str:
+    _SCENARIO_DIR.mkdir(parents=True, exist_ok=True)
+    records = _load_scenario_records(upload_id)
+    scenario_id = f"{upload_id}_s{len(records) + 1}"
+    records.append(
+        {
+            "scenario_id": scenario_id,
+            "label": label,
+            "created_at": datetime.now().isoformat(timespec="seconds"),
+            "scenario_result": scenario_result,
+        }
+    )
+    if len(records) > _SCENARIO_MAX_SAVED:
+        records = records[-_SCENARIO_MAX_SAVED:]
+    _save_scenario_records(upload_id, records)
+    return scenario_id
+
+
+def load_scenarios(upload_id: str) -> list[dict[str, object]]:
+    try:
+        records = _load_scenario_records(upload_id)
+    except Exception:
+        return []
+    return list(reversed(records))
