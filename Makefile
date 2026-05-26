@@ -1,25 +1,27 @@
-.PHONY: install run-api run-web run-all test test-api lint audit clean verify help
+.PHONY: install run-api run-web run-all test test-api test-unit lint lint-fix audit clean verify help
 
-# ────────────────────────────────────────────────────────────────
-# Kira-AI Makefile
-# ────────────────────────────────────────────────────────────────
+# ────────────────────────────────────────────────────────────────────────────────
+# Kira-AI Developer Makefile
+# ────────────────────────────────────────────────────────────────────────────────
 
 help:
-	@echo "Kira-AI Development Commands"
+	@echo "Kira-AI Developer Commands"
 	@echo ""
 	@echo "Setup:"
-	@echo "  make install          Install Python dependencies"
-	@echo "  make verify           Verify all required packages"
+	@echo "  make install          Install all Python dependencies"
+	@echo "  make verify           Verify all critical packages are importable"
 	@echo ""
 	@echo "Running:"
-	@echo "  make run-api          Start FastAPI backend (port 8000)"
-	@echo "  make run-web          Start React frontend (port 5173)"
-	@echo "  make run-all          Start both API and frontend"
+	@echo "  make run-api          Start FastAPI backend  (http://localhost:8000)"
+	@echo "  make run-web          Start React frontend   (http://localhost:5173)"
+	@echo "  make run-all          Start both (background)"
 	@echo ""
 	@echo "Testing & Quality:"
 	@echo "  make test             Run all tests with coverage"
-	@echo "  make test-api         Run API tests only"
-	@echo "  make lint             Run linters (black, flake8, mypy)"
+	@echo "  make test-api         Run API integration tests only"
+	@echo "  make test-unit        Run coach agent unit tests only"
+	@echo "  make lint             Run black (check), flake8, mypy"
+	@echo "  make lint-fix         Auto-format with black"
 	@echo "  make audit            Security audit (pip-audit, bandit)"
 	@echo ""
 	@echo "Maintenance:"
@@ -41,7 +43,7 @@ verify:
 # ────────────────────────────────────────────────────────────────
 
 run-api:
-	uvicorn app:app --host 0.0.0.0 --port 8000 --reload
+	uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload
 
 run-web:
 	cd web && npm run dev
@@ -60,10 +62,13 @@ run-all:
 # ────────────────────────────────────────────────────────────────
 
 test:
-	pytest tests/ -v --cov=src --cov=api --cov-report=term-summary --cov-report=html
+	pytest tests/ -v --cov=src --cov=api --cov-report=term-missing --cov-report=html
 
 test-api:
 	pytest tests/test_api.py -v --tb=short
+
+test-unit:
+	pytest tests/test_coach_agent_unit.py -v --tb=short
 
 # ────────────────────────────────────────────────────────────────
 # Code Quality

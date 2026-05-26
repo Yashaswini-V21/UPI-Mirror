@@ -1,9 +1,30 @@
+"""api/schemas.py
+================
+Pydantic v2 request / response schemas for the Kira-AI API.
+
+Schemas:
+  HealthResponse            — GET /health
+  UploadResponse            — POST /upload
+  FeedbackRequest           — POST /feedback  (request body)
+  FeedbackResponse          — POST /feedback  (response)
+  ScenarioRequest           — POST /scenarios (request body)
+  SignalData                — Embedded in CoachResponse
+  CoachResponse             — POST /coach
+  MetricsResponse           — GET /metrics
+  ErrorResponse             — All error responses
+  IntegrationsStatusResponse — GET /integrations/status
+
+All schemas inherit from ``KiraBaseModel`` which strips whitespace and
+validates on assignment.
+"""
+
 from __future__ import annotations
 
 from typing import Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+# Upload IDs must match this pattern: kira_<13-digit timestamp>
 UPLOAD_ID_PATTERN = r"^kira_\d{13}$"
 
 

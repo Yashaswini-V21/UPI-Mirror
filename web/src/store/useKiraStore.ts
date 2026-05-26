@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { apiClient, type CoachResponse, type UploadResponse } from '../api/client';
 
-export type TabId = 'coach' | 'impact' | 'forecast' | 'explain' | 'upload';
+export type TabId = 'coach' | 'impact' | 'forecast' | 'explain' | 'upload' | 'artifacts';
 export type FinancialStatus = 'stable' | 'watch' | 'critical';
 
 export interface KiraSession {

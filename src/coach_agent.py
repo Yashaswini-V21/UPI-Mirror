@@ -1,12 +1,26 @@
-from __future__ import annotations
+"""src/coach_agent.py
+====================
+Kira-AI spending coach orchestration.
 
-"""Kira-AI spending coach orchestration.
+This module implements a merge-safe LangGraph pipeline where each node returns
+only the keys it writes, making state propagation additive rather than
+destructive.  The graph is compiled once at import time and reused thread-safely
+via ``_COACH_GRAPH_LOCK``.
 
-This module uses a merge-safe LangGraph pipeline: each node returns only the
-keys it sets, so state propagation is additive instead of destructive.
-Legacy helpers are kept for compatibility with the rest of the repo and the
-existing test suite.
+Pipeline topology (linear)::
+
+  START -> anomaly_check -> pattern_analysis -> nudge_generation
+        -> cap_recommendation -> confidence_scoring -> END
+
+Public entry points:
+  - run_coach_workflow():        Low-level; accepts pre-built signal dict.
+  - run_spending_coach_agent():  High-level convenience wrapper used by the API.
+
+Legacy helpers (``_detect_anomaly``, ``_suggest_limit``, etc.) are retained for
+compatibility with the existing test suite.
 """
+
+from __future__ import annotations
 
 from dataclasses import asdict, dataclass
 import os
@@ -482,7 +496,19 @@ coach = _build_coach()
 
 
 def run_coach_workflow(signals: dict, budget: float) -> dict[str, Any]:
-    """Run the merge-safe coaching workflow and return the final state."""
+    """Execute the merge-safe coaching graph and return the final state dict.
+
+    Low-level entry point for the LangGraph pipeline.  Each node mutates only
+    its own keys so the full state accumulates without overwriting unrelated
+    fields.
+
+    Args:
+        signals: Pre-built signal dict (e.g. from :func:`_build_initial_state`).
+        budget:  Monthly budget in ₹.
+
+    Returns:
+        Final merged ``CoachState`` dict after all pipeline nodes have run.
+    """
     initial_state: CoachState = {"signals": dict(signals or {}), "budget": float(budget)}
     result = coach.invoke(initial_state)
     if not isinstance(result, dict):
@@ -557,6 +583,19 @@ def _suggest_limit(state: CoachState) -> CoachState:
 
 
 def _derive_repeat_pattern(state: dict[str, Any]) -> bool:
+    """Detect whether the user exhibits a repeating compulsive spending pattern.
+
+    A repeat pattern is flagged when all three conditions hold:
+      1. An anomaly was detected this week.
+      2. The habit score is at or above the ``REPEAT_PATTERN_HABIT_THRESHOLD``.
+      3. Either the regret score or the late-night share exceeds its threshold.
+
+    Args:
+        state: Merged ``CoachState`` dict from the completed pipeline run.
+
+    Returns:
+        ``True`` if a repeat compulsive pattern is detected, ``False`` otherwise.
+    """
     habit_score = _normalize_unit(state.get("habit_score", 0.0))
     regret_score = _coerce_float(state.get("top_regret_score", 0.0), 0.0)
     late_night_share = _coerce_float(state.get("late_night_share", 0.0), 0.0)
@@ -573,7 +612,24 @@ def run_spending_coach_agent(
     regret_stats: pd.DataFrame,
     merchant_late_night: pd.DataFrame,
 ) -> SpendingCoachResult:
-    """Compatibility wrapper used by the API and dashboard code."""
+    """High-level entry point used by the FastAPI layer and tests.
+
+    Builds the initial state from raw analytics frames, runs the LangGraph
+    coaching pipeline, then generates the Gemini (or template) narrative and
+    assembles the final :class:`SpendingCoachResult`.
+
+    Args:
+        transactions:        Cleaned transaction DataFrame.
+        monthly_budget:      User-declared monthly budget (₹).
+        prediction:          Output of :func:`src.analytics.predict_broke_date`.
+        addiction_scores:    Output of :func:`src.analytics.compute_addiction_scores`.
+        weekly:              Output of :func:`src.analytics.detect_weekly_anomalies`.
+        regret_stats:        Output of :func:`src.regret.compute_regret_stats`.
+        merchant_late_night: Output of :func:`src.merchant.late_night_merchant_alerts`.
+
+    Returns:
+        A fully-populated :class:`SpendingCoachResult` dataclass.
+    """
     with _COACH_GRAPH_LOCK:
         initial_state = _build_initial_state(
             transactions=transactions,

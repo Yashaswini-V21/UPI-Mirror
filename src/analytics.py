@@ -1,3 +1,18 @@
+"""src/analytics.py
+==================
+Behavioral finance analytics engine for Kira-AI.
+
+Core responsibilities:
+  - predict_broke_date():       Linear-regression broke-date forecast.
+  - compute_addiction_scores(): Habit-intensity scoring per spending category.
+  - detect_weekly_anomalies():  IQR-based weekly spend anomaly detection.
+  - simulate_scenario():        What-if budget-cut simulation.
+  - compute_projection_bands(): Best / base / worst 30-day balance curves.
+  - month_to_date_spend():      Current-month total spend helper.
+  - simulate_savings():         Compound-interest savings projection.
+  - save_scenario() / load_scenarios(): Scenario persistence (max 5 per session).
+"""
+
 from __future__ import annotations
 
 import json
@@ -9,11 +24,28 @@ import pandas as pd
 from sklearn.linear_model import LinearRegression
 
 
+# ── Scenario persistence settings ─────────────────────────────────────────────
 _SCENARIO_DIR = Path(".coach_memory")
 _SCENARIO_MAX_SAVED = 5
 
 
+# ─────────────────────────────────────────────────────────────────────────────
+# PRIVATE HELPERS
+# ─────────────────────────────────────────────────────────────────────────────
+
 def _clean_transactions(df: pd.DataFrame) -> pd.DataFrame:
+    """Coerce and validate the required transaction columns.
+
+    Args:
+        df: Raw transaction DataFrame.
+
+    Returns:
+        A cleaned, sorted copy with valid ``datetime``, ``amount``, and
+        ``category`` rows. Invalid rows are dropped.
+
+    Raises:
+        ValueError: If ``datetime``, ``amount``, or ``category`` columns are absent.
+    """
     frame = df.copy()
     if "datetime" not in frame.columns:
         raise ValueError("df must contain a datetime column")
@@ -90,7 +122,20 @@ def _save_scenario_records(upload_id: str, records: list[dict[str, object]]) -> 
     path.write_text(json.dumps(records, indent=2, ensure_ascii=False, default=str), encoding="utf-8")
 
 
+# ─────────────────────────────────────────────────────────────────────────────
+# PUBLIC API
+# ─────────────────────────────────────────────────────────────────────────────
+
 def month_to_date_spend(transactions: pd.DataFrame, reference_date: datetime | None = None) -> float:
+    """Return the total amount spent in the calendar month of *reference_date*.
+
+    Args:
+        transactions:   Full transaction DataFrame (must have ``datetime`` and ``amount``).
+        reference_date: Reference point; defaults to ``datetime.now()``.
+
+    Returns:
+        Total spend as a float (₹).
+    """
     reference_date = reference_date or datetime.now()
     month_data = transactions[transactions["datetime"].dt.to_period("M") == reference_date.strftime("%Y-%m")]
     return float(month_data["amount"].sum())
@@ -101,6 +146,23 @@ def predict_broke_date(
     monthly_budget: float,
     reference_date: datetime | None = None,
 ) -> dict[str, object]:
+    """Forecast the day within the current month when spend crosses *monthly_budget*.
+
+    Uses linear regression on cumulative daily spend to extrapolate a "broke date".
+
+    Args:
+        transactions:   Full transaction DataFrame.
+        monthly_budget: The user's declared monthly budget (₹).
+        reference_date: Reference point for the current month; defaults to ``datetime.now()``.
+
+    Returns:
+        Dict with keys:
+          - ``predicted_date``      (datetime | None) – extrapolated broke date.
+          - ``daily_burn``          (float) – average daily spend this month.
+          - ``projected_month_end`` (float) – projected total spend at month end.
+          - ``days_left``           (int | None) – days until broke date.
+          - ``confidence``          (float 0–1) – regression confidence.
+    """
     reference_date = reference_date or datetime.now()
     month_mask = transactions["datetime"].dt.to_period("M") == reference_date.strftime("%Y-%m")
     month_data = transactions.loc[month_mask].copy()
@@ -157,6 +219,22 @@ def predict_broke_date(
 
 
 def compute_addiction_scores(transactions: pd.DataFrame) -> pd.DataFrame:
+    """Compute a 0–100 addiction/habit intensity score for each spending category.
+
+    Scores are derived from four signals over a 30-day lookback window:
+      - **Frequency** (35 pts): Transaction count relative to the most frequent category.
+      - **Consistency** (20 pts): Number of distinct weeks the category appeared.
+      - **Spend volume** (20 pts): Total spend relative to the highest-spend category.
+      - **Late-night share** (15 pts): Fraction of transactions made between 22:00–23:59.
+      - **Spend trend** (5 pts): Recent-14-day growth vs. previous-14-day baseline.
+
+    Args:
+        transactions: Full transaction DataFrame.
+
+    Returns:
+        DataFrame sorted by score descending with columns:
+        ``category``, ``score``, ``late_night_share``, ``weekly_consistency``, ``trend``.
+    """
     recent = transactions[transactions["datetime"] >= transactions["datetime"].max() - pd.Timedelta(days=30)].copy()
     if recent.empty:
         return pd.DataFrame(columns=["category", "score", "late_night_share", "weekly_consistency", "trend"])
@@ -214,6 +292,18 @@ def compute_addiction_scores(transactions: pd.DataFrame) -> pd.DataFrame:
 
 
 def detect_weekly_anomalies(transactions: pd.DataFrame) -> pd.DataFrame:
+    """Flag weekly spend totals that exceed the IQR upper fence as anomalies.
+
+    Requires at least 4 weeks of data to calculate a meaningful IQR; earlier
+    weeks are labelled ``is_anomaly=False, severity=0.0``.
+
+    Args:
+        transactions: Full transaction DataFrame (must have ``datetime`` and ``amount``).
+
+    Returns:
+        Weekly-resampled DataFrame with added columns:
+        ``is_anomaly`` (bool) and ``severity`` (float ≥ 0).
+    """
     weekly = (
         transactions.set_index("datetime")["amount"]
         .resample("W")
@@ -241,6 +331,18 @@ def simulate_savings(
     annual_interest_rate: float,
     months: int = 12,
 ) -> pd.DataFrame:
+    """Project compound-interest savings from a monthly spending cutback.
+
+    Args:
+        current_month_spend:  This month's total spend (₹).
+        cut_percent:          Percentage reduction to apply each month (0–100).
+        annual_interest_rate: Annual savings interest rate (e.g. 7.0 for 7%).
+        months:               Number of months to project. Defaults to 12.
+
+    Returns:
+        DataFrame with columns: ``month``, ``saved_from_cutbacks``,
+        ``projected_balance``.
+    """
     monthly_contribution = current_month_spend * (cut_percent / 100)
     monthly_rate = annual_interest_rate / 100 / 12
     balance = 0.0
@@ -260,6 +362,21 @@ def simulate_savings(
 
 
 def simulate_scenario(df: pd.DataFrame, budget: float, cutback_pct: float, cutback_category: str) -> dict[str, object]:
+    """Simulate the impact of reducing a category's spend by *cutback_pct* percent.
+
+    Args:
+        df:               Full transaction DataFrame.
+        budget:           Monthly budget (₹).
+        cutback_pct:      Percentage reduction (0–100).
+        cutback_category: Exact category string to cut (must exist in ``df``).
+
+    Returns:
+        Dict with keys: ``original_days_left``, ``new_days_left``, ``days_gained``,
+        ``new_monthly_savings``, ``new_suggested_cap``, ``scenario_impact``.
+
+    Raises:
+        ValueError: If *cutback_category* is not present in ``df['category']``.
+    """
     month_df, reference_date = _current_month_frame(df)
     if cutback_category not in set(month_df["category"].astype(str).unique()):
         raise ValueError("cutback_category must exist in df['category']")
@@ -303,6 +420,20 @@ def simulate_scenario(df: pd.DataFrame, budget: float, cutback_pct: float, cutba
 
 
 def compute_projection_bands(df: pd.DataFrame, budget: float, days: int = 30) -> dict[str, object]:
+    """Compute best-case, base, and worst-case 30-day balance projection curves.
+
+    Best-case uses 85% of the observed burn rate; worst-case uses 115%.
+
+    Args:
+        df:     Full transaction DataFrame.
+        budget: Monthly budget (₹).
+        days:   Number of days to project. Defaults to 30.
+
+    Returns:
+        Dict with keys: ``days`` (list[int]), ``base``, ``best_case``,
+        ``worst_case`` (list[float]), ``broke_date_base``, ``broke_date_best``,
+        ``broke_date_worst`` (int).
+    """
     month_df, reference_date = _current_month_frame(df)
     current_balance = _current_balance(month_df, budget)
     current_days = max(reference_date.day, 1)
@@ -337,6 +468,16 @@ def compute_projection_bands(df: pd.DataFrame, budget: float, days: int = 30) ->
 
 
 def save_scenario(upload_id: str, label: str, scenario_result: dict[str, object]) -> str:
+    """Persist a scenario result to disk (capped at 5 most-recent per session).
+
+    Args:
+        upload_id:       Session upload ID used as the file key.
+        label:           Human-readable scenario name.
+        scenario_result: Output dict from :func:`simulate_scenario`.
+
+    Returns:
+        Generated ``scenario_id`` string.
+    """
     _SCENARIO_DIR.mkdir(parents=True, exist_ok=True)
     records = _load_scenario_records(upload_id)
     scenario_id = f"{upload_id}_s{len(records) + 1}"
@@ -355,6 +496,14 @@ def save_scenario(upload_id: str, label: str, scenario_result: dict[str, object]
 
 
 def load_scenarios(upload_id: str) -> list[dict[str, object]]:
+    """Load persisted scenarios for a session, most-recent first.
+
+    Args:
+        upload_id: Session upload ID.
+
+    Returns:
+        List of scenario dicts (up to 5), newest first. Empty list on any error.
+    """
     try:
         records = _load_scenario_records(upload_id)
     except Exception:
