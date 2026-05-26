@@ -19,6 +19,7 @@ export const TopNav: React.FC<TopNavProps> = ({ onMenuOpen }) => {
     forecast: 'Forecast',
     explain: 'Explain ML',
     upload: 'Upload',
+    artifacts: 'Artifacts Builder',
   };
 
   return (

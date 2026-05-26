@@ -258,9 +258,13 @@ def configure_logging(
         _LOGGING_CONFIGURED = True
         return
 
+    def add_logger_name_processor(logger: Any, method_name: str, event_dict: dict[str, Any]) -> dict[str, Any]:
+        event_dict["logger"] = getattr(logger, "name", "kira")
+        return event_dict
+
     shared_processors: list[Any] = [
         structlog.contextvars.merge_contextvars,
-        structlog.stdlib.add_logger_name,
+        add_logger_name_processor,
         structlog.stdlib.add_log_level,
         structlog.processors.TimeStamper(fmt="iso", utc=True),
         structlog.processors.StackInfoRenderer(),

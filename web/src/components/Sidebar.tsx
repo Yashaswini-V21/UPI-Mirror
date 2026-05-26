@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, LayoutGroup } from 'framer-motion';
-import { ShieldIcon, BoltIcon, TrendingUpIcon, CpuIcon, UploadCloudIcon } from './ui/Icons';
+import { ShieldIcon, BoltIcon, TrendingUpIcon, CpuIcon, UploadCloudIcon, SparklesIcon } from './ui/Icons';
 import { useKiraStore, type TabId } from '../store/useKiraStore';
 
 interface NavItem {
@@ -14,6 +14,7 @@ const NAV_ITEMS: NavItem[] = [
   { id: 'impact',   label: 'Impact',   Icon: BoltIcon },
   { id: 'forecast', label: 'Forecast', Icon: TrendingUpIcon },
   { id: 'explain',  label: 'Explain',  Icon: CpuIcon },
+  { id: 'artifacts',label: 'Builder',  Icon: SparklesIcon },
   { id: 'upload',   label: 'Upload',   Icon: UploadCloudIcon },
 ];
 

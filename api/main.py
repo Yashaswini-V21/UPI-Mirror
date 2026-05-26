@@ -1,3 +1,31 @@
+"""api/main.py
+============
+Kira-AI FastAPI application — routing, middleware, session management.
+
+Endpoints (all under Bearer token auth unless noted):
+  POST   /upload                 — Ingest a CSV or PDF file, create a session.
+  POST   /coach                  — Run the full coaching pipeline for a session.
+  POST   /feedback               — Record nudge acceptance / dismissal.
+  GET    /history/{upload_id}    — Full session record.
+  GET    /metrics                — Model quality metrics.
+  GET    /scenarios/{upload_id}  — List what-if scenarios.
+  POST   /scenarios              — Create a what-if scenario.
+  DELETE /session/{upload_id}    — Delete a session and all its files.
+  GET    /export/csv             — Download PII-masked transactions CSV.
+  GET    /integrations/status    — Check which integrations are active.
+  GET    /health                 — Health check (unauthenticated).
+  GET    /                       — Root info (unauthenticated).
+
+Middleware stack (outermost to innermost):
+  SecurityHeadersMiddleware → RequestIDMiddleware → RequestTimingMiddleware
+  → SlowAPIMiddleware → GZipMiddleware → CORSMiddleware → handler
+
+Key constants:
+  SESSION_STORE  — in-memory dict of upload_id → session record.
+  SESSION_DIR    — on-disk JSON session directory (sys temp).
+  STALE_CSV_AGE  — 60-minute TTL for temporary upload CSVs.
+"""
+
 from __future__ import annotations
 
 import json

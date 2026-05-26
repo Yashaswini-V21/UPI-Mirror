@@ -1,4 +1,4 @@
-import React, { Suspense } from 'react';
+import React, { Suspense, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Toaster } from 'react-hot-toast';
 import { LandingScreen } from './components/LandingScreen';
@@ -10,9 +10,11 @@ import { ExplainTab } from './components/tabs/ExplainTab';
 import { ForecastTab } from './components/tabs/ForecastTab';
 import { ImpactTab } from './components/tabs/ImpactTab';
 import { UploadTab } from './components/tabs/UploadTab';
+import { ArtifactsTab } from './components/tabs/ArtifactsTab';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { KiraSkeleton } from './components/ui';
 import { useKiraStore } from './store/useKiraStore';
+import { SplashScreen } from './components/SplashScreen';
 
 // ── Tab-level loading fallback ────────────────────────────────────────────────
 const TabSkeleton = () => (
@@ -25,9 +27,32 @@ const TabSkeleton = () => (
 
 function App() {
   const { showDashboard, activeTab, enterDashboard, newSession } = useKiraStore();
+  const [showSplash, setShowSplash] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowSplash(false);
+    }, 2800);
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
     <>
+      {/* Premium SplashScreen overlay */}
+      <AnimatePresence>
+        {showSplash && (
+          <motion.div
+            key="splash"
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0, scale: 1.05, filter: 'blur(12px)' }}
+            transition={{ duration: 0.55, ease: 'easeInOut' }}
+            style={{ position: 'fixed', inset: 0, zIndex: 99999 }}
+          >
+            <SplashScreen />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Global toast notifications */}
       <Toaster
         position="top-right"
@@ -93,6 +118,7 @@ function App() {
                           {activeTab === 'forecast' && <ForecastTab />}
                           {activeTab === 'explain'  && <ExplainTab />}
                           {activeTab === 'upload'   && <UploadTab />}
+                          {activeTab === 'artifacts' && <ArtifactsTab />}
                         </Suspense>
                       </ErrorBoundary>
                     </motion.div>
