@@ -60,7 +60,7 @@ async def _record_trace_async(
 
         with tracer.lifespan(store):
             async with tracer.trace_context(
-                "upi_mirror_spending_coach",
+                "kira_ai_spending_coach",
                 store=store,
                 rollout_id=rollout.rollout_id,
                 attempt_id=rollout.attempt.attempt_id,
