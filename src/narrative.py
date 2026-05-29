@@ -307,8 +307,8 @@ def generate_narrative(coach_state: dict[str, Any]) -> str:
                     status=_status(coach_state),
                 )
                 return _template_narrative(coach_state)
-        except Exception as exc:
-            LOGGER.debug("Could not check circuit breaker state: %s", exc)
+        except Exception:
+            pass
 
     prompt = _build_prompt(coach_state)
     generation_config = _build_generation_config()

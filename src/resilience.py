@@ -81,8 +81,8 @@ class _MetricsListener:
 
             if str(new_state).lower() == "open":
                 METRICS.narrative_circuit_open_total.inc()
-        except Exception as exc:  # pragma: no cover
-            LOGGER.debug("Failed to update metrics for circuit state change: %s", exc)
+        except Exception:  # pragma: no cover
+            pass
 
 
 class _NoOpBreaker:
