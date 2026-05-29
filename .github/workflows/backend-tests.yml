@@ -26,9 +26,10 @@ jobs:
 
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install pytest pytest-cov pytest-asyncio
+          python -m pip install --upgrade pip setuptools wheel
+          # Prefer pre-built wheels to avoid building heavy packages on runners
+          pip install --prefer-binary -r requirements.txt
+          pip install --prefer-binary pytest pytest-cov pytest-asyncio
 
       - name: Lint with flake8
         continue-on-error: true
