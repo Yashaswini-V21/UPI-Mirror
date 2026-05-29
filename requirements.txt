@@ -21,8 +21,10 @@ PyPDF2==3.0.1
 
 # ── AI / LLM ──────────────────────────
 google-generativeai==0.7.2
-langchain-core==0.2.9
+langchain-core>=0.2.22,<0.3
 langgraph==0.1.13
+# Allow a compatible range for langchain-core to satisfy langgraph dependency
+# langgraph 0.1.13 requires langchain-core>=0.2.22,<0.3, so don't pin to an older patch.
 
 # ── HTTP Requests ──────────────────────
 requests==2.32.3
