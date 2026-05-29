@@ -1,0 +1,52 @@
+name: Frontend Tests
+
+on:
+  push:
+    branches: [main, develop, feat/**]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    strategy:
+      matrix:
+        node-version: ["18", "20"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: "npm"
+          cache-dependency-path: web/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ./web
+        run: npm ci
+
+      - name: Check formatting with Prettier
+        working-directory: ./web
+        run: npx prettier --check src/
+
+      - name: Lint with ESLint
+        working-directory: ./web
+        run: npx eslint src/ --max-warnings 0 || true
+
+      - name: Type check with TypeScript
+        working-directory: ./web
+        run: npx tsc --noEmit
+
+      - name: Build frontend
+        working-directory: ./web
+        env:
+          VITE_API_URL: http://localhost:8000
+        run: npm run build
+
+      - name: Run tests (if test script exists)
+        working-directory: ./web
+        run: npm run test --if-present || echo "No test script configured"

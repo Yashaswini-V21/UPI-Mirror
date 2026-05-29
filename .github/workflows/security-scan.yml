@@ -1,0 +1,63 @@
+name: Security Scan
+
+on:
+  push:
+    branches: [main, develop, feat/**]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  security:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install bandit safety
+
+      - name: Run Bandit security scan
+        run: |
+          bandit -r src/ api/ -f json -o bandit-report.json || true
+          bandit -r src/ api/ -f txt
+
+      - name: Check for known vulnerabilities with Safety
+        run: |
+          safety check --json || true
+          safety check
+
+      - name: Run GitGuardian secret scan
+        uses: gitguardian/ggshield-action@master
+        with:
+          path: ./
+          verbose: true
+        env:
+          GITGUARDIAN_API_KEY: ${{ secrets.GITGUARDIAN_API_KEY }}
+        continue-on-error: true
+
+      - name: Check for hardcoded secrets (truffleHog)
+        run: |
+          pip install truffleHog3
+          trufflehog filesystem . --json > trufflehog-report.json || echo "Scan completed"
+        continue-on-error: true
+
+      - name: Upload security reports
+        uses: actions/upload-artifact@v3
+        with:
+          name: security-reports
+          path: |
+            bandit-report.json
+            trufflehog-report.json
+        if: always()
