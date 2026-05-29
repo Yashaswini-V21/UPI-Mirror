@@ -50,8 +50,8 @@ def _append_to_file(record: dict[str, Any]) -> None:
         _AUDIT_LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
         with _AUDIT_LOG_PATH.open("a", encoding="utf-8") as fh:
             fh.write(json.dumps(record, ensure_ascii=False, default=str) + "\n")
-    except Exception:  # pragma: no cover
-        pass  # Audit write failure must never crash the request
+    except Exception as exc:  # pragma: no cover
+        _STD_AUDIT_LOGGER.exception("Failed to append audit record: %s", exc)
 
 
 def _emit(event: str, **fields: Any) -> None:
