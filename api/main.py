@@ -529,8 +529,8 @@ def _load_session_transports(upload_id: str) -> pd.DataFrame:
             if "regret" in frame.columns:
                 frame["regret"] = pd.to_numeric(frame["regret"], errors="coerce")
             return frame.dropna(subset=["datetime", "amount"]).sort_values("datetime").reset_index(drop=True)
-        except Exception:
-            pass
+        except Exception as exc:
+            LOGGER.warning("Failed to read session CSV %s: %s", csv_path, exc)
 
     session = _require_session(upload_id)
     return _session_transactions(session)

@@ -331,7 +331,7 @@ def configure_tracing(service_name: str = "kira-ai") -> None:
             exporter = OTLPSpanExporter(endpoint=otlp_endpoint)
             provider.add_span_processor(BatchSpanProcessor(exporter))
         except Exception:  # pragma: no cover
-            pass  # Tracing disabled — non-fatal
+                logging.getLogger(__name__).warning("Tracing disabled: %s", exc)
 
     trace.set_tracer_provider(provider)
     _TRACER = trace.get_tracer(service_name)
