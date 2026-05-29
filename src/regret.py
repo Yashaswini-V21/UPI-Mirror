@@ -1,15 +1,38 @@
+"""src/regret.py
+================
+Per-category regret analytics for Kira-AI.
+
+Functions:
+  - compute_regret_stats():       Mean regret, high-regret share, and verdict per category.
+  - regret_by_hour():             Average regret score per hour-of-day.
+  - regret_amount_correlation():  Regret vs. spend-amount quintile analysis.
+  - top_regret_insight():         Single-sentence hero insight for the highest-regret category.
+
+Expected columns: ``datetime``, ``amount``, ``category``, ``regret`` (1–5 int).
+All functions return an empty DataFrame / fallback string if ``regret`` is absent.
+"""
+
 from __future__ import annotations
 
 import pandas as pd
 
 
 def compute_regret_stats(transactions: pd.DataFrame) -> pd.DataFrame:
-    """
-    Per-category regret statistics.
+    """Compute per-category regret statistics.
 
-    Expects a `regret` column (1–5 int) and `amount`, `datetime`, `category`.
-    Returns a DataFrame with mean_regret, high_regret_share, costly_regret_index,
-    and a plain-language verdict for each category.
+    For each spending category, calculates:
+      - **mean_regret** – average regret score (1–5).
+      - **high_regret_share** – percentage of transactions rated ≥ 4.
+      - **costly_regret_index** – composite of regret intensity × spend weight (0–100).
+      - **verdict** – plain-language label (e.g. "Compulsive — stop or cut hard").
+
+    Args:
+        transactions: Full transaction DataFrame. Must contain
+                      ``regret`` (1–5), ``amount``, ``datetime``, and ``category`` columns.
+
+    Returns:
+        DataFrame sorted by ``mean_regret`` descending.  Returns an empty
+        DataFrame with the correct schema if ``regret`` is absent.
     """
     if "regret" not in transactions.columns:
         return pd.DataFrame(
@@ -50,7 +73,15 @@ def compute_regret_stats(transactions: pd.DataFrame) -> pd.DataFrame:
 
 
 def regret_by_hour(transactions: pd.DataFrame) -> pd.DataFrame:
-    """Average regret score per hour-of-day across all categories."""
+    """Return average regret score and transaction count for each hour of the day.
+
+    Args:
+        transactions: Full transaction DataFrame with a ``regret`` column.
+
+    Returns:
+        DataFrame with columns ``hour`` (0–23), ``mean_regret``, ``transaction_count``.
+        Empty DataFrame with the correct schema if ``regret`` is absent.
+    """
     if "regret" not in transactions.columns:
         return pd.DataFrame(columns=["hour", "mean_regret", "transaction_count"])
 
@@ -69,9 +100,17 @@ def regret_by_hour(transactions: pd.DataFrame) -> pd.DataFrame:
 
 
 def regret_amount_correlation(transactions: pd.DataFrame) -> pd.DataFrame:
-    """
-    Bucket transactions by amount quintile and show mean regret per bucket.
-    Reveals whether higher spend → higher regret.
+    """Bucket transactions by spend-amount quintile and show mean regret per bucket.
+
+    Reveals whether higher spend amounts correlate with higher regret —
+    a key signal for compulsive vs. intentional spending.
+
+    Args:
+        transactions: Full transaction DataFrame with ``regret`` and ``amount`` columns.
+
+    Returns:
+        DataFrame with columns ``amount_bucket``, ``mean_regret``, ``transaction_count``.
+        Empty DataFrame with the correct schema if ``regret`` is absent.
     """
     if "regret" not in transactions.columns:
         return pd.DataFrame(columns=["amount_bucket", "mean_regret", "transaction_count"])
@@ -91,7 +130,15 @@ def regret_amount_correlation(transactions: pd.DataFrame) -> pd.DataFrame:
 
 
 def top_regret_insight(regret_stats: pd.DataFrame) -> str:
-    """Single-sentence shame-bot insight for the hero section."""
+    """Generate a single-sentence coaching insight for the highest-regret category.
+
+    Args:
+        regret_stats: Output of :func:`compute_regret_stats`.
+
+    Returns:
+        A plain-language string suitable for the dashboard hero section.
+        Falls back gracefully to ``"No regret data available yet."`` on empty input.
+    """
     if regret_stats.empty:
         return "No regret data available yet."
 
