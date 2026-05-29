@@ -1,8 +1,54 @@
+# Environment Variables (NEVER commit .env files with secrets)
+.env
+.env.local
+.env.*
+!.env.example
+!web/.env.local.example
+
+# Python
 __pycache__/
 *.py[cod]
 .venv/
 venv/
-.env
-.streamlit/
+*.egg-info/
+dist/
+build/
 .pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Kira-AI Specific
+.streamlit/
 .coach_memory/
+docs/screenshots/
+data/
+
+# Frontend
+web/node_modules/
+web/dist/
+web/.turbo/
+node_modules/
+dist/
+
+# Build artifacts
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Deployment
+render.yaml
+.railway.json
+

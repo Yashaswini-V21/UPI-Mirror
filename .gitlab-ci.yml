@@ -1,0 +1,101 @@
+image: python:3.11-slim
+
+stages:
+  - test
+  - lint
+  - security
+  - build
+  - deploy
+
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+  PYTHONPATH: "$CI_PROJECT_DIR"
+
+cache:
+  key: "$CI_COMMIT_REF_SLUG"
+  paths:
+    - .cache/pip/
+    - venv/
+
+before_script:
+  - python -m venv venv
+  - source venv/bin/activate
+  - pip install -q -r requirements.txt
+
+# ============================================================================
+# TEST STAGE
+# ============================================================================
+
+test-unit:
+  stage: test
+  script:
+    - pytest tests/ -q --tb=short --cov=src --cov-report=term-missing --ignore=tests/test_api.py
+  coverage: '/TOTAL.*\s+(\d+%)$/'
+
+test-api:
+  stage: test
+  script:
+    - pip install -q httpx
+    - pytest tests/test_api.py -q --tb=short
+  variables:
+    API_KEY: $CI_API_KEY
+
+# ============================================================================
+# LINT STAGE
+# ============================================================================
+
+lint:
+  stage: lint
+  script:
+    - pip install -q black flake8 mypy
+    - black --check src/ api/
+    - flake8 src/ api/ --max-line-length=100 --extend-ignore=E501,W503
+    - mypy src/ api/ --ignore-missing-imports --no-strict-optional
+
+# ============================================================================
+# SECURITY STAGE
+# ============================================================================
+
+security:
+  stage: security
+  script:
+    - pip install -q pip-audit bandit
+    - pip-audit --desc || true
+    - bandit -r src/ api/ -ll -f txt
+  allow_failure: true
+
+# ============================================================================
+# BUILD STAGE
+# ============================================================================
+
+build-docker:
+  stage: build
+  image: docker:24.0
+  services:
+    - docker:24.0-dind
+  variables:
+    DOCKER_TLS_CERTDIR: "/certs"
+  before_script: []
+  script:
+    - docker build -t kira-ai:$CI_COMMIT_SHORT_SHA .
+    - docker tag kira-ai:$CI_COMMIT_SHORT_SHA kira-ai:latest
+  only:
+    - main
+
+# ============================================================================
+# DEPLOY STAGE
+# ============================================================================
+
+deploy-production:
+  stage: deploy
+  image: alpine:latest
+  before_script:
+    - apk add --no-cache curl
+  script:
+    - echo "Triggering Railway deployment..."
+    - curl -X POST $RAILWAY_DEPLOY_WEBHOOK || echo "Webhook not configured yet"
+  environment:
+    name: production
+    url: $RAILWAY_URL
+  only:
+    - main

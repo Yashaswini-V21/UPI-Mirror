@@ -17,11 +17,11 @@ def build_coach_delivery_message(coach_result: SpendingCoachResult) -> str:
         else "Suggested cap: Track only"
     )
     return (
-        f"UPI Mirror - {coach_result.title}\n"
+        f"Kira-AI - {coach_result.title}\n"
         f"Status: {coach_result.status.title()}\n"
         f"{limit_line}\n\n"
         f"Nudge:\n{coach_result.nudge}\n\n"
-        "Shared from UPI Mirror Coach."
+        "Shared from Kira-AI Coach."
     )
 
 
