@@ -27,13 +27,17 @@ def parse_upi_pdf(file_bytes: bytes) -> pd.DataFrame:
     
     try:
         reader = PdfReader(BytesIO(file_bytes))
-        text = ""
+        text_parts = []
         for page in reader.pages:
-            text += page.extract_text()
+            page_text = page.extract_text() or ""
+            if page_text:
+                text_parts.append(page_text)
+        text = "\n".join(text_parts)
     except Exception as exc:
         raise ValueError(f"Failed to read PDF: {exc}")
     
-    transactions = _extract_transactions_from_text(text)
+    source = _detect_statement_source(text)
+    transactions = _extract_transactions_from_text(text, source=source)
     if not transactions:
         raise ValueError(
             "No transactions found in PDF. Ensure it is a valid UPI statement "
@@ -53,7 +57,18 @@ def parse_upi_pdf(file_bytes: bytes) -> pd.DataFrame:
     return df[["datetime", "amount", "category", "merchant"]].reset_index(drop=True)
 
 
-def _extract_transactions_from_text(text: str) -> list[dict[str, str]]:
+def _detect_statement_source(text: str) -> str:
+    lowered = text.lower()
+    if "google pay" in lowered or "gpay" in lowered:
+        return "gpay"
+    if "paytm" in lowered:
+        return "paytm"
+    if "phonepe" in lowered or "phone pe" in lowered:
+        return "phonepe"
+    return "generic"
+
+
+def _extract_transactions_from_text(text: str, source: str = "generic") -> list[dict[str, str]]:
     """
     Regex-based extraction of transaction rows from PDF text.
     Handles common UPI statement formats.
@@ -70,6 +85,13 @@ def _extract_transactions_from_text(text: str) -> list[dict[str, str]]:
     for line in lines:
         if not line.strip():
             continue
+
+        if source == "gpay" and not any(keyword in line.lower() for keyword in ("paid", "sent", "received", "to ", "from ")):
+            pass
+        elif source == "paytm" and not any(keyword in line.lower() for keyword in ("paid", "sent", "received", "txn", "transaction")):
+            pass
+        elif source == "phonepe" and not any(keyword in line.lower() for keyword in ("paid", "sent", "received", "upi", "to ", "from ")):
+            pass
         
         date_match = None
         for pattern in date_patterns:
@@ -99,7 +121,7 @@ def _extract_merchant_name(line: str) -> str:
     parts = line.split()
     
     for i, part in enumerate(parts):
-        if "₹" in part or part in ("sent", "received", "paid", "transfer", "to", "from"):
+        if "₹" in part or part.lower() in ("sent", "received", "paid", "transfer", "transferred", "to", "from", "txn", "transaction"):
             if i > 0:
                 return parts[i - 1].strip(".,;:")
     

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import random
+import numpy as np
 from datetime import datetime, timedelta
 from io import BytesIO, StringIO
 
@@ -12,7 +12,7 @@ OPTIONAL_COLUMNS = ["regret"]
 
 
 def _build_sample_transactions() -> pd.DataFrame:
-    rng = random.Random(21)
+    rng = np.random.default_rng(21)
     end_date = datetime.now().replace(hour=20, minute=0, second=0, microsecond=0)
     start_date = end_date - timedelta(days=89)
 
@@ -83,27 +83,27 @@ def _build_sample_transactions() -> pd.DataFrame:
     rows: list[dict[str, object]] = []
     current = start_date
     while current <= end_date:
-        transaction_count = rng.choices([1, 2, 3, 4], weights=[0.2, 0.35, 0.3, 0.15], k=1)[0]
+        transaction_count = int(rng.choice([1, 2, 3, 4], p=[0.2, 0.35, 0.3, 0.15]))
         if current.weekday() in (4, 5):
             transaction_count += 1
 
         for _ in range(transaction_count):
-            category = rng.choices(categories, weights=weights, k=1)[0]
+            category = str(rng.choice(categories, p=weights))
             profile = profile_lookup[category]
-            hour = rng.choice(profile["hours"])
-            minute = rng.choice([0, 5, 10, 15, 20, 30, 35, 40, 45, 50])
-            amount = rng.randint(*profile["amount_range"])
+            hour = int(rng.choice(profile["hours"]))
+            minute = int(rng.choice([0, 5, 10, 15, 20, 30, 35, 40, 45, 50]))
+            amount = int(rng.integers(profile["amount_range"][0], profile["amount_range"][1] + 1))
 
             if category == "Food Delivery" and current.day in (1, 7, 14, 21, 28):
-                amount += rng.randint(100, 280)
+                amount += int(rng.integers(100, 280 + 1))
             if category == "Shopping" and current.day > 24:
-                amount += rng.randint(150, 500)
+                amount += int(rng.integers(150, 500 + 1))
 
             # regret is higher late at night and when amount is outsized
             base_regret = int(profile["base_regret"])
             regret_bump = 1 if hour >= 22 else 0
             regret_bump += 1 if amount > (profile["amount_range"][1] * 0.8) else 0
-            raw_regret = base_regret + regret_bump + rng.choice([-1, 0, 0, 1])
+            raw_regret = base_regret + regret_bump + int(rng.choice([-1, 0, 0, 1]))
             regret = min(max(raw_regret, 1), 5)
 
             rows.append(
@@ -111,7 +111,7 @@ def _build_sample_transactions() -> pd.DataFrame:
                     "datetime": current.replace(hour=hour, minute=minute),
                     "amount": float(amount),
                     "category": category,
-                    "merchant": rng.choice(profile["merchants"]),
+                    "merchant": str(rng.choice(profile["merchants"])),
                     "regret": regret,
                 }
             )

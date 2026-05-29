@@ -1,0 +1,115 @@
+:root {
+  /* BACKGROUND SYSTEM */
+  --bg-base: #03040a;         /* deepest — page background */
+  --bg-surface: #080912;      /* cards, panels */
+  --bg-elevated: #0e1020;     /* elevated cards, modals */
+  --bg-overlay: #161828;      /* hover, selected states */
+  --bg-inverse: #f4f0ff;      /* rare light elements */
+
+  /* PURPLE — brand primary (Kira identity) */
+  --purple-50:  rgba(157, 122, 255, 0.05);
+  --purple-100: rgba(157, 122, 255, 0.1);
+  --purple-200: rgba(157, 122, 255, 0.2);
+  --purple-500: #9d7aff;
+  --purple-600: #7c54f0;
+  --purple-700: #5b3fd4;
+  --purple-glow: rgba(124, 84, 240, 0.4);
+
+  /* GREEN — positive money signals */
+  --green-100: rgba(45, 217, 160, 0.1);
+  --green-200: rgba(45, 217, 160, 0.2);
+  --green-500: #2dd9a0;
+  --green-600: #1db886;
+  --green-glow: rgba(45, 217, 160, 0.3);
+
+  /* BLUE — data, analytics */
+  --blue-100: rgba(90, 171, 255, 0.1);
+  --blue-500: #5aabff;
+  --blue-glow: rgba(90, 171, 255, 0.3);
+
+  /* AMBER — WATCH status */
+  --amber-100: rgba(255, 184, 48, 0.1);
+  --amber-500: #ffb830;
+
+  /* RED — CRITICAL status */
+  --red-100: rgba(255, 92, 122, 0.1);
+  --red-500: #ff5c7a;
+  --red-glow: rgba(255, 92, 122, 0.4);
+
+  /* TEXT */
+  --text-primary:   #f4f0ff;
+  --text-secondary: #9090b8;
+  --text-muted:     #5a5a80;
+  --text-dim:       #30305a;
+
+  /* BORDERS */
+  --border-subtle:  rgba(255, 255, 255, 0.05);
+  --border-default: rgba(255, 255, 255, 0.09);
+  --border-strong:  rgba(255, 255, 255, 0.16);
+  --border-brand:   rgba(157, 122, 255, 0.25);
+
+  /* SHADOWS */
+  --shadow-sm:  0 2px 8px rgba(0, 0, 0, 0.3);
+  --shadow-md:  0 8px 32px rgba(0, 0, 0, 0.4);
+  --shadow-lg:  0 24px 64px rgba(0, 0, 0, 0.5);
+  --shadow-xl:  0 40px 100px rgba(0, 0, 0, 0.6);
+  --glow-purple: 0 0 40px rgba(124, 84, 240, 0.3);
+  --glow-green:  0 0 30px rgba(45, 217, 160, 0.25);
+  --glow-red:    0 0 30px rgba(255, 92, 122, 0.35);
+  --glow-blue:   0 0 30px rgba(90, 171, 255, 0.25);
+
+  /* RADIUS */
+  --r-xs: 4px;
+  --r-sm: 6px;
+  --r-md: 10px;
+  --r-lg: 14px;
+  --r-xl: 20px;
+  --r-2xl: 28px;
+  --r-full: 999px;
+
+  /* SPACING (4px base) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-7: 28px;
+  --space-8: 32px;
+  --space-9: 36px;
+  --space-10: 40px;
+  --space-11: 44px;
+  --space-12: 48px;
+  --space-13: 52px;
+  --space-14: 56px;
+  --space-15: 60px;
+  --space-16: 64px;
+  --space-17: 68px;
+  --space-18: 72px;
+  --space-19: 76px;
+  --space-20: 80px;
+  --space-21: 84px;
+  --space-22: 88px;
+  --space-23: 92px;
+  --space-24: 96px;
+
+  /* TRANSITIONS */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+  --duration-fast: 150ms;
+  --duration-base: 250ms;
+  --duration-slow: 450ms;
+  --duration-enter: 700ms;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.animate-shimmer {
+  background: linear-gradient(90deg, var(--bg-elevated) 25%, var(--bg-overlay) 50%, var(--bg-elevated) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.8s ease-in-out infinite;
+}

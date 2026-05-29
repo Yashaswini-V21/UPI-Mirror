@@ -1,0 +1,54 @@
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes ping {
+  75%, 100% { transform: scale(2); opacity: 0; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.animate-shimmer { 
+  animation: shimmer 2s infinite linear; 
+  background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.05) 50%, rgba(255,255,255,0) 100%); 
+  background-size: 200% 100%; 
+}
+
+.animate-ping { 
+  animation: ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite; 
+}
+
+.animate-slide-up { 
+  animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; 
+}
+
+.animate-fade-in { 
+  animation: fadeIn 0.4s ease-out forwards; 
+}
+
+.animate-breathe { 
+  animation: breathe 4s ease-in-out infinite; 
+}
+
+.animate-spin { 
+  animation: spin 1s linear infinite; 
+}
