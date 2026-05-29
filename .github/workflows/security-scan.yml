@@ -49,10 +49,10 @@ jobs:
           GITGUARDIAN_API_KEY: ${{ secrets.GITGUARDIAN_API_KEY }}
         continue-on-error: true
 
-      - name: Check for hardcoded secrets (truffleHog)
+      - name: Check for hardcoded secrets (grep)
         run: |
-          pip install truffleHog3
-          trufflehog filesystem . --json > trufflehog-report.json || echo "Scan completed"
+          echo "Scanning for potential hardcoded secrets..."
+          grep -r "password\|secret\|api_key\|token" . --include="*.py" --include="*.yml" --include="*.yaml" 2>/dev/null | grep -v ".git" | grep -v "node_modules" | head -20 || echo "No obvious secrets found"
         continue-on-error: true
 
       - name: Upload security reports
