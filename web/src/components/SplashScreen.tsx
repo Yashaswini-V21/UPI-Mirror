@@ -160,17 +160,6 @@ const NeuralParticlesCanvas = ({ progress }: { progress: number }) => {
 
 export const SplashScreen: React.FC = () => {
   const [percent, setPercent] = useState(0);
-  const [activeLogs, setActiveLogs] = useState<string[]>([]);
-
-  const bootLogs = [
-    "[BOOT] Ingesting Kira-AI cognitive kernel v3.0.0...",
-    "[LOAD] Syncing LangGraph multi-agent orchestration streams...",
-    "[PII] Masking UPI data space with one-way SHA-256 signatures...",
-    "[CORE] Initializing runway forecasting regression models...",
-    "[NUDG] Bootstrapping behavioral finance nudges generator...",
-    "[WIDG] Preloading web-artifacts-builder rendering nodes...",
-    "[SYS] Kira-AI interface compiled successfully. Standby for launch."
-  ];
 
   useEffect(() => {
     const loadingInterval = setInterval(() => {
@@ -185,24 +174,6 @@ export const SplashScreen: React.FC = () => {
     }, 110);
 
     return () => clearInterval(loadingInterval);
-  }, []);
-
-  useEffect(() => {
-    let timerId: any;
-    const runLogs = (index: number) => {
-      if (index >= bootLogs.length) return;
-      setActiveLogs((prev) => {
-        const next = [...prev, bootLogs[index]];
-        if (next.length > 5) next.shift(); // Keep last 5 logs
-        return next;
-      });
-
-      const delay = index === bootLogs.length - 1 ? 500 : Math.random() * 200 + 150;
-      timerId = setTimeout(() => runLogs(index + 1), delay);
-    };
-
-    runLogs(0);
-    return () => clearTimeout(timerId);
   }, []);
 
   const logoPathVariants = {
@@ -492,65 +463,7 @@ export const SplashScreen: React.FC = () => {
           </motion.div>
         </div>
 
-        {/* Digital Boot Terminal Box at bottom */}
-        <div
-          style={{
-            width: '100%',
-            background: 'rgba(3, 4, 10, 0.92)',
-            border: '1px solid rgba(168, 85, 247, 0.22)',
-            borderRadius: '16px',
-            padding: '18px',
-            fontFamily: 'JetBrains Mono, monospace',
-            fontSize: '10.5px',
-            color: 'rgba(255, 255, 255, 0.65)',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '8px',
-            textAlign: 'left',
-            boxShadow:
-              '0 12px 40px rgba(0,0,0,0.85), inset 0 0 20px rgba(168,85,247,0.04)',
-          }}
-        >
-          {activeLogs.map((log, index) => (
-            <motion.div
-              key={index + log}
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.2 }}
-              style={{
-                color: log.includes('[BOOT]')
-                  ? 'rgba(255,255,255,0.85)'
-                  : log.includes('[SYS]')
-                  ? '#22c55e'
-                  : log.includes('[WIDG]')
-                  ? '#a855f7'
-                  : log.includes('[PII]')
-                  ? '#06b6d4'
-                  : 'rgba(255,255,255,0.5)',
-              }}
-            >
-              {log}
-            </motion.div>
-          ))}
-          {activeLogs.length < 5 && (
-            <span
-              style={{
-                animation: 'blink 1s infinite',
-                color: '#a855f7',
-                fontWeight: 'bold',
-              }}
-            >
-              _
-            </span>
-          )}
-        </div>
       </div>
-
-      <style>{`
-        @keyframes blink {
-          50% { opacity: 0; }
-        }
-      `}</style>
     </div>
   );
 };

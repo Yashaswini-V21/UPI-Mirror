@@ -40,6 +40,20 @@ test-api:
   variables:
     API_KEY: $CI_API_KEY
 
+test-frontend:
+  stage: test
+  image: node:18-alpine
+  cache:
+    key: "$CI_COMMIT_REF_SLUG-node"
+    paths:
+      - web/node_modules/
+  before_script: []
+  script:
+    - cd web
+    - npm ci --prefer-offline
+    - npx tsc --noEmit
+    - npm run build
+
 # ============================================================================
 # LINT STAGE
 # ============================================================================
@@ -62,6 +76,15 @@ security:
     - pip install -q pip-audit bandit
     - pip-audit --desc || true
     - bandit -r src/ api/ -ll -f txt
+  allow_failure: true
+
+security-frontend:
+  stage: security
+  image: node:18-alpine
+  before_script: []
+  script:
+    - cd web
+    - npm audit --audit-level=high
   allow_failure: true
 
 # ============================================================================

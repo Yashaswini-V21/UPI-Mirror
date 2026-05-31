@@ -244,117 +244,628 @@ const NavWithStart = ({ onStart }: { onStart?: () => void }) => {
   );
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
-// ── HERO SECTION – ASYMMETRIC LAYOUT WITH FLOATING CHIPS & RADAR RINGS ──
-// ─────────────────────────────────────────────────────────────────────────────
-const FloatingChip = ({ label, amount, color, x, y, delay }: { label: string; amount: string; color: string; x: string; y: string; delay: number; }) => (
-  <motion.div
-    initial={{ opacity: 0, scale: 0.7 }}
-    animate={{ opacity: 1, scale: 1, y: [0, -8, 0] }}
-    transition={{ opacity: { delay, duration: 0.5 }, scale: { delay, duration: 0.5 }, y: { delay: delay + 0.5, duration: 3 + Math.random() * 2, repeat: Infinity, ease: 'easeInOut' } }}
-    style={{ position: 'absolute', left: x, top: y, background: 'rgba(6,6,18,0.85)', backdropFilter: 'blur(20px)', border: `1px solid ${color}44`, borderRadius: '14px', padding: '8px 14px', display: 'flex', flexDirection: 'column', gap: '2px', boxShadow: `0 8px 24px rgba(0,0,0,0.5), 0 0 12px ${color}22`, zIndex: 5 }}
-  >
-    <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '9px', color: color, fontWeight: 700, letterSpacing: '0.06em' }}>{label}</span>
-    <span style={{ fontFamily: 'Outfit, sans-serif', fontSize: '14px', color: 'white', fontWeight: 800 }}>{amount}</span>
-  </motion.div>
-);
+interface CommandCenterDeckProps {
+  logs: string[];
+  setLogs: React.Dispatch<React.SetStateAction<string[]>>;
+  status: 'STANDBY' | 'INGESTING' | 'SECURED';
+}
 
-const RadarRings = () => {
-  const rings = [90, 70, 50, 30];
+const CommandCenterDeck: React.FC<CommandCenterDeckProps> = ({ logs, setLogs, status }) => {
+  const [activeStep, setActiveStep] = useState(0);
+  const [scanning, setScanning] = useState(false);
+
+  // Simulated live security stream loop running when standby
+  useEffect(() => {
+    if (status !== 'STANDBY' || scanning) return;
+    const stream = [
+      "INGEST: raw statements in volatile RAM.",
+      "DECODE: running local Regex scrubbing rules.",
+      "REDISP: redacting transaction metadata...",
+      "MASKING: Swiggy merchant -> MOCKED_FOOD",
+      "MASKING: Uber merchant -> MOCKED_TRANSIT",
+      "SECURE: UPI checksum SHA-256 verified.",
+      "ROUTE: LangGraph supervisor routing logic.",
+      "DISPATCH: lockscreen WhatsApp alert ready."
+    ];
+    let i = 0;
+    const interval = setInterval(() => {
+      setLogs(prev => {
+        const next = [...prev, `[wasm_dec] ${stream[i]}`];
+        if (next.length > 5) next.shift();
+        return next;
+      });
+      setActiveStep(s => (s + 1) % 4);
+      i = (i + 1) % stream.length;
+    }, 3200);
+    return () => clearInterval(interval);
+  }, [status, scanning]);
+
+  // Handle manual diagnostic scan trigger
+  const triggerScan = () => {
+    if (scanning || status === 'INGESTING') return;
+    setScanning(true);
+    setLogs(prev => [...prev, "SYSTEM: [!] MANUAL SCAN ACTIVATED [!]"]);
+    setTimeout(() => { setLogs(prev => [...prev, "SYSTEM: checking SHA-256 integrity..."]); }, 600);
+    setTimeout(() => { setLogs(prev => [...prev, "SYSTEM: volatile context scrubbed ✓"]); }, 1400);
+    setTimeout(() => {
+      setLogs(prev => [...prev, "SYSTEM: Diagnostic check passed. 100% Secure."]);
+      setScanning(false);
+    }, 2200);
+  };
+
+  const isScanning = scanning || status === 'INGESTING';
+
   return (
-    <div style={{ position: 'relative', width: '380px', height: '380px', flexShrink: 0 }}>
-      {/* Radar rings */}
-      {rings.map((r, i) => (
-        <motion.div key={i} animate={{ rotate: i % 2 === 0 ? 360 : -360 }} transition={{ duration: 12 + i * 4, repeat: Infinity, ease: 'linear' }} style={{ position: 'absolute', inset: `${(100 - r) / 2 * 3.8}px`, border: `1px solid rgba(99,102,241,${0.12 - i * 0.02})`, borderRadius: '50%', borderTopColor: i === 0 ? C.indigo : i === 1 ? C.pink : C.teal, boxShadow: i < 2 ? `0 0 12px rgba(99,102,241,0.1)` : 'none' }} />
-      ))}
-      {/* Center pulse */}
-      <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <motion.div animate={{ scale: [1, 1.2, 1], opacity: [0.6, 1, 0.6] }} transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }} style={{ width: '72px', height: '72px', borderRadius: '50%', background: `radial-gradient(circle, rgba(99,102,241,0.3), transparent 70%)`, border: `2px solid ${C.indigo}`, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: `0 0 30px rgba(99,102,241,0.4)` }}>
-          <span style={{ fontWeight: 900, fontSize: '18px', color: 'white', fontFamily: 'Outfit, sans-serif' }}>K</span>
-        </motion.div>
+    <motion.div
+      initial={{ opacity: 0, y: 40, rotateX: 10, rotateY: -15 }}
+      animate={{
+        opacity: 1,
+        y: [0, -8, 0],
+        rotateX: [10, 8, 10],
+        rotateY: [-15, -12, -15],
+        rotateZ: [1.5, 0.8, 1.5]
+      }}
+      transition={{
+        opacity: { duration: 0.8 },
+        y: { duration: 6, repeat: Infinity, ease: 'easeInOut' },
+        rotateX: { duration: 6, repeat: Infinity, ease: 'easeInOut' },
+        rotateY: { duration: 6, repeat: Infinity, ease: 'easeInOut' },
+        rotateZ: { duration: 6, repeat: Infinity, ease: 'easeInOut' }
+      }}
+      style={{
+        width: '100%',
+        maxWidth: '480px',
+        height: '460px',
+        background: 'rgba(3, 3, 10, 0.82)',
+        backdropFilter: 'blur(32px)',
+        WebkitBackdropFilter: 'blur(32px)',
+        border: status === 'SECURED' ? '1px solid rgba(34, 197, 94, 0.5)' : (status === 'INGESTING' ? '1px solid rgba(20, 184, 166, 0.5)' : '1px solid rgba(99, 102, 241, 0.35)'),
+        borderRadius: '28px',
+        padding: '24px',
+        boxShadow: status === 'SECURED' ? '0 30px 80px rgba(0,0,0,0.85), 0 0 40px rgba(34, 197, 94, 0.15)' : '0 30px 80px rgba(0,0,0,0.85), 0 0 40px rgba(99, 102, 241, 0.15), inset 0 0 25px rgba(255,255,255,0.01)',
+        position: 'relative',
+        transformStyle: 'preserve-3d',
+        transform: 'perspective(1200px) rotateX(10deg) rotateY(-15deg) rotateZ(1.5deg)',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'space-between',
+        overflow: 'hidden',
+        transition: 'border-color 0.5s, box-shadow 0.5s'
+      }}
+    >
+      {/* Laser Scanning overlay when active */}
+      {isScanning && (
+        <motion.div
+          initial={{ top: '0%' }}
+          animate={{ top: ['0%', '100%', '0%'] }}
+          transition={{ duration: 1.8, repeat: Infinity, ease: 'linear' }}
+          style={{
+            position: 'absolute',
+            left: 0,
+            right: 0,
+            height: '4px',
+            background: status === 'INGESTING' ? 'linear-gradient(90deg, transparent, #14b8a6, transparent)' : 'linear-gradient(90deg, transparent, #14b8a6, #6366f1, #14b8a6, transparent)',
+            boxShadow: '0 0 15px #14b8a6, 0 0 5px #6366f1',
+            zIndex: 10,
+            pointerEvents: 'none'
+          }}
+        />
+      )}
+
+      {/* Terminal Title Bar */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.06)', paddingBottom: '12px', zIndex: 2 }}>
+        <div style={{ display: 'flex', gap: '6px' }}>
+          <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#ff5f56' }} />
+          <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#ffbd2e' }} />
+          <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#27c93f' }} />
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <Terminal size={12} color={C.indigo} />
+          <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '9px', color: C.textMuted, fontWeight: 700 }}>kira-privacy-vault://core-deck</span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span className="animate-pulse" style={{ width: '5px', height: '5px', borderRadius: '50%', background: isScanning ? '#14b8a6' : (status === 'SECURED' ? '#22c55e' : '#6366f1'), boxShadow: isScanning ? '0 0 8px #14b8a6' : '0 0 8px #22c55e' }} />
+          <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '8px', color: isScanning ? '#14b8a6' : (status === 'SECURED' ? '#22c55e' : '#6366f1'), fontWeight: 800 }}>
+            {status === 'INGESTING' ? 'INGESTING' : (status === 'SECURED' ? 'SECURED ✓' : 'STANDBY')}
+          </span>
+        </div>
       </div>
-      {/* Scan line */}
-      <motion.div animate={{ rotate: 360 }} transition={{ duration: 4, repeat: Infinity, ease: 'linear' }} style={{ position: 'absolute', inset: 0, borderRadius: '50%', overflow: 'hidden' }}>
-        <div style={{ position: 'absolute', top: '50%', left: '50%', width: '50%', height: '2px', transformOrigin: 'left center', background: `linear-gradient(90deg, ${C.indigo}88, transparent)`, boxShadow: `0 0 8px ${C.indigo}` }} />
-      </motion.div>
-      {/* Dot nodes on rings */}
-      {[0, 72, 144, 216, 288].map((deg, i) => (
-        <motion.div key={i} animate={{ opacity: [0.3, 1, 0.3] }} transition={{ duration: 2, repeat: Infinity, delay: i * 0.4 }} style={{ position: 'absolute', top: '50%', left: '50%', width: '8px', height: '8px', borderRadius: '50%', background: [C.indigo, C.pink, C.teal, C.indigo, C.pink][i], transform: `rotate(${deg}deg) translateX(120px) translate(-50%,-50%)`, boxShadow: `0 0 8px ${[C.indigo, C.pink, C.teal, C.indigo, C.pink][i]}` }} />
-      ))}
-    </div>
+
+      {/* Futuristic Circular Visualizer Target Grid */}
+      <div style={{ flex: 1, display: 'flex', gap: '16px', alignItems: 'center', justifyContent: 'center', position: 'relative', margin: '16px 0', zIndex: 2 }}>
+        
+        {/* Animated HUD Sweeper */}
+        <div style={{ position: 'relative', width: '130px', height: '130px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 12, repeat: Infinity, ease: 'linear' }}
+            style={{
+              position: 'absolute',
+              width: '100%',
+              height: '100%',
+              borderRadius: '50%',
+              border: status === 'SECURED' ? '1.5px dashed rgba(34, 197, 94, 0.45)' : '1.5px dashed rgba(99, 102, 241, 0.35)',
+            }}
+          />
+          <motion.div
+            animate={{ rotate: -360 }}
+            transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
+            style={{
+              position: 'absolute',
+              width: '80%',
+              height: '80%',
+              borderRadius: '50%',
+              border: status === 'SECURED' ? '1.5px dotted rgba(34, 197, 94, 0.35)' : '1.5px dotted rgba(20, 184, 166, 0.4)',
+            }}
+          />
+          <motion.div
+            animate={{ scale: isScanning ? [0.9, 1.1, 0.9] : [0.95, 1.05, 0.95] }}
+            transition={{ duration: 2, repeat: Infinity }}
+            style={{
+              position: 'absolute',
+              width: '50%',
+              height: '50%',
+              borderRadius: '50%',
+              background: status === 'SECURED' ? 'radial-gradient(circle, rgba(34,197,94,0.15) 0%, transparent 70%)' : 'radial-gradient(circle, rgba(99,102,241,0.15) 0%, transparent 70%)',
+              border: status === 'SECURED' ? '1.5px solid rgba(34, 197, 94, 0.6)' : '1.5px solid rgba(99, 102, 241, 0.5)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: status === 'SECURED' ? '0 0 20px rgba(34,197,94,0.3)' : '0 0 15px rgba(99,102,241,0.2)'
+            }}
+          >
+            <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: status === 'SECURED' ? 'linear-gradient(135deg, #22c55e, #10b981)' : 'linear-gradient(135deg, #14b8a6, #6366f1)', boxShadow: status === 'SECURED' ? '0 0 10px #22c55e' : '0 0 10px #14b8a6' }} />
+          </motion.div>
+
+          <svg width="100%" height="100%" style={{ position: 'absolute', pointerEvents: 'none', overflow: 'visible' }}>
+            <line x1="50%" y1="0%" x2="50%" y2="100%" stroke="rgba(255,255,255,0.02)" strokeWidth="1" />
+            <line x1="0%" y1="50%" x2="100%" y2="50%" stroke="rgba(255,255,255,0.02)" strokeWidth="1" />
+          </svg>
+        </div>
+
+        {/* Diagnostic Action Block */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '160px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '12px', padding: '10px 14px' }}>
+            <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '7px', color: C.textFaint }}>DECRYPT_THROUGHPUT</span>
+            <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '11px', color: status === 'SECURED' ? '#22c55e' : '#14b8a6', fontWeight: 800, transition: 'color 0.3s' }}>
+              {status === 'SECURED' ? '100% SECURED' : (status === 'INGESTING' ? 'PROCESSING...' : '100% CLIENT_ONLY')}
+            </span>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '12px', padding: '10px 14px' }}>
+            <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '7px', color: C.textFaint }}>VOLATILE_MEMORY_TTL</span>
+            <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '11px', color: C.pink, fontWeight: 800 }}>ZERO_RETENTION</span>
+          </div>
+
+          <motion.button
+            whileHover={{ scale: isScanning ? 1 : 1.03, boxShadow: isScanning ? 'none' : '0 4px 12px rgba(20,184,166,0.3)' }}
+            whileTap={{ scale: isScanning ? 1 : 0.98 }}
+            onClick={triggerScan}
+            disabled={isScanning}
+            style={{
+              padding: '10px',
+              borderRadius: '12px',
+              background: isScanning ? 'rgba(20,184,166,0.1)' : 'rgba(99, 102, 241, 0.1)',
+              border: isScanning ? '1px solid rgba(20,184,166,0.4)' : '1px solid rgba(99, 102, 241, 0.4)',
+              color: isScanning ? '#14b8a6' : C.indigo,
+              fontFamily: 'JetBrains Mono, monospace',
+              fontSize: '9.5px',
+              fontWeight: 800,
+              cursor: isScanning ? 'default' : 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px',
+              transition: 'all 0.2s'
+            }}
+          >
+            <Activity size={12} className={isScanning ? "animate-pulse" : ""} />
+            {status === 'INGESTING' ? 'INGESTING...' : (scanning ? 'AUDITING...' : 'RUN SECURITY CHECK')}
+          </motion.button>
+        </div>
+      </div>
+
+      {/* Live Log Ticker Block */}
+      <div style={{ background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.04)', borderRadius: '16px', padding: '14px 18px', display: 'flex', flexDirection: 'column', gap: '6px', minHeight: '130px', zIndex: 2 }}>
+        <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '7.5px', color: C.textFaint, letterSpacing: '0.08em', textTransform: 'uppercase' }}>VOLATILE COCKPIT TRACE</span>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', fontFamily: 'JetBrains Mono, monospace', fontSize: '10px' }}>
+          {logs.map((log, idx) => (
+            <motion.div
+              key={idx}
+              initial={{ opacity: 0, x: -8 }}
+              animate={{ opacity: 1, x: 0 }}
+              style={{
+                color: log.includes('SYSTEM') ? '#ffbd2e' : (log.includes('Secure') || log.includes('passed') || log.includes('SECURED') ? '#22c55e' : 'rgba(250,250,250,0.65)'),
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: '6px',
+                lineHeight: 1.3
+              }}
+            >
+              <span style={{ color: C.indigo }}>&gt;</span>
+              <span>{log}</span>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </motion.div>
   );
 };
 
 const HeroWithStart = ({ onStart }: { onStart?: () => void }) => {
+  const [activePipeline, setActivePipeline] = useState<string | null>(null);
+  const [pipelineStatus, setPipelineStatus] = useState<'STANDBY' | 'INGESTING' | 'SECURED'>('STANDBY');
+  const [activeLogs, setActiveLogs] = useState<string[]>([
+    "INIT: Isolated WASM sandbox active.",
+    "SCAN: Awaiting browser statement upload..."
+  ]);
+  const [triggerPulse, setTriggerPulse] = useState(false);
+  const [activeTab, setActiveTab] = useState<'PDF' | 'CSV' | 'SMS'>('PDF');
+  const [scrubLevel, setScrubLevel] = useState(100);
+
+  const selectPipeline = (source: string, level: number = 100) => {
+    if (pipelineStatus === 'INGESTING') return;
+    setActivePipeline(source);
+    setPipelineStatus('INGESTING');
+    setTriggerPulse(true);
+
+    setActiveLogs(prev => {
+      const next = [...prev, `[wasm_dec] INGEST: [${source}] payload loaded in local RAM.`];
+      if (next.length > 5) next.shift();
+      return next;
+    });
+
+    setTimeout(() => {
+      setActiveLogs(prev => {
+        const levelMsg = level === 100 
+          ? `[wasm_dec] TOTAL SCRUB: All identifiers (HOLDER, Balances, Card #s, UPI IDs) scrubbed to zero.`
+          : level === 50 
+            ? `[wasm_dec] SHIELDED MODE: Primary identifiers partially scrubbed. Merchant categories preserved.`
+            : `[wasm_dec] WARNING: Minimal scrub activated. Only raw bank signatures redacted.`;
+        const next = [...prev, `[wasm_dec] DECODE: running Regex rules...`, levelMsg];
+        while (next.length > 5) next.shift();
+        return next;
+      });
+    }, 750);
+
+    setTimeout(() => {
+      setActiveLogs(prev => {
+        const next = [...prev, `[wasm_dec] SECURED: [${source}] all transaction records scrubbed.`];
+        if (next.length > 5) next.shift();
+        return next;
+      });
+      setPipelineStatus('SECURED');
+      setTriggerPulse(false);
+    }, 1800);
+  };
+
+  const getMaskedText = (tab: 'PDF' | 'CSV' | 'SMS', level: number): string => {
+    if (tab === 'PDF') {
+      if (level === 0) {
+        return "ACC: 4892-2901-5521 / BAL: ₹4,18,920.00 / UPI: 882910@ybl / FOOD: SWIGGY-REST";
+      }
+      if (level <= 50) {
+        return "ACC: 4892-2901-**** / BAL: ₹4,18,920.00 / UPI: 882910@ybl / FOOD: MOCKED_FOOD";
+      }
+      return "ACC: ****-****-**** / BAL: [REDACTED] / UPI: [SCRUBBED] / FOOD: MOCKED_FOOD";
+    } else if (tab === 'CSV') {
+      if (level === 0) {
+        return "TxID: 99201982, Merchant: ZOMATO-FOOD-DELIVERY, Card: 4111-2290-0982-9918, Amt: ₹850";
+      }
+      if (level <= 50) {
+        return "TxID: 99201982, Merchant: ZOMATO-FOOD, Card: ****-****-****-9918, Amt: ₹850";
+      }
+      return "TxID: [SCRUBBED], Merchant: MOCKED_FOOD, Card: ****-****-****-****, Amt: ₹850";
+    } else {
+      if (level === 0) {
+        return "Debited: ₹649 for Netflix subscription. A/c ending 1928. Ref: UPI/66201";
+      }
+      if (level <= 50) {
+        return "Debited: ₹649 for Netflix subscription. A/c ending ****. Ref: UPI/66201";
+      }
+      return "Debited: ₹649 for MOCKED_SUB. A/c ending ****. Ref: [REDACTED]";
+    }
+  };
+
   return (
-    <section style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', paddingTop: '100px', position: 'relative', zIndex: 1, padding: '120px 24px 80px', overflow: 'hidden' }}>
-      {/* Background accent orb */}
-      <div style={{ position: 'absolute', right: '0', top: '10%', width: '600px', height: '600px', background: 'radial-gradient(circle, rgba(99,102,241,0.08), transparent 65%)', filter: 'blur(60px)', pointerEvents: 'none' }} />
+    <section style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', paddingTop: '110px', position: 'relative', zIndex: 1, padding: '120px 24px 80px', overflow: 'hidden' }}>
+      <div style={{ position: 'absolute', right: '-10%', top: '10%', width: '600px', height: '600px', background: 'radial-gradient(circle, rgba(99,102,241,0.14), transparent 70%)', filter: 'blur(110px)', pointerEvents: 'none', zIndex: 0 }} />
+      <div style={{ position: 'absolute', left: '-5%', bottom: '5%', width: '500px', height: '500px', background: 'radial-gradient(circle, rgba(20,184,166,0.08), transparent 70%)', filter: 'blur(100px)', pointerEvents: 'none', zIndex: 0 }} />
 
-      <div style={{ display: 'flex', flexDirection: 'row', width: '100%', maxWidth: '1200px', margin: '0 auto', alignItems: 'center', gap: '80px', flexWrap: 'wrap' }}>
-        {/* LEFT: Text content */}
-        <div style={{ flex: '1 1 420px', display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-          {/* Badge */}
-          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '5px 14px', borderRadius: '99px', border: `1px solid rgba(99,102,241,0.35)`, background: 'rgba(99,102,241,0.07)', marginBottom: '28px' }}>
-            <motion.div animate={{ scale: [1, 1.4, 1], opacity: [1, 0.5, 1] }} transition={{ duration: 1.8, repeat: Infinity }} style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#22c55e', boxShadow: '0 0 8px #22c55e' }} />
-            <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '10px', fontWeight: 700, color: 'rgba(200,210,255,0.9)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
-              <DecryptedText text="Cognitive Runway Forecast Engine" speed={22} />
-            </span>
-          </motion.div>
+      <div style={{ width: '100%', maxWidth: '1200px', margin: '0 auto', position: 'relative', zIndex: 2 }}>
+        <div className="hero-row" style={{ display: 'flex', alignItems: 'center', gap: '50px', flexWrap: 'wrap', width: '100%' }}>
+          
+          {/* Left Column: Interactive Ingest Checklist */}
+          <div style={{ flex: '1 1 500px', display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 14px', borderRadius: '99px', border: `1px solid rgba(99,102,241,0.3)`, background: 'rgba(99,102,241,0.08)', marginBottom: '24px' }}
+            >
+              <span className="animate-pulse" style={{ width: '6px', height: '6px', borderRadius: '50%', background: C.indigo, boxShadow: `0 0 8px ${C.indigo}` }} />
+              <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '9.5px', fontWeight: 800, color: 'white', letterSpacing: '0.08em' }}>KIRA_ENGINE_V3.0 // ACTIVE</span>
+            </motion.div>
 
-          {/* Heading */}
-          <h1 style={{ fontSize: 'clamp(2.8rem, 5.5vw, 5rem)', fontWeight: 900, lineHeight: 1.02, letterSpacing: '-2.5px', margin: '0 0 24px 0', fontFamily: 'Outfit, sans-serif' }}>
-            <span style={{ display: 'block', color: C.textPrimary }}><WordReveal text="Know Your" delay={0.05} /></span>
-            <span style={{ display: 'block', fontFamily: 'Instrument Serif, serif', fontStyle: 'italic', fontWeight: 400, background: `linear-gradient(90deg, ${C.indigo}, ${C.pink}, ${C.teal})`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', letterSpacing: '-1px' }}>
-              <WordReveal text="Money Runway" delay={0.3} />
-            </span>
-            <span style={{ display: 'block', color: C.textMuted, fontSize: '0.78em', fontWeight: 500, letterSpacing: '-1px' }}>
-              <WordReveal text="Before It Runs Out." delay={0.55} />
-            </span>
-          </h1>
+            <h1 style={{ fontSize: 'clamp(2.5rem, 5.5vw, 4.5rem)', fontWeight: 900, lineHeight: 1.05, letterSpacing: '-2.5px', margin: '0 0 24px 0', fontFamily: 'Outfit, sans-serif', color: 'white' }}>
+              Private Financial <br />
+              <span style={{ background: C.gradH, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', animation: 'shiny-anim 6s linear infinite', backgroundSize: '200% auto' }}>Intelligence.</span>
+            </h1>
 
-          <motion.p initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.7 }} style={{ fontSize: '1.05rem', color: C.textMuted, lineHeight: 1.7, maxWidth: '480px', margin: '0 0 36px 0', fontFamily: 'Outfit, sans-serif' }}>
-            Kira ingests your transaction statements, identifies cognitive spending loops, and dispatches behavioral WhatsApp alerts before your balance hits crisis level.
-          </motion.p>
+            <p style={{ fontSize: '16.5px', color: C.textMuted, lineHeight: 1.65, margin: '0 0 36px 0', fontFamily: 'Outfit, sans-serif', maxWidth: '560px' }}>
+              Kira decodes bank statements locally, scrubs transaction IDs in WebAssembly sandboxes, maps metrics with LangGraph supervisor logic, and routes actionable WhatsApp alerts.
+            </p>
 
-          {/* CTA Buttons */}
-          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.85 }} style={{ display: 'flex', gap: '14px', flexWrap: 'wrap' }}>
-            <MagneticButton onClick={onStart} aria-label="Launch Dashboard">
-              <div style={{ padding: '15px 34px', fontSize: '14.5px', background: C.grad, borderRadius: '99px', color: 'white', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 8px 28px rgba(99,102,241,0.45)', fontFamily: 'Outfit, sans-serif' }}>
-                Launch Dashboard <ChevronRight size={16} />
+            {/* Unique WASM Sandbox Privacy Core Dock */}
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '16px',
+              background: 'rgba(5, 5, 14, 0.65)',
+              border: `1px solid rgba(20, 184, 166, 0.22)`,
+              borderRadius: '24px',
+              padding: '22px',
+              width: '100%',
+              maxWidth: '560px',
+              marginBottom: '36px',
+              backdropFilter: 'blur(28px)',
+              position: 'relative',
+              boxShadow: '0 20px 50px rgba(0,0,0,0.5), inset 0 0 20px rgba(20, 184, 166, 0.04)'
+            }}>
+              
+              {/* Flying particle beam */}
+              <AnimatePresence>
+                {triggerPulse && (
+                  <motion.div
+                    initial={{ x: 50, y: 120, opacity: 0, scale: 0.5 }}
+                    animate={{ x: [50, 480], y: [120, -50, 60], opacity: [0, 1, 1, 0], scale: [0.5, 1.2, 0.6] }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 1.1, ease: "easeInOut" }}
+                    style={{
+                      position: 'absolute',
+                      width: '14px',
+                      height: '14px',
+                      borderRadius: '50%',
+                      background: 'radial-gradient(circle, #14b8a6 0%, #6366f1 100%)',
+                      boxShadow: '0 0 15px #14b8a6, 0 0 30px #6366f1',
+                      zIndex: 999,
+                      pointerEvents: 'none'
+                    }}
+                  />
+                )}
+              </AnimatePresence>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '10px' }}>
+                <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '9px', color: C.textFaint, fontWeight: 700, letterSpacing: '0.08em' }}>WASM LOCAL SANDBOX // ROUTING BAY</span>
+                <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '8.5px', color: pipelineStatus === 'SECURED' ? '#22c55e' : (pipelineStatus === 'INGESTING' ? '#14b8a6' : C.textFaint), fontWeight: 800 }}>
+                  STATUS: {pipelineStatus}
+                </span>
               </div>
-            </MagneticButton>
-            <MagneticButton onClick={() => document.getElementById('simulator')?.scrollIntoView({ behavior: 'smooth' })} aria-label="Try Simulator">
-              <div style={{ padding: '15px 34px', fontSize: '14.5px', border: `1px solid rgba(255,255,255,0.14)`, borderRadius: '99px', color: 'white', fontWeight: 600, background: 'rgba(255,255,255,0.03)', fontFamily: 'Outfit, sans-serif' }}>
-                Try Simulator
-              </div>
-            </MagneticButton>
-          </motion.div>
 
-          {/* Trust line */}
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.1 }} style={{ display: 'flex', alignItems: 'center', gap: '20px', marginTop: '40px', flexWrap: 'wrap' }}>
-            {[{ label: '800M+', sub: 'nodes traversed' }, { label: '93/100', sub: 'tests passed' }, { label: '₹0', sub: 'hosting cost' }].map((s, i) => (
-              <div key={i} style={{ display: 'flex', flexDirection: 'column' }}>
-                <span style={{ fontFamily: 'Outfit, sans-serif', fontSize: '18px', fontWeight: 900, color: 'white' }}>{s.label}</span>
-                <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '9.5px', color: C.textFaint, textTransform: 'uppercase', letterSpacing: '0.08em' }}>{s.sub}</span>
+              {/* Tab Selector */}
+              <div style={{ display: 'flex', gap: '8px', background: 'rgba(255,255,255,0.02)', padding: '4px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                {(['PDF', 'CSV', 'SMS'] as const).map(tab => {
+                  const isActive = activeTab === tab;
+                  const colors = { PDF: '#14b8a6', CSV: '#6366f1', SMS: '#ec4899' };
+                  return (
+                    <button
+                      key={tab}
+                      onClick={() => {
+                        if (pipelineStatus === 'INGESTING') return;
+                        setActiveTab(tab);
+                      }}
+                      style={{
+                        flex: 1,
+                        padding: '10px 12px',
+                        borderRadius: '8px',
+                        background: isActive ? 'rgba(255, 255, 255, 0.04)' : 'transparent',
+                        border: isActive ? `1px solid ${colors[tab]}40` : '1px solid transparent',
+                        color: isActive ? 'white' : 'rgba(200,210,255,0.6)',
+                        fontFamily: 'Outfit, sans-serif',
+                        fontWeight: 700,
+                        fontSize: '12px',
+                        cursor: pipelineStatus === 'INGESTING' ? 'default' : 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '6px',
+                        transition: 'all 0.25s',
+                        boxShadow: isActive ? `0 4px 12px rgba(0,0,0,0.25), inset 0 1px 1px rgba(255,255,255,0.05)` : 'none'
+                      }}
+                    >
+                      <span>{tab === 'PDF' ? '📄 PDF' : tab === 'CSV' ? '📊 CSV' : '💬 SMS'}</span>
+                    </button>
+                  );
+                })}
               </div>
-            ))}
-          </motion.div>
+
+              {/* File Info Dock */}
+              <div style={{ background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.04)', borderRadius: '14px', padding: '14px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontSize: '14px' }}>{activeTab === 'PDF' ? '📄' : activeTab === 'CSV' ? '📊' : '💬'}</span>
+                    <span style={{ fontSize: '12.5px', fontWeight: 700, color: 'white', fontFamily: 'Outfit, sans-serif' }}>
+                      {activeTab === 'PDF' ? 'statement_q2_raw.pdf' : activeTab === 'CSV' ? 'ledger_export_q2.csv' : 'transaction_sms.txt'}
+                    </span>
+                  </div>
+                  <span style={{ fontSize: '10px', fontFamily: 'JetBrains Mono, monospace', color: C.textFaint }}>
+                    {activeTab === 'PDF' ? '142.4 KB' : activeTab === 'CSV' ? '88.1 KB' : '1.2 KB'}
+                  </span>
+                </div>
+
+                {/* Live Buffer Monitor */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '4px' }}>
+                  {/* Raw Buffer */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: '8px', fontFamily: 'JetBrains Mono, monospace', color: '#f87171', fontWeight: 800 }}>[IN MEMORY RAW BUFFER]</span>
+                      <span className="animate-pulse" style={{ fontSize: '8px', fontFamily: 'JetBrains Mono, monospace', color: '#f87171', fontWeight: 800 }}>EXPOSED</span>
+                    </div>
+                    <div style={{
+                      background: 'rgba(239, 68, 68, 0.03)',
+                      border: '1px solid rgba(239, 68, 68, 0.12)',
+                      borderRadius: '8px',
+                      padding: '8px 10px',
+                      fontSize: '9.5px',
+                      fontFamily: 'JetBrains Mono, monospace',
+                      color: '#fca5a5',
+                      wordBreak: 'break-all',
+                      lineHeight: 1.3
+                    }}>
+                      {activeTab === 'PDF'
+                        ? 'ACC: 4892-2901-5521 / BAL: ₹4,18,920.00 / UPI: 882910@ybl / FOOD: SWIGGY-REST'
+                        : activeTab === 'CSV'
+                          ? 'TxID: 99201982, Merchant: ZOMATO-FOOD-DELIVERY, Card: 4111-2290-0982-9918, Amt: ₹850'
+                          : 'Debited: ₹649 for Netflix subscription. A/c ending 1928. Ref: UPI/66201'
+                      }
+                    </div>
+                  </div>
+
+                  {/* Masked Buffer */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: '8px', fontFamily: 'JetBrains Mono, monospace', color: '#14b8a6', fontWeight: 800 }}>[SCRUBBED LOCAL BUFFER]</span>
+                      <span style={{ fontSize: '8px', fontFamily: 'JetBrains Mono, monospace', color: '#14b8a6', fontWeight: 800 }}>
+                        {scrubLevel === 100 ? 'SECURED (100%)' : scrubLevel === 50 ? 'PARTIAL (50%)' : 'MINIMAL'}
+                      </span>
+                    </div>
+                    <div style={{
+                      background: 'rgba(20, 184, 166, 0.03)',
+                      border: `1px solid rgba(20, 184, 166, 0.15)`,
+                      borderRadius: '8px',
+                      padding: '8px 10px',
+                      fontSize: '9.5px',
+                      fontFamily: 'JetBrains Mono, monospace',
+                      color: '#2dd4bf',
+                      wordBreak: 'break-all',
+                      lineHeight: 1.3,
+                      boxShadow: 'inset 0 0 10px rgba(20,184,166,0.02)'
+                    }}>
+                      {getMaskedText(activeTab, scrubLevel)}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Interactive Redaction Depth Slider */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '6px', borderTop: '1px solid rgba(255,255,255,0.04)', paddingTop: '12px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: '10px', fontFamily: 'Outfit, sans-serif', fontWeight: 700, color: 'white' }}>De-identification Depth</span>
+                    <span style={{ fontSize: '10px', fontFamily: 'JetBrains Mono, monospace', color: scrubLevel === 100 ? '#14b8a6' : (scrubLevel === 50 ? '#6366f1' : '#ec4899'), fontWeight: 800 }}>
+                      {scrubLevel}% REDACTED
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    step="50"
+                    value={scrubLevel}
+                    onChange={(e) => {
+                      if (pipelineStatus === 'INGESTING') return;
+                      setScrubLevel(Number(e.target.value));
+                    }}
+                    disabled={pipelineStatus === 'INGESTING'}
+                    style={{
+                      width: '100%',
+                      accentColor: '#14b8a6',
+                      height: '4px',
+                      borderRadius: '99px',
+                      outline: 'none',
+                      cursor: pipelineStatus === 'INGESTING' ? 'default' : 'pointer'
+                    }}
+                  />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '8px', fontFamily: 'JetBrains Mono, monospace', color: C.textFaint }}>
+                    <span>0% MINIMAL</span>
+                    <span>50% SHIELDED</span>
+                    <span>100% SECURE</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Trigger Button */}
+              <motion.button
+                whileHover={{ scale: pipelineStatus === 'INGESTING' ? 1 : 1.02 }}
+                whileTap={{ scale: pipelineStatus === 'INGESTING' ? 1 : 0.98 }}
+                onClick={() => selectPipeline(activeTab, scrubLevel)}
+                disabled={pipelineStatus === 'INGESTING'}
+                style={{
+                  width: '100%',
+                  padding: '14px',
+                  borderRadius: '14px',
+                  background: pipelineStatus === 'INGESTING' ? 'rgba(255,255,255,0.03)' : (pipelineStatus === 'SECURED' ? 'rgba(34, 197, 94, 0.15)' : 'rgba(20, 184, 166, 0.12)'),
+                  border: pipelineStatus === 'INGESTING' ? '1px solid rgba(255,255,255,0.08)' : (pipelineStatus === 'SECURED' ? '1px solid rgba(34, 197, 94, 0.4)' : '1px solid rgba(20, 184, 166, 0.45)'),
+                  color: pipelineStatus === 'SECURED' ? '#4ade80' : '#2dd4bf',
+                  fontSize: '12.5px',
+                  fontFamily: 'Outfit, sans-serif',
+                  fontWeight: 800,
+                  cursor: pipelineStatus === 'INGESTING' ? 'default' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  transition: 'all 0.3s',
+                  boxShadow: pipelineStatus === 'SECURED' ? '0 4px 16px rgba(34, 197, 94, 0.1)' : 'none'
+                }}
+              >
+                <Zap size={14} className={pipelineStatus === 'INGESTING' ? "animate-spin" : ""} />
+                {pipelineStatus === 'INGESTING'
+                  ? 'COMMITTING CLIENT MASKING...'
+                  : (pipelineStatus === 'SECURED' ? 'SECURE FLOW ROUTED ✓' : 'INGEST & RUN DE-IDENTIFICATION')}
+              </motion.button>
+
+              {/* Local Telemetry Stats Grid */}
+              <div style={{ display: 'flex', gap: '8px', borderTop: '1px solid rgba(255,255,255,0.04)', paddingTop: '10px' }}>
+                <div style={{ flex: 1, background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.03)', borderRadius: '10px', padding: '8px', display: 'flex', flexDirection: 'column', gap: '2px', alignItems: 'center' }}>
+                  <span style={{ fontSize: '7px', fontFamily: 'JetBrains Mono, monospace', color: C.textFaint }}>LOCAL_LATENCY</span>
+                  <span style={{ fontSize: '10.5px', fontFamily: 'JetBrains Mono, monospace', color: '#14b8a6', fontWeight: 800 }}>&lt; 0.4ms</span>
+                </div>
+                <div style={{ flex: 1, background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.03)', borderRadius: '10px', padding: '8px', display: 'flex', flexDirection: 'column', gap: '2px', alignItems: 'center' }}>
+                  <span style={{ fontSize: '7px', fontFamily: 'JetBrains Mono, monospace', color: C.textFaint }}>RETENTION_TTL</span>
+                  <span style={{ fontSize: '10.5px', fontFamily: 'JetBrains Mono, monospace', color: C.pink, fontWeight: 800 }}>0ms // RAM</span>
+                </div>
+                <div style={{ flex: 1, background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.03)', borderRadius: '10px', padding: '8px', display: 'flex', flexDirection: 'column', gap: '2px', alignItems: 'center' }}>
+                  <span style={{ fontSize: '7px', fontFamily: 'JetBrains Mono, monospace', color: C.textFaint }}>ANONYMITY_IDX</span>
+                  <span style={{ fontSize: '10.5px', fontFamily: 'JetBrains Mono, monospace', color: '#a7f3d0', fontWeight: 800 }}>
+                    {scrubLevel === 100 ? '99.8%' : scrubLevel === 50 ? '78.5%' : '24.1%'}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+              <MagneticButton onClick={onStart}>
+                <div style={{ padding: '16px 36px', fontSize: '15px', background: C.grad, borderRadius: '99px', color: 'white', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 10px 30px rgba(99,102,241,0.45)', fontFamily: 'Outfit, sans-serif' }}>
+                  Launch Dashboard <ArrowRight size={18} />
+                </div>
+              </MagneticButton>
+
+              <button
+                onClick={() => document.getElementById('simulator')?.scrollIntoView({ behavior: 'smooth' })}
+                style={{ padding: '16px 34px', fontSize: '15px', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '99px', color: 'white', fontWeight: 700, background: 'rgba(255,255,255,0.02)', backdropFilter: 'blur(8px)', cursor: 'pointer', transition: 'all 0.2s', fontFamily: 'Outfit, sans-serif', display: 'flex', alignItems: 'center', gap: '8px' }}
+                onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.18)'}
+                onMouseLeave={e => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'}
+              >
+                Zero-Knowledge Sandbox <Sparkles size={15} color={C.teal} />
+              </button>
+            </div>
+
+          </div>
+
+          {/* Right Column: 3D Command Deck Cockpit */}
+          <div style={{ flex: '1 1 450px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+            <CommandCenterDeck logs={activeLogs} setLogs={setActiveLogs} status={pipelineStatus} />
+          </div>
+
         </div>
-
-        {/* RIGHT: Radar + Floating chips */}
-        <motion.div initial={{ opacity: 0, scale: 0.88 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 1, ease: [0.16, 1, 0.3, 1], delay: 0.2 }} style={{ flex: '1 1 380px', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', minHeight: '400px' }}>
-          <RadarRings />
-          <FloatingChip label="UPI DEDUCTED" amount="₹1,420" color={C.pink} x="0px" y="40px" delay={0.9} />
-          <FloatingChip label="RUNWAY LEFT" amount="18 Days" color={C.teal} x="260px" y="20px" delay={1.1} />
-          <FloatingChip label="MERCH LOOP" amount="SWIGGY ⚠" color="#f59e0b" x="290px" y="280px" delay={1.3} />
-          <FloatingChip label="ALERT SENT" amount="WhatsApp ✓" color="#22c55e" x="-30px" y="300px" delay={1.5} />
-        </motion.div>
       </div>
 
+      {/* Styles for Hero layout */}
       <style>{`
-        @media(max-width:900px){
-          section .hero-row { flex-direction:column!important; gap:60px!important; }
+        .hero-row { display: flex; flex-direction: row; }
+        @media(max-width: 991px) {
+          .hero-row { flex-direction: column !important; gap: 80px !important; }
+          .hero-row > div { width: 100% !important; text-align: center !important; align-items: center !important; }
+          .hero-row > div:first-child { align-items: center !important; }
         }
       `}</style>
     </section>
@@ -362,53 +873,302 @@ const HeroWithStart = ({ onStart }: { onStart?: () => void }) => {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// ── STATS STRIP – CIRCULAR GAUGE RINGS ──
+// ── ZERO-KNOWLEDGE STATEMENT DE-IDENTIFICATION SANDBOX ──
 // ─────────────────────────────────────────────────────────────────────────────
-const GaugeStat = ({ num, suffix, prefix, label, color, decimals = 0, pct }: { num: number; suffix?: string; prefix?: string; label: string; color: string; decimals?: number; pct: number; }) => {
-  const { val, ref } = useCountUp(num, 2, decimals);
-  const r = 42; const circ = 2 * Math.PI * r;
-  const [progress, setProgress] = useState(0);
-  const inView = useInView(ref, { once: true, margin: '-50px' });
-  useEffect(() => { if (inView) setTimeout(() => setProgress(pct), 200); }, [inView, pct]);
-  return (
-    <div ref={ref} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '14px', padding: '0 16px' }}>
-      <div style={{ position: 'relative', width: '100px', height: '100px' }}>
-        <svg width="100" height="100" viewBox="0 0 100 100" style={{ transform: 'rotate(-90deg)' }}>
-          <circle cx="50" cy="50" r={r} fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="5" />
-          <motion.circle cx="50" cy="50" r={r} fill="none" stroke={color} strokeWidth="5" strokeLinecap="round" strokeDasharray={circ} initial={{ strokeDashoffset: circ }} animate={{ strokeDashoffset: circ - (progress / 100) * circ }} transition={{ duration: 1.8, ease: 'easeOut' }} style={{ filter: `drop-shadow(0 0 6px ${color}88)` }} />
-        </svg>
-        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}>
-          <span style={{ fontFamily: 'Outfit, sans-serif', fontSize: '18px', fontWeight: 900, color: 'white', lineHeight: 1 }}>{prefix}{val}{suffix}</span>
-        </div>
-      </div>
-      <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '9.5px', color: C.textFaint, textTransform: 'uppercase', letterSpacing: '1px', textAlign: 'center', maxWidth: '110px' }}>{label}</span>
-    </div>
-  );
-};
+interface TxItem {
+  raw: string;
+  masked: string;
+  category: string;
+  amount: string;
+  confidence: number;
+  icon: React.FC<any>;
+  color: string;
+  logs: string[];
+}
 
-const StatsStrip = () => {
-  const stats = [
-    { num: 800, suffix: 'M+', label: 'Agent Nodes Traversed', color: C.indigo, pct: 88 },
-    { num: 93, suffix: '%', label: 'Unit Tests Passing', color: '#22c55e', pct: 93 },
-    { num: 9.4, suffix: '/10', label: 'User Rating Score', color: C.teal, decimals: 1, pct: 94 },
-    { num: 0, prefix: '₹', label: 'Permanent Hosting Cost', color: C.pink, pct: 100 },
+const DecoderSandbox = () => {
+  const [activeIdx, setActiveIdx] = useState(0);
+  const [displayMasked, setDisplayMasked] = useState('');
+  const [isMasking, setIsMasking] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, { once: true, margin: '-100px' });
+
+  const transactions: TxItem[] = [
+    {
+      raw: 'UPI/20260531/SWIGGY-REST-BANGALORE/882901/1420.00/DR',
+      masked: 'UPI/20260531/*********_FOOD_DELIVERY/******/******/DR',
+      category: 'Food Delivery',
+      amount: '₹1,420.00',
+      confidence: 98,
+      icon: Database,
+      color: '#ec4899',
+      logs: [
+        'Ingesting raw direct UPI string from browser memory...',
+        'Running client regex redaction rules (No cloud transmission)',
+        'Merchant signature detected: "SWIGGY-REST"',
+        'Successfully scrubbed merchant ID and metadata tags.',
+        'Token categorized under Food Delivery with 98% confidence.',
+      ]
+    },
+    {
+      raw: 'UPI/20260530/UBER-RIDE-HSR-TOWN/129302/380.00/DR',
+      masked: 'UPI/20260530/*********_MICRO_TRANSIT/******/******/DR',
+      category: 'Micro-Transit',
+      amount: '₹380.00',
+      confidence: 99,
+      icon: Zap,
+      color: '#14b8a6',
+      logs: [
+        'Ingesting raw direct UPI string from browser memory...',
+        'Running client regex redaction rules (No cloud transmission)',
+        'Merchant signature detected: "UBER-RIDE"',
+        'Successfully scrubbed merchant ID and GPS location strings.',
+        'Token categorized under Micro-Transit with 99% confidence.',
+      ]
+    },
+    {
+      raw: 'UPI/20260529/AMZN-IN-MARKETPLACE/492100/2100.00/DR',
+      masked: 'UPI/20260529/*********_RETAIL_SHOPPING/******/******/DR',
+      category: 'Shopping',
+      amount: '₹2,100.00',
+      confidence: 94,
+      icon: Shield,
+      color: '#6366f1',
+      logs: [
+        'Ingesting raw direct UPI string from browser memory...',
+        'Running client regex redaction rules (No cloud transmission)',
+        'Merchant signature detected: "AMZN-IN"',
+        'Successfully scrubbed transaction reference parameters.',
+        'Token categorized under Retail Shopping with 94% confidence.',
+      ]
+    },
+    {
+      raw: 'UPI/20260528/NETFLIX-MEMBER-SUB/330198/649.00/DR',
+      masked: 'UPI/20260528/*********_DIGITAL_SERVICES/******/******/DR',
+      category: 'Subscriptions',
+      amount: '₹649.00',
+      confidence: 97,
+      icon: Wifi,
+      color: '#f59e0b',
+      logs: [
+        'Ingesting raw direct UPI string from browser memory...',
+        'Running client regex redaction rules (No cloud transmission)',
+        'Merchant signature detected: "NETFLIX-MEMBER"',
+        'Successfully scrubbed subscription index signatures.',
+        'Token categorized under Digital Subscriptions with 97% confidence.',
+      ]
+    }
   ];
+
+  const activeTx = transactions[activeIdx];
+
+  useEffect(() => {
+    setIsMasking(true);
+    let i = 0;
+    const target = activeTx.masked;
+    const interval = setInterval(() => {
+      setDisplayMasked(() => {
+        return target.split('').map((char, index) => {
+          if (index < i) return target[index];
+          if (char === '/' || char === '-' || char === '_') return char;
+          const noise = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789$₹%#@!*&';
+          return noise[Math.floor(Math.random() * noise.length)];
+        }).join('');
+      });
+      if (i >= target.length) {
+        clearInterval(interval);
+        setDisplayMasked(target);
+        setIsMasking(false);
+      }
+      i += 2;
+    }, 20);
+    return () => clearInterval(interval);
+  }, [activeIdx]);
+
   return (
-    <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '-80px' }} transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }} style={{ padding: '60px 24px', maxWidth: '1200px', margin: '0 auto', position: 'relative', zIndex: 1 }}>
-      <SpotlightCard glowColor="rgba(99,102,241,0.08)" style={{ background: 'rgba(6,6,18,0.55)', border: `1px solid ${C.border}`, backdropFilter: 'blur(20px)', padding: '48px 32px' }}>
-        <div className="stats-grid" style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center', flexWrap: 'wrap', gap: '32px' }}>
-          {stats.map((s, i) => (
-            <React.Fragment key={i}>
-              <GaugeStat {...s} />
-              {i < stats.length - 1 && <div className="stats-divider" style={{ width: '1px', height: '80px', background: `linear-gradient(to bottom, transparent, ${C.border}, transparent)` }} />}
-            </React.Fragment>
-          ))}
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 35 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: '-80px' }}
+      transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
+      style={{
+        padding: '100px 24px',
+        maxWidth: '1200px',
+        margin: '0 auto',
+        position: 'relative',
+        zIndex: 1,
+      }}
+      id="simulator"
+    >
+      <div style={{ display: 'flex', flexDirection: 'row', gap: '50px', flexWrap: 'wrap', width: '100%' }} className="sandbox-row">
+        
+        {/* LEFT: Explainer & Selectable Items */}
+        <div style={{ flex: '1 1 500px', display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+          <div style={{ fontFamily: 'Outfit, sans-serif', fontSize: '10px', fontWeight: 800, color: C.teal, letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: '16px', border: `1px solid ${C.teal}40`, padding: '4px 12px', borderRadius: '99px', background: `${C.teal}12` }}>
+            Zero-Knowledge Local Sandbox
+          </div>
+          <h3 style={{ fontSize: 'clamp(1.8rem, 4vw, 2.8rem)', fontWeight: 900, color: 'white', letterSpacing: '-1.5px', margin: '0 0 20px 0', fontFamily: 'Outfit, sans-serif', lineHeight: 1.15 }}>
+            Client-Side Privacy <span style={{ background: C.gradH, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>De-identification.</span>
+          </h3>
+          <p style={{ fontSize: '1rem', color: C.textMuted, lineHeight: 1.65, margin: '0 0 32px 0', fontFamily: 'Outfit, sans-serif' }}>
+            Kira does not ingest raw merchant transactions. Select any mock UPI entry below to test our local WebAssembly regex de-identification engine. Your private data is completely scrubbed before being analyzed by remote supervisor layers.
+          </p>
+
+          {/* List of selectables */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%' }}>
+            {transactions.map((tx, idx) => {
+              const isActive = activeIdx === idx;
+              const Icon = tx.icon;
+              return (
+                <div
+                  key={idx}
+                  onClick={() => setActiveIdx(idx)}
+                  style={{
+                    padding: '16px 20px',
+                    borderRadius: '16px',
+                    background: isActive ? 'rgba(255,255,255,0.03)' : 'transparent',
+                    border: isActive ? `1px solid ${tx.color}50` : '1px solid rgba(255,255,255,0.04)',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    boxShadow: isActive ? `0 8px 24px rgba(0,0,0,0.4), 0 0 12px ${tx.color}15` : 'none',
+                  }}
+                  onMouseEnter={e => { if (!isActive) e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)'; }}
+                  onMouseLeave={e => { if (!isActive) e.currentTarget.style.borderColor = 'rgba(255,255,255,0.04)'; }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                    <div style={{
+                      width: '40px',
+                      height: '40px',
+                      borderRadius: '10px',
+                      background: `${tx.color}18`,
+                      border: `1px solid ${tx.color}35`,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: tx.color,
+                    }}>
+                      <Icon size={18} />
+                    </div>
+                    <div>
+                      <span style={{ display: 'block', fontSize: '14px', fontWeight: 700, color: isActive ? 'white' : 'rgba(255,255,255,0.85)', transition: 'color 0.2s' }}>{tx.category}</span>
+                      <span style={{ display: 'block', fontSize: '11px', color: C.textFaint, fontFamily: 'JetBrains Mono, monospace', marginTop: '2px' }}>Amount: {tx.amount}</span>
+                    </div>
+                  </div>
+                  <div style={{
+                    fontSize: '11px',
+                    fontFamily: 'JetBrains Mono, monospace',
+                    fontWeight: 700,
+                    color: tx.color,
+                    padding: '3px 8px',
+                    borderRadius: '4px',
+                    background: `${tx.color}10`,
+                  }}>
+                    {tx.confidence}% Match
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
-      </SpotlightCard>
+
+        {/* RIGHT: High-End Terminal Decoder Engine */}
+        <div style={{ flex: '1 1 500px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+          <div style={{
+            width: '100%',
+            maxWidth: '540px',
+            background: 'rgba(5, 5, 14, 0.75)',
+            border: `1px solid ${activeTx.color}35`,
+            borderRadius: '24px',
+            boxShadow: `0 30px 70px rgba(0,0,0,0.8), 0 0 35px ${activeTx.color}10`,
+            padding: '24px',
+            fontFamily: 'JetBrains Mono, monospace',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '16px',
+            transition: 'border-color 0.5s, box-shadow 0.5s',
+          }}>
+            {/* Header / Window tabs */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.06)', paddingBottom: '14px' }}>
+              <div style={{ display: 'flex', gap: '6px' }}>
+                <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#ff5f56' }} />
+                <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#ffbd2e' }} />
+                <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#27c93f' }} />
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Terminal size={12} color={activeTx.color} />
+                <span style={{ fontSize: '9.5px', color: C.textMuted, fontWeight: 700 }}>kira_wasm_dec.rs</span>
+              </div>
+            </div>
+
+            {/* Raw input block */}
+            <div>
+              <span style={{ display: 'block', fontSize: '9px', color: '#ff5f56', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '6px', fontWeight: 800 }}>[Input Raw UPI payload in RAM]</span>
+              <div style={{
+                background: 'rgba(255, 95, 86, 0.04)',
+                border: '1px solid rgba(255, 95, 86, 0.15)',
+                borderRadius: '10px',
+                padding: '12px 14px',
+                fontSize: '11px',
+                color: '#f87171',
+                whiteSpace: 'pre-wrap',
+                wordBreak: 'break-all',
+                lineHeight: 1.4,
+              }}>
+                {activeTx.raw}
+              </div>
+            </div>
+
+            {/* Pipeline logs stream */}
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <span style={{ display: 'block', fontSize: '9px', color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '2px', fontWeight: 800 }}>[WASM Parser Telemetry]</span>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', background: 'rgba(255,255,255,0.01)', border: `1px solid rgba(255,255,255,0.04)`, borderRadius: '10px', padding: '12px 14px', minHeight: '120px', justifyContent: 'center' }}>
+                {activeTx.logs.map((log, i) => (
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0, x: -8 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.1 }}
+                    style={{ fontSize: '10px', color: 'rgba(255,255,255,0.5)', display: 'flex', alignItems: 'flex-start', gap: '8px', lineHeight: 1.3 }}
+                  >
+                    <span style={{ color: activeTx.color }}>&gt;</span>
+                    <span>{log}</span>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+
+            {/* Secure masked output payload */}
+            <div>
+              <span style={{ display: 'block', fontSize: '9px', color: '#22c55e', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '6px', fontWeight: 800 }}>[Secure Masked Payload Dispatched]</span>
+              <div style={{
+                background: 'rgba(34, 197, 94, 0.04)',
+                border: '1px solid rgba(34, 197, 94, 0.15)',
+                borderRadius: '10px',
+                padding: '12px 14px',
+                fontSize: '11.5px',
+                color: '#4ade80',
+                whiteSpace: 'pre-wrap',
+                wordBreak: 'break-all',
+                lineHeight: 1.4,
+                boxShadow: isMasking ? 'none' : 'inset 0 0 10px rgba(34,197,94,0.05)',
+              }}>
+                {displayMasked}
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+
       <style>{`
-        @media(max-width:768px){
-          .stats-grid { flex-direction:column!important; }
-          .stats-divider { width:60%!important; height:1px!important; background:linear-gradient(to right,transparent,rgba(255,255,255,0.07),transparent)!important; }
+        .sandbox-row { display: flex; flex-direction: row; }
+        @media(max-width: 991px) {
+          .sandbox-row { flex-direction: column !important; gap: 60px !important; }
         }
       `}</style>
     </motion.div>
@@ -419,12 +1179,19 @@ const StatsStrip = () => {
 // ── NUDGE SIMULATOR & PHONE LOCK SEQUENCE (PRESERVED EXACTLY) ──
 // ─────────────────────────────────────────────────────────────────────────────
 const NudgePlayground = () => {
-  const [activePersona, setActivePersona] = useState<number | null>(null);
-  const [logs, setLogs] = useState<string[]>([]);
-  const [activeStep, setActiveStep] = useState<number | null>(null);
-  const [typedNudge, setTypedNudge] = useState('');
+  const [activePersona, setActivePersona] = useState<number | null>(0);
+  const [logs, setLogs] = useState<string[]>([
+    "[ParserNode] Booting local sandbox agent pipeline...",
+    "[ParserNode] Ingested raw bank statement table keys.",
+    "[ClassifierNode] Discretionary spending anomalies flagged.",
+    "[RegressorNode] Calculated daily runway burn trajectory.",
+    "[SupervisorNode] Routing audit check for tone compliance...",
+    "[SupervisorNode] Sandboxed agent pipeline success."
+  ]);
+  const [activeStep, setActiveStep] = useState<number | null>(3);
+  const [typedNudge, setTypedNudge] = useState("Kira Nudge: Food delivery & transit have eaten 45% of your discretionary cap. Cash forecast indicates zero balance by Oct 14th (12 days early). Action: Freeze Swiggy orders for 3 days to recover ₹2,420.");
   const [simulating, setSimulating] = useState(false);
-  const [phoneState, setPhoneState] = useState<'off' | 'lockscreen' | 'homescreen'>('off');
+  const [phoneState, setPhoneState] = useState<'off' | 'lockscreen' | 'homescreen'>('homescreen');
 
   const personas = [
     {
@@ -742,10 +1509,26 @@ const AnimatedProgressBar = ({ value, color }: { value: number; color: string })
 const FeaturesGrid = () => {
   const [toggleActive, setToggleActive] = useState(true);
   const [parserHov, setParserHov] = useState(false);
+  const [activeNode, setActiveNode] = useState<number | null>(null);
+  
+  // WhatsApp Mock Nudge Simulator states inside bento
+  const [selectedNudge, setSelectedNudge] = useState<'food' | 'chai' | 'transit'>('food');
+  const [nudgeMessage, setNudgeMessage] = useState("Kira Alert: Food delivery limit breached. Swiggy has taken 40% of your allowance. Freeze Swiggy for 3 days to recover ₹1,820.");
+
+  const handleNudgeSelect = (type: 'food' | 'chai' | 'transit') => {
+    setSelectedNudge(type);
+    if (type === 'food') {
+      setNudgeMessage("Kira Alert: Food delivery limit breached. Swiggy has taken 40% of your allowance. Freeze Swiggy for 3 days to recover ₹1,820.");
+    } else if (type === 'chai') {
+      setNudgeMessage("Kira Alert: Cafe micro-leakage! Daily Chai visits are projecting a runway exhaustion by June 12th. Switch to office pantry to save ₹680.");
+    } else {
+      setNudgeMessage("Kira Alert: Rapid transit drain. Daily Uber rides have climbed 15% this week. Action: Take the metro to extend cash runway by 5 days.");
+    }
+  };
 
   const cardAnim = (dir: 'left' | 'right' | 'up' | 'scale') => ({
-    hidden: dir === 'left' ? { opacity: 0, x: -50 } : dir === 'right' ? { opacity: 0, x: 50 } : dir === 'up' ? { opacity: 0, y: 50 } : { opacity: 0, scale: 0.88 },
-    show: { opacity: 1, x: 0, y: 0, scale: 1, transition: { type: 'spring', stiffness: 75, damping: 14 } }
+    hidden: dir === 'left' ? { opacity: 0, x: -40 } : dir === 'right' ? { opacity: 0, x: 40 } : dir === 'up' ? { opacity: 0, y: 40 } : { opacity: 0, scale: 0.92 },
+    show: { opacity: 1, x: 0, y: 0, scale: 1, transition: { type: 'spring', stiffness: 85, damping: 16 } }
   });
 
   return (
@@ -759,60 +1542,95 @@ const FeaturesGrid = () => {
         </motion.div>
         <motion.h2 initial={{ opacity: 0, y: 14 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.1 }} style={{ fontSize: 'clamp(1.8rem,4vw,3rem)', fontWeight: 900, fontFamily: 'Outfit, sans-serif', color: 'white', letterSpacing: '-1.5px', margin: '0' }}>
           Engineered for{' '}
-          <span style={{ fontStyle: 'italic', fontWeight: 400, fontFamily: 'Instrument Serif, serif', background: `linear-gradient(90deg,${C.teal},${C.indigo})`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>financial clarity.</span>
+          <span style={{ fontStyle: 'italic', fontWeight: 400, fontFamily: 'Outfit, sans-serif', background: `linear-gradient(90deg,${C.teal},${C.indigo})`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>financial clarity.</span>
         </motion.h2>
       </div>
 
       <style>{`
-        .feat-grid { display:grid; grid-template-columns:repeat(3,1fr); grid-auto-rows:minmax(240px,auto); gap:20px; }
+        .feat-grid { display:grid; grid-template-columns:repeat(3,1fr); grid-auto-rows:minmax(280px,auto); gap:24px; }
         .feat-span2 { grid-column:span 2; }
+        .interactive-node:hover { transform: scale(1.1); filter: drop-shadow(0 0 10px rgba(20,184,166,0.8)); }
         @media(max-width:1024px){ .feat-grid { grid-template-columns:repeat(2,1fr)!important; } .feat-span2 { grid-column:span 2!important; } }
         @media(max-width:640px){ .feat-grid { grid-template-columns:1fr!important; grid-auto-rows:auto!important; } .feat-span2 { grid-column:span 1!important; } }
       `}</style>
 
       <div className="feat-grid">
-        {/* Card 1: LangGraph Network – large, slides left */}
+        {/* Card 1: Interactive LangGraph Network (feat-span2) */}
         <motion.div variants={cardAnim('left')} initial="hidden" whileInView="show" viewport={{ once: true, margin: '-80px' }} className="feat-span2">
-          <SpotlightCard glowColor="rgba(20,184,166,0.12)" style={{ background: 'rgba(6,6,18,0.65)', border: `1px solid ${C.border}`, backdropFilter: 'blur(20px)', height: '100%' }}>
-            <div style={{ padding: '30px', display: 'flex', gap: '32px', height: '100%', alignItems: 'center', flexWrap: 'wrap', position: 'relative', overflow: 'hidden' }}>
-              {/* Watermark */}
-              <div style={{ position: 'absolute', right: '10px', bottom: '8px', fontFamily: 'JetBrains Mono, monospace', fontSize: '7.5px', color: 'rgba(255,255,255,0.02)', lineHeight: 1.5 }}>cargo run --bin supervisor<br />ingesting STATEMENT_LOG_001.csv...</div>
+          <SpotlightCard glowColor="rgba(20,184,166,0.14)" style={{ background: 'rgba(6,6,20,0.65)', border: `1px solid ${C.border}`, backdropFilter: 'blur(28px)', height: '100%' }}>
+            <div style={{ padding: '34px', display: 'flex', gap: '32px', height: '100%', alignItems: 'center', flexWrap: 'wrap', position: 'relative', overflow: 'hidden' }}>
+              {/* Decorative Tech Grid */}
+              <div style={{ position: 'absolute', right: '10px', bottom: '8px', fontFamily: 'JetBrains Mono, monospace', fontSize: '7.5px', color: 'rgba(255,255,255,0.02)', lineHeight: 1.5 }}>
+                node_stream_supervisor_network v3.0<br />running classifier on 4 parameters...
+              </div>
 
-              <div style={{ flex: 1, minWidth: '200px', display: 'flex', flexDirection: 'column', gap: '12px', zIndex: 1 }}>
+              <div style={{ flex: 1.2, minWidth: '220px', display: 'flex', flexDirection: 'column', gap: '14px', zIndex: 1 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: `rgba(20,184,166,0.12)`, border: `1px solid rgba(20,184,166,0.25)`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <Cpu size={18} color={C.teal} />
                   </div>
-                  <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '10.5px', color: C.teal, fontWeight: 700 }}>LOGIC PIPELINE</span>
+                  <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '10.5px', color: C.teal, fontWeight: 700 }}>SUPERVISOR NETWORK</span>
                 </div>
-                <h3 style={{ fontSize: '20px', fontWeight: 800, color: 'white', margin: 0, fontFamily: 'Outfit, sans-serif' }}>LangGraph Supervisor Network</h3>
-                <p style={{ color: C.textMuted, fontSize: '14px', margin: 0, lineHeight: 1.65 }}>
-                  Agent nodes route bank statements to individual regressors, checking calculations and auditing advice against GDPR criteria automatically.
+                <h3 style={{ fontSize: '22px', fontWeight: 800, color: 'white', margin: 0, fontFamily: 'Outfit, sans-serif' }}>LangGraph Logic Pipeline</h3>
+                <p style={{ color: C.textMuted, fontSize: '14px', margin: 0, lineHeight: 1.68 }}>
+                  Kira utilizes a multi-agent logic network. Ingested statements traverse separate regressors that audit models, detect spikes, and verify advice against safety templates automatically.
                 </p>
-                {/* Mini pipeline indicator */}
-                <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginTop: '8px' }}>
-                  {['Parser', 'Regressor', 'Supervisor'].map((n, i) => (
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginTop: '12px' }}>
+                  {['Parser', 'Classifier', 'Regressor', 'Auditor'].map((n, i) => (
                     <React.Fragment key={n}>
-                      <motion.div animate={{ boxShadow: [`0 0 0px ${C.teal}`, `0 0 12px ${C.teal}88`, `0 0 0px ${C.teal}`] }} transition={{ duration: 2, repeat: Infinity, delay: i * 0.7 }} style={{ padding: '4px 10px', borderRadius: '8px', background: 'rgba(20,184,166,0.08)', border: `1px solid rgba(20,184,166,0.2)`, fontSize: '10px', fontFamily: 'JetBrains Mono, monospace', color: C.teal, fontWeight: 700 }}>{n}</motion.div>
-                      {i < 2 && <div style={{ width: '18px', height: '1px', background: `linear-gradient(90deg, ${C.teal}66, transparent)` }} />}
+                      <span style={{
+                        padding: '4px 12px',
+                        borderRadius: '8px',
+                        background: activeNode === i ? 'rgba(20,184,166,0.18)' : 'rgba(20,184,166,0.06)',
+                        border: activeNode === i ? `1px solid ${C.teal}` : `1px solid rgba(20,184,166,0.2)`,
+                        fontSize: '9.5px',
+                        fontFamily: 'JetBrains Mono, monospace',
+                        color: activeNode === i ? 'white' : C.teal,
+                        fontWeight: 700,
+                        transition: 'all 0.3s'
+                      }}>{n}</span>
+                      {i < 3 && <span style={{ width: '12px', height: '1.5px', background: activeNode === i ? C.teal : 'rgba(255,255,255,0.06)' }} />}
                     </React.Fragment>
                   ))}
                 </div>
               </div>
 
-              {/* SVG mini graph */}
-              <div style={{ width: '180px', height: '130px', flexShrink: 0, zIndex: 1 }}>
-                <svg width="100%" height="100%" viewBox="0 0 180 130">
-                  <defs><radialGradient id="ng1" cx="50%" cy="50%" r="50%"><stop offset="0%" stopColor={C.teal} stopOpacity="0.3" /><stop offset="100%" stopColor={C.teal} stopOpacity="0" /></radialGradient></defs>
-                  {[[25,65,'Parser'],[90,30,'Classifier'],[90,100,'Regressor'],[155,65,'Supervisor']].map(([x,y,l], i) => (
+              {/* Interactive Vector Pipeline Graph */}
+              <div style={{ width: '180px', height: '160px', flexShrink: 0, zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <svg width="100%" height="100%" viewBox="0 0 180 160" style={{ overflow: 'visible' }}>
+                  {/* Connecting lines */}
+                  {[[25,80,90,35],[25,80,90,125],[90,35,155,80],[90,125,155,80]].map(([x1,y1,x2,y2], i) => (
                     <g key={i}>
-                      <circle cx={x} cy={y} r="16" fill="#03030c" stroke={[C.teal,C.indigo,C.pink,C.teal][i]} strokeWidth="1.5" />
-                      <motion.circle cx={x} cy={y} r="20" fill="none" stroke={[C.teal,C.indigo,C.pink,C.teal][i]} strokeWidth="1" initial={{ opacity: 0.3 }} animate={{ opacity: [0.3, 0.8, 0.3], r: [20, 25, 20] }} transition={{ duration: 2.5, repeat: Infinity, delay: i * 0.5 }} />
-                      <text x={x} y={Number(y)+4} textAnchor="middle" fontSize="7" fill="white" fontFamily="JetBrains Mono">{String(l).substring(0,4)}</text>
+                      <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="rgba(255,255,255,0.05)" strokeWidth="2" />
+                      <motion.line
+                        x1={x1} y1={y1} x2={x2} y2={y2}
+                        stroke={activeNode === i || activeNode === i + 1 ? C.teal : 'rgba(20,184,166,0.25)'}
+                        strokeWidth="1.8"
+                        strokeDasharray="5,5"
+                        animate={{ strokeDashoffset: [0, -20] }}
+                        transition={{ duration: 1.2, repeat: Infinity, ease: 'linear' }}
+                      />
                     </g>
                   ))}
-                  {[[25,65,90,30],[25,65,90,100],[90,30,155,65],[90,100,155,65]].map(([x1,y1,x2,y2], i) => (
-                    <motion.line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke="rgba(255,255,255,0.08)" strokeWidth="1.2" strokeDasharray="4,4" animate={{ strokeDashoffset: [0,-16] }} transition={{ duration: 1.5, repeat: Infinity, ease: 'linear', delay: i * 0.3 }} />
+                  
+                  {/* Nodes */}
+                  {[
+                    { x: 25, y: 80, label: 'Parser', desc: 'Converts bank tables' },
+                    { x: 90, y: 35, label: 'Classifier', desc: 'Identifies merchant caps' },
+                    { x: 90, y: 125, label: 'Regressor', desc: 'Predicts day zero runway' },
+                    { x: 155, y: 80, label: 'Auditor', desc: 'Audits privacy compliance' }
+                  ].map((node, i) => (
+                    <g
+                      key={i}
+                      onMouseEnter={() => setActiveNode(i)}
+                      onMouseLeave={() => setActiveNode(null)}
+                      style={{ cursor: 'pointer' }}
+                      className="interactive-node"
+                    >
+                      <circle cx={node.x} cy={node.y} r="18" fill="#03030c" stroke={activeNode === i ? C.teal : 'rgba(255,255,255,0.1)'} strokeWidth="2" />
+                      <circle cx={node.x} cy={node.y} r="4" fill={activeNode === i ? C.teal : 'rgba(255,255,255,0.2)'} />
+                      <text x={node.x} y={node.y - 24} textAnchor="middle" fontSize="8" fill={activeNode === i ? 'white' : 'rgba(255,255,255,0.45)'} fontFamily="JetBrains Mono" fontWeight="bold">{node.label}</text>
+                    </g>
                   ))}
                 </svg>
               </div>
@@ -820,9 +1638,9 @@ const FeaturesGrid = () => {
           </SpotlightCard>
         </motion.div>
 
-        {/* Card 2: Parser – scales up */}
+        {/* Card 2: Statement Parser with live parsing ticker */}
         <motion.div variants={cardAnim('scale')} initial="hidden" whileInView="show" viewport={{ once: true, margin: '-80px' }} onMouseEnter={() => setParserHov(true)} onMouseLeave={() => setParserHov(false)}>
-          <SpotlightCard glowColor="rgba(99,102,241,0.12)" style={{ background: 'rgba(6,6,18,0.65)', border: `1px solid ${C.border}`, backdropFilter: 'blur(20px)', height: '100%', cursor: 'default' }}>
+          <SpotlightCard glowColor="rgba(99,102,241,0.14)" style={{ background: 'rgba(6,6,20,0.65)', border: `1px solid ${C.border}`, backdropFilter: 'blur(28px)', height: '100%' }}>
             <div style={{ padding: '28px', display: 'flex', flexDirection: 'column', gap: '16px', height: '100%' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -831,20 +1649,47 @@ const FeaturesGrid = () => {
                   </div>
                   <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '10px', color: C.indigo, fontWeight: 700 }}>PARSER CORE</span>
                 </div>
-                <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '9px', color: parserHov ? '#22c55e' : C.textFaint, fontWeight: 700, transition: 'color 0.3s' }}>{parserHov ? 'PARSING...' : 'IDLE'}</span>
+                <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '9px', color: parserHov ? '#22c55e' : C.textFaint, fontWeight: 700, transition: 'color 0.3s' }}>{parserHov ? 'COMPILING...' : 'STANDBY'}</span>
               </div>
+              
               <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'white', margin: 0, fontFamily: 'Outfit, sans-serif' }}>Statement Parser</h3>
-              <p style={{ color: C.textMuted, fontSize: '13.5px', margin: 0, lineHeight: 1.6 }}>Ingests raw transaction logs, structuring values into secure datasets.</p>
-              {/* File format badges */}
-              <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                {['.csv', '.pdf', '.xlsx'].map(ext => (
-                  <motion.div key={ext} animate={{ scale: parserHov ? [1, 1.08, 1] : 1 }} transition={{ duration: 0.5, delay: ext === '.pdf' ? 0.1 : ext === '.xlsx' ? 0.2 : 0 }} style={{ padding: '3px 10px', borderRadius: '6px', background: 'rgba(99,102,241,0.07)', border: `1px solid rgba(99,102,241,0.18)`, fontFamily: 'JetBrains Mono, monospace', fontSize: '10px', color: C.indigo, fontWeight: 700 }}>{ext}</motion.div>
-                ))}
+              <p style={{ color: C.textMuted, fontSize: '13.5px', margin: 0, lineHeight: 1.6, flexGrow: 1 }}>
+                Ingests statements securely and extracts raw parameters into mapped datasets locally.
+              </p>
+
+              {/* Live terminal simulation ticker */}
+              <div style={{
+                background: 'rgba(0, 0, 0, 0.45)',
+                border: '1px solid rgba(255,255,255,0.05)',
+                borderRadius: '12px',
+                padding: '10px 14px',
+                fontFamily: 'JetBrains Mono, monospace',
+                fontSize: '9px',
+                color: parserHov ? '#4ade80' : 'rgba(255,255,255,0.3)',
+                minHeight: '44px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '2px',
+                transition: 'color 0.3s'
+              }}>
+                {parserHov ? (
+                  <>
+                    <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.1 }}>&gt; PARSING swiggy_stmt.csv</motion.span>
+                    <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2, duration: 0.1 }}>&gt; SUCCESS: 14 rows structured</motion.span>
+                  </>
+                ) : (
+                  <>
+                    <span>&gt; awaiting upload stream</span>
+                    <span>&gt; session isolated</span>
+                  </>
+                )}
               </div>
+
               {/* Animated parse progress */}
-              <div style={{ marginTop: 'auto' }}>
+              <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: C.textFaint, fontFamily: 'JetBrains Mono, monospace', marginBottom: '6px' }}>
-                  <span>Parse rate</span><span style={{ color: parserHov ? '#22c55e' : C.textFaint }}>{parserHov ? '99.7%' : '0%'}</span>
+                  <span>Parse rate</span>
+                  <span style={{ color: parserHov ? '#22c55e' : C.textFaint }}>{parserHov ? '99.7%' : '0%'}</span>
                 </div>
                 <AnimatedProgressBar value={parserHov ? 99.7 : 0} color={C.indigo} />
               </div>
@@ -852,44 +1697,110 @@ const FeaturesGrid = () => {
           </SpotlightCard>
         </motion.div>
 
-        {/* Card 3: WhatsApp Nudge – slides up, full wide */}
+        {/* Card 3: WhatsApp Interactive Nudge Click-Simulator (feat-span2) */}
         <motion.div variants={cardAnim('up')} initial="hidden" whileInView="show" viewport={{ once: true, margin: '-80px' }} className="feat-span2">
-          <SpotlightCard glowColor="rgba(236,72,153,0.12)" style={{ background: 'rgba(6,6,18,0.65)', border: `1px solid ${C.border}`, backdropFilter: 'blur(20px)', height: '100%' }}>
-            <div style={{ padding: '30px', display: 'flex', gap: '32px', height: '100%', alignItems: 'center', flexWrap: 'wrap', position: 'relative', overflow: 'hidden' }}>
-              <div style={{ flex: 1, minWidth: '200px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <SpotlightCard glowColor="rgba(236,72,153,0.14)" style={{ background: 'rgba(6,6,20,0.65)', border: `1px solid ${C.border}`, backdropFilter: 'blur(28px)', height: '100%' }}>
+            <div style={{ padding: '34px', display: 'flex', gap: '32px', height: '100%', alignItems: 'center', flexWrap: 'wrap', position: 'relative', overflow: 'hidden' }}>
+              
+              <div style={{ flex: 1.1, minWidth: '220px', display: 'flex', flexDirection: 'column', gap: '14px', zIndex: 1 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(236,72,153,0.1)', border: `1px solid rgba(236,72,153,0.22)`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <Smartphone size={18} color={C.pink} />
                   </div>
-                  <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '10.5px', color: C.pink, fontWeight: 700 }}>NUDGE ROUTER</span>
+                  <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '10.5px', color: C.pink, fontWeight: 700 }}>BEHAVIORAL ROUTER</span>
                 </div>
-                <h3 style={{ fontSize: '20px', fontWeight: 800, color: 'white', margin: 0, fontFamily: 'Outfit, sans-serif' }}>Instant WhatsApp Nudges</h3>
-                <p style={{ color: C.textMuted, fontSize: '14px', margin: 0, lineHeight: 1.65 }}>
-                  Behavioral coach messages explain exactly which spending patterns are draining your runway — no dashboard checks required.
+                <h3 style={{ fontSize: '22px', fontWeight: 800, color: 'white', margin: 0, fontFamily: 'Outfit, sans-serif' }}>WhatsApp Budget Nudges</h3>
+                <p style={{ color: C.textMuted, fontSize: '14px', margin: 0, lineHeight: 1.68 }}>
+                  No complex dashboards to check. Kira dispatches custom coaching nudges that highlight discretionary leaks directly on your lockscreen. Click tabs to test different triggers below:
                 </p>
-                {/* Animated nudge pill */}
-                <motion.div animate={{ y: [0, -5, 0] }} transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }} style={{ marginTop: '8px', background: 'rgba(6,6,18,0.6)', border: '1px solid rgba(236,72,153,0.2)', borderRadius: '14px', padding: '12px 16px', display: 'flex', gap: '10px', alignItems: 'center' }}>
-                  <motion.div animate={{ scale: [1, 1.3, 1], opacity: [1, 0.5, 1] }} transition={{ duration: 1.5, repeat: Infinity }} style={{ width: '8px', height: '8px', borderRadius: '50%', background: C.pink, boxShadow: `0 0 8px ${C.pink}`, flexShrink: 0 }} />
-                  <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.85)', fontFamily: 'Outfit, sans-serif', lineHeight: 1.4 }}>Kira: Food Delivery limits crossed. Freeze Swiggy 3 days → +4 runway days.</span>
-                </motion.div>
+                
+                {/* Simulator Triggers */}
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '8px' }}>
+                  {[
+                    { type: 'food', label: '🍔 Swiggy Loop', color: C.pink },
+                    { type: 'chai', label: '☕ Cafe Leak', color: C.teal },
+                    { type: 'transit', label: '🚗 Uber Surge', color: '#f59e0b' }
+                  ].map(tab => (
+                    <button
+                      key={tab.type}
+                      onClick={() => handleNudgeSelect(tab.type as any)}
+                      style={{
+                        padding: '6px 14px',
+                        background: selectedNudge === tab.type ? 'white' : 'rgba(255,255,255,0.03)',
+                        border: selectedNudge === tab.type ? `1px solid ${tab.color}` : `1px solid rgba(255,255,255,0.08)`,
+                        borderRadius: '99px',
+                        fontSize: '11px',
+                        fontWeight: 700,
+                        color: selectedNudge === tab.type ? 'black' : 'rgba(255,255,255,0.65)',
+                        cursor: 'pointer',
+                        transition: 'all 0.3s',
+                        fontFamily: 'Outfit, sans-serif'
+                      }}
+                    >
+                      {tab.label}
+                    </button>
+                  ))}
+                </div>
               </div>
 
-              {/* Delivery metrics */}
-              <div style={{ width: '160px', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                {[{ label: 'Alerts Sent', val: '2.4K', color: C.pink }, { label: 'Avg Saved', val: '₹3,800', color: C.teal }, { label: 'Response Time', val: '<2 sec', color: C.indigo }].map(s => (
-                  <div key={s.label} style={{ padding: '12px 14px', background: 'rgba(255,255,255,0.02)', border: `1px solid ${C.border}`, borderRadius: '12px' }}>
-                    <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '9px', color: C.textFaint, marginBottom: '4px' }}>{s.label}</div>
-                    <div style={{ fontFamily: 'Outfit, sans-serif', fontSize: '18px', fontWeight: 900, color: s.color }}>{s.val}</div>
+              {/* High-Fidelity WhatsApp Phone Message Simulation */}
+              <div style={{ width: '220px', height: '170px', flexShrink: 0, zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{
+                  width: '100%',
+                  height: '100%',
+                  background: '#0b141a',
+                  border: '4px solid #2d2d30',
+                  borderRadius: '24px',
+                  boxShadow: '0 20px 40px rgba(0,0,0,0.7)',
+                  overflow: 'hidden',
+                  display: 'flex',
+                  flexDirection: 'column'
+                }}>
+                  {/* WhatsApp Header banner */}
+                  <div style={{ background: '#075e54', padding: '10px', display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    <span style={{ fontSize: '11px' }}>💬</span>
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                      <span style={{ fontSize: '10px', fontWeight: 800, color: 'white', fontFamily: 'Outfit, sans-serif' }}>Kira Budget Coach</span>
+                      <span style={{ fontSize: '7px', color: '#25d366', fontFamily: 'JetBrains Mono, monospace', fontWeight: 700 }}>online</span>
+                    </div>
                   </div>
-                ))}
+                  
+                  {/* Message Bubble area */}
+                  <div style={{ flex: 1, padding: '10px', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', background: 'radial-gradient(circle, rgba(7,94,84,0.05), transparent 75%)' }}>
+                    <AnimatePresence mode="wait">
+                      <motion.div
+                        key={selectedNudge}
+                        initial={{ opacity: 0, scale: 0.9, y: 15 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.9, y: -10 }}
+                        transition={{ type: 'spring', damping: 15 }}
+                        style={{
+                          background: '#056162',
+                          borderRadius: '0px 14px 14px 14px',
+                          padding: '8px 12px',
+                          color: 'white',
+                          boxShadow: '0 2px 4px rgba(0,0,0,0.15)'
+                        }}
+                      >
+                        <p style={{ margin: 0, fontSize: '9.5px', fontFamily: 'Outfit, sans-serif', lineHeight: 1.4 }}>
+                          {nudgeMessage}
+                        </p>
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '3px', marginTop: '4px' }}>
+                          <span style={{ fontSize: '6.5px', color: 'rgba(255,255,255,0.4)', fontFamily: 'JetBrains Mono, monospace' }}>12:44 PM</span>
+                          <span style={{ color: '#34b7f1', fontSize: '7px' }}>✓✓</span>
+                        </div>
+                      </motion.div>
+                    </AnimatePresence>
+                  </div>
+                </div>
               </div>
             </div>
           </SpotlightCard>
         </motion.div>
 
-        {/* Card 4: Circuit Breaker – slides right */}
+        {/* Card 4: Circuit Breaker with high-fidelity security safe toggle */}
         <motion.div variants={cardAnim('right')} initial="hidden" whileInView="show" viewport={{ once: true, margin: '-80px' }}>
-          <SpotlightCard glowColor="rgba(20,184,166,0.1)" style={{ background: 'rgba(6,6,18,0.65)', border: `1px solid ${C.border}`, backdropFilter: 'blur(20px)', height: '100%' }}>
+          <SpotlightCard glowColor="rgba(20,184,166,0.12)" style={{ background: 'rgba(6,6,20,0.65)', border: `1px solid ${C.border}`, backdropFilter: 'blur(28px)', height: '100%' }}>
             <div style={{ padding: '28px', display: 'flex', flexDirection: 'column', gap: '16px', height: '100%' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -899,13 +1810,58 @@ const FeaturesGrid = () => {
                   <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '10px', color: C.teal, fontWeight: 700 }}>CIRCUIT BREAKER</span>
                 </div>
               </div>
+              
               <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'white', margin: 0, fontFamily: 'Outfit, sans-serif' }}>Privacy Isolation</h3>
-              <p style={{ color: C.textMuted, fontSize: '13.5px', margin: 0, lineHeight: 1.6 }}>Strict breaker policies shield credential schemas from any model timeout or breach.</p>
-              {/* Interactive Switch */}
-              <div style={{ marginTop: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(255,255,255,0.02)', border: `1px solid ${C.border}`, padding: '10px 16px', borderRadius: '12px' }}>
-                <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '11px', color: toggleActive ? '#4ade80' : C.textFaint, fontWeight: 700, textShadow: toggleActive ? '0 0 8px rgba(74,222,128,0.4)' : 'none', transition: 'all 0.3s' }}>{toggleActive ? 'SECURED' : 'EXPOSED'}</span>
-                <button onClick={() => setToggleActive(!toggleActive)} style={{ width: '38px', height: '20px', borderRadius: '99px', background: toggleActive ? '#22c55e' : 'rgba(255,255,255,0.1)', border: 'none', cursor: 'pointer', position: 'relative', padding: '2px', transition: 'background 0.3s', boxShadow: toggleActive ? '0 0 12px rgba(34,197,94,0.45)' : 'none' }}>
-                  <motion.div layout style={{ width: '16px', height: '16px', borderRadius: '50%', background: 'white', position: 'absolute', left: toggleActive ? '20px' : '2px' }} transition={{ type: 'spring', stiffness: 500, damping: 30 }} />
+              <p style={{ color: C.textMuted, fontSize: '13.5px', margin: 0, lineHeight: 1.6, flexGrow: 1 }}>
+                Volatile sandbox storage ensures bank details scrub merchant records regex-scrubbed before hitting remote streams.
+              </p>
+
+              {/* Secure switch widget */}
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                background: 'rgba(255, 255, 255, 0.02)',
+                border: `1px solid ${C.border}`,
+                padding: '12px 18px',
+                borderRadius: '16px',
+                boxShadow: toggleActive ? 'inset 0 0 10px rgba(34,197,94,0.06)' : 'none'
+              }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                  <span style={{
+                    fontFamily: 'JetBrains Mono, monospace',
+                    fontSize: '11px',
+                    color: toggleActive ? '#4ade80' : C.textFaint,
+                    fontWeight: 800,
+                    textShadow: toggleActive ? '0 0 8px rgba(74,222,128,0.3)' : 'none',
+                    transition: 'all 0.3s'
+                  }}>
+                    {toggleActive ? 'VAULT SECURED' : 'UNSECURED'}
+                  </span>
+                  <span style={{ fontSize: '7.5px', color: C.textFaint, fontFamily: 'JetBrains Mono, monospace', textTransform: 'uppercase' }}>
+                    Regex Purge Active
+                  </span>
+                </div>
+                <button
+                  onClick={() => setToggleActive(!toggleActive)}
+                  style={{
+                    width: '42px',
+                    height: '22px',
+                    borderRadius: '99px',
+                    background: toggleActive ? '#22c55e' : 'rgba(255,255,255,0.08)',
+                    border: 'none',
+                    cursor: 'pointer',
+                    position: 'relative',
+                    padding: '2px',
+                    transition: 'background 0.3s',
+                    boxShadow: toggleActive ? '0 0 12px rgba(34,197,94,0.4)' : 'none'
+                  }}
+                >
+                  <motion.div
+                    layout
+                    style={{ width: '18px', height: '18px', borderRadius: '50%', background: 'white', position: 'absolute', left: toggleActive ? '22px' : '2px' }}
+                    transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                  />
                 </button>
               </div>
             </div>
@@ -917,110 +1873,270 @@ const FeaturesGrid = () => {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// ── HOW IT WORKS – WAVY SVG TIMELINE WITH FLOWING LASER PULSES ──
+// ─────────────────────────────────────────────────────────────────────────────
+// ── HOW IT WORKS – SLEEK DIGG-STYLE ARCHITECTURAL SOCIAL FEED ──
 // ─────────────────────────────────────────────────────────────────────────────
 const HowItWorks = () => {
-  const [activeStep, setActiveStep] = useState(0);
+  const [votes, setVotes] = useState<Record<number, number>>({
+    0: 942,
+    1: 818,
+    2: 605,
+    3: 411
+  });
+  const [upvoted, setUpvoted] = useState<Record<number, boolean>>({
+    0: false,
+    1: false,
+    2: false,
+    3: false
+  });
+  const [expandedLogIdx, setExpandedLogIdx] = useState<number | null>(0);
+
+  const toggleUpvote = (id: number) => {
+    setUpvoted(prev => {
+      const isUp = !!prev[id];
+      setVotes(v => ({
+        ...v,
+        [id]: isUp ? v[id] - 1 : v[id] + 1
+      }));
+      return { ...prev, [id]: !isUp };
+    });
+  };
+
   const steps = [
-    { title: 'Statement Ingestion', desc: 'Securely upload bank statement templates. Kira structures rows automatically into a clean dataset.', icon: <Database size={20} />, color: C.indigo },
-    { title: 'UPI De-identification', desc: 'One-way cryptographic masking trims merchant identity fields before any LLM categorization.', icon: <Lock size={20} />, color: C.pink },
-    { title: 'Runway Regression', desc: 'Algorithms project daily cash balances forward to calculate exact exhaustion dates.', icon: <BarChart3 size={20} />, color: C.teal },
-    { title: 'LangGraph Auditing', desc: 'Supervisor nodes audit generated coach alerts for tone, compliance, and behavioral accuracy.', icon: <Cpu size={20} />, color: '#f59e0b' },
+    {
+      id: 0,
+      channel: 'local-privacy-core',
+      author: 'wasm_sandbox_agent',
+      time: '5m ago',
+      title: 'WASM local parser strips PII in browser sandbox before dispatch',
+      desc: 'Raw bank statements never touch Kira-AI servers unencrypted. Our Regex de-identification core executes client-side inside volatile browser memory, completely scrubbing names, account numbers, and transaction IDs.',
+      tags: ['#wasm', '#regex-masking', '#client-privacy'],
+      color: C.indigo,
+      comments: 42,
+      cmd: 'KIRA_INGEST: parsed 128 rows. Scrubbed merchant UPI parameters. Dispatching anonymous vector payload.'
+    },
+    {
+      id: 1,
+      channel: 'langgraph-coordinator',
+      author: 'graph_supervisor',
+      time: '12m ago',
+      title: 'LangGraph supervisor agent coordinates runway drain regressions',
+      desc: 'An intelligent coordinator agent charts day-zero runway parameters, spawning expert sub-agents to trace food/ride subscription loops, verify spike anomalies, and construct tone-compliant budget recovery warnings.',
+      tags: ['#langgraph', '#supervisors', '#regressions'],
+      color: C.pink,
+      comments: 29,
+      cmd: 'KIRA_FORECAST: calculated daily burn baseline. Weekend food spike flagged. Spawning sub-agent auditors.'
+    },
+    {
+      id: 2,
+      channel: 'whatsapp-alert-bridge',
+      author: 'twilio_bridge_dispatcher',
+      time: '28m ago',
+      title: 'Real-time SMS & WhatsApp alerts push actionable lockscreen budget warnings',
+      desc: 'Kira-AI syncs securely with communications bridges to push instant, actionable WhatsApp reminders to your mobile phone. Budget warnings come with custom 1-click reward acceptance feedback tags.',
+      tags: ['#whatsapp', '#user-nudges', '#feedback-loop'],
+      color: C.teal,
+      comments: 18,
+      cmd: 'KIRA_DISPATCH: Alert payload constructed. Transmitting secure WhatsApp lockscreen nudge. Awaiting reward callback.'
+    },
+    {
+      id: 3,
+      channel: 'gitlab-issue-hardener',
+      author: 'repo_ticket_auditor',
+      time: '45m ago',
+      title: 'GitLab ticket auto-logging enables advanced programmatic team hardening',
+      desc: 'For power users and dev teams, critical cash runway alerts can be logged programmatically as structured GitLab issues, automatically mapping financial anomalies to code logs for continuous team auditing.',
+      tags: ['#gitlab-api', '#system-audits', '#team-hardening'],
+      color: '#f59e0b',
+      comments: 12,
+      cmd: 'KIRA_AUDIT: Critical burn logged to GitLab API. Ticket #889 opened. Pipeline checklist audit passed.'
+    }
   ];
 
   return (
-    <motion.section initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '-100px' }} transition={{ duration: 0.9 }} id="howitworks" style={{ padding: '120px 24px', maxWidth: '1200px', margin: '0 auto', position: 'relative', zIndex: 1 }}>
+    <motion.section
+      initial={{ opacity: 0, y: 30 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: '-100px' }}
+      transition={{ duration: 0.9 }}
+      id="howitworks"
+      style={{ padding: '120px 24px', maxWidth: '960px', margin: '0 auto', position: 'relative', zIndex: 1 }}
+    >
       <div style={{ height: '1px', background: 'linear-gradient(90deg,transparent,rgba(255,255,255,0.06),transparent)', width: '100%', marginBottom: '80px' }} />
 
       {/* Header */}
       <div style={{ textAlign: 'center', marginBottom: '72px' }}>
-        <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '10.5px', fontWeight: 700, color: C.pink, textTransform: 'uppercase', letterSpacing: '2px', border: `1px solid rgba(236,72,153,0.3)`, padding: '4px 14px', borderRadius: '99px', background: 'rgba(236,72,153,0.07)', display: 'inline-block', marginBottom: '16px' }}>Pipeline Architecture</motion.div>
+        <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} style={{ fontFamily: 'Outfit, sans-serif', fontSize: '10.5px', fontWeight: 700, color: C.pink, textTransform: 'uppercase', letterSpacing: '2px', border: `1px solid rgba(236,72,153,0.3)`, padding: '4px 14px', borderRadius: '99px', background: 'rgba(236,72,153,0.07)', display: 'inline-block', marginBottom: '16px' }}>Pipeline Architecture</motion.div>
         <h2 style={{ fontSize: 'clamp(1.8rem,4vw,3rem)', fontWeight: 900, fontFamily: 'Outfit, sans-serif', color: 'white', letterSpacing: '-1.5px', margin: 0 }}>
-          How it{' '}
-          <span style={{ fontStyle: 'italic', fontWeight: 400, fontFamily: 'Instrument Serif, serif', color: C.pink }}>works.</span>
+          Engineering{' '}
+          <span style={{ fontStyle: 'italic', fontWeight: 400, fontFamily: 'Outfit, sans-serif', color: C.pink }}>Chronicles.</span>
         </h2>
+        <p style={{ fontSize: '15px', color: C.textMuted, marginTop: '12px', fontFamily: 'Outfit, sans-serif' }}>
+          Explore our system architecture styled as a premium interactive news feed. Upvote or expand telemetry logs on any component.
+        </p>
       </div>
 
-      <div style={{ display: 'flex', gap: '64px', alignItems: 'flex-start', flexWrap: 'wrap' }}>
-        {/* Step list */}
-        <div style={{ flex: 1, minWidth: '300px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
-          {steps.map((step, i) => {
-            const isActive = activeStep === i;
-            return (
-              <motion.div key={i} onClick={() => setActiveStep(i)} whileHover={{ x: 4 }} style={{ display: 'flex', gap: '18px', alignItems: 'flex-start', cursor: 'pointer', padding: '18px 20px', borderRadius: '18px', background: isActive ? `rgba(99,102,241,0.06)` : 'transparent', border: isActive ? `1px solid rgba(99,102,241,0.18)` : '1px solid transparent', transition: 'all 0.3s cubic-bezier(0.16,1,0.3,1)', boxShadow: isActive ? `0 8px 28px rgba(0,0,0,0.35)` : 'none' }}>
-                {/* Step icon */}
-                <motion.div animate={{ background: isActive ? step.color : 'rgba(255,255,255,0.04)', boxShadow: isActive ? `0 0 20px ${step.color}55` : 'none' }} transition={{ duration: 0.3 }} style={{ width: '48px', height: '48px', borderRadius: '14px', border: isActive ? `2px solid ${step.color}` : `1px solid rgba(255,255,255,0.08)`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: isActive ? 'white' : C.textFaint, flexShrink: 0, transition: 'color 0.3s' }}>
-                  {step.icon}
-                </motion.div>
-                <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '5px' }}>
-                    <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '9.5px', color: step.color, fontWeight: 700 }}>STEP {i + 1}</span>
-                  </div>
-                  <h4 style={{ fontSize: '16px', fontWeight: 800, color: isActive ? 'white' : 'rgba(200,210,255,0.65)', margin: '0 0 4px 0', fontFamily: 'Outfit, sans-serif', transition: 'color 0.3s' }}>{step.title}</h4>
-                  <p style={{ color: isActive ? C.textMuted : C.textFaint, fontSize: '13px', margin: 0, lineHeight: 1.55, transition: 'color 0.3s' }}>{step.desc}</p>
-                </div>
-              </motion.div>
-            );
-          })}
-        </div>
+      {/* Feed list */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        {steps.map((step) => {
+          const isUp = !!upvoted[step.id];
+          const score = votes[step.id];
+          const isExpanded = expandedLogIdx === step.id;
 
-        {/* SVG wave pipeline */}
-        <div style={{ flex: 1.1, minWidth: '300px' }}>
-          <SpotlightCard glowColor="rgba(99,102,241,0.1)" style={{ padding: '32px', background: 'rgba(6,6,18,0.65)', border: `1px solid ${C.border}`, backdropFilter: 'blur(20px)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-              <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '10px', color: C.textFaint, fontWeight: 600 }}>LANGGRAPH STATE MAP</span>
-              <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '9.5px', background: 'rgba(99,102,241,0.1)', color: C.indigo, padding: '2px 8px', borderRadius: '4px', fontWeight: 700 }}>INTERACTIVE</span>
-            </div>
-            <div style={{ height: '260px', background: 'rgba(0,0,0,0.2)', border: `1px solid ${C.border}`, borderRadius: '16px', overflow: 'hidden', position: 'relative' }}>
-              <svg width="100%" height="100%" viewBox="0 0 400 260" style={{ position: 'absolute', inset: 0 }}>
-                <defs>
-                  {steps.map((s, i) => (
-                    <radialGradient key={i} id={`ng${i}`} cx="50%" cy="50%" r="50%">
-                      <stop offset="0%" stopColor={s.color} stopOpacity="0.4" />
-                      <stop offset="100%" stopColor={s.color} stopOpacity="0" />
-                    </radialGradient>
-                  ))}
-                </defs>
-                {/* Wavy paths */}
-                {[
-                  { d: 'M 55,70 C 110,70 130,130 200,130', color: C.indigo, idx: 0 },
-                  { d: 'M 200,130 C 260,130 280,70 340,70', color: C.pink, idx: 1 },
-                  { d: 'M 55,190 C 110,190 130,130 200,130', color: C.teal, idx: 2 },
-                  { d: 'M 200,130 C 260,130 280,190 340,190', color: '#f59e0b', idx: 3 },
-                ].map(({ d, color, idx }) => (
-                  <g key={idx}>
-                    <path d={d} fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="2" />
-                    <motion.path d={d} fill="none" stroke={color} strokeWidth={activeStep === idx ? '2.5' : '1'} strokeDasharray="6,4" animate={activeStep === idx ? { strokeDashoffset: [0, -20] } : { strokeDashoffset: 0 }} transition={activeStep === idx ? { duration: 1, repeat: Infinity, ease: 'linear' } : {}} style={{ opacity: activeStep === idx ? 1 : 0.2, transition: 'all 0.4s' }} />
-                    {activeStep === idx && (
-                      <motion.circle r="5" fill={color} style={{ filter: `drop-shadow(0 0 6px ${color})` }}>
-                        <animateMotion dur="1.2s" repeatCount="indefinite" path={d} />
-                      </motion.circle>
-                    )}
-                  </g>
-                ))}
-                {/* Nodes */}
-                {[
-                  { x: 55, y: 70, label: 'Parser', i: 0 },
-                  { x: 55, y: 190, label: 'Regressor', i: 2 },
-                  { x: 200, y: 130, label: 'Supervisor', i: null },
-                  { x: 340, y: 70, label: 'Classifier', i: 1 },
-                  { x: 340, y: 190, label: 'Dispatcher', i: 3 },
-                ].map(({ x, y, label, i }, ni) => {
-                  const isAct = i !== null ? activeStep === i : false;
-                  const nodeColor = i !== null ? steps[i].color : C.indigo;
-                  return (
-                    <g key={ni}>
-                      {isAct && <motion.circle cx={x} cy={y} r="22" fill="none" stroke={nodeColor} strokeWidth="1" initial={{ scale: 0.8, opacity: 0.5 }} animate={{ scale: [0.8, 1.6, 0.8], opacity: [0.6, 0, 0.6] }} transition={{ duration: 1.8, repeat: Infinity }} />}
-                      <circle cx={x} cy={y} r="16" fill="#03030c" stroke={isAct ? nodeColor : 'rgba(255,255,255,0.1)'} strokeWidth={isAct ? '2' : '1.2'} />
-                      <circle cx={x} cy={y} r="5" fill={nodeColor} style={{ opacity: isAct ? 1 : 0.4 }} />
-                      <text x={x} y={y + 30} textAnchor="middle" fontSize="9" fill={isAct ? 'white' : 'rgba(200,210,255,0.35)'} fontFamily="JetBrains Mono" fontWeight={isAct ? '700' : '400'}>{label}</text>
-                    </g>
-                  );
-                })}
-              </svg>
-            </div>
-          </SpotlightCard>
-        </div>
+          return (
+            <motion.div
+              key={step.id}
+              whileHover={{ y: -2 }}
+              transition={{ duration: 0.2 }}
+              style={{
+                background: 'rgba(5, 5, 14, 0.72)',
+                border: isUp ? `1px solid ${step.color}60` : `1px solid ${C.border}`,
+                borderRadius: '24px',
+                padding: '24px',
+                display: 'flex',
+                gap: '20px',
+                boxShadow: isUp ? `0 15px 35px rgba(0,0,0,0.6), 0 0 20px ${step.color}15` : '0 10px 30px rgba(0,0,0,0.4)',
+                transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+                alignItems: 'flex-start'
+              }}
+            >
+              {/* Upvote column */}
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
+                <motion.button
+                  onClick={() => toggleUpvote(step.id)}
+                  whileTap={{ scale: 0.85 }}
+                  style={{
+                    background: isUp ? step.color : 'rgba(255,255,255,0.03)',
+                    border: isUp ? 'none' : `1px solid rgba(255,255,255,0.08)`,
+                    color: isUp ? 'black' : 'rgba(255,255,255,0.6)',
+                    width: '42px',
+                    height: '42px',
+                    borderRadius: '12px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    transition: 'all 0.2s',
+                    boxShadow: isUp ? `0 0 12px ${step.color}` : 'none'
+                  }}
+                  onMouseEnter={e => { if (!isUp) e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; }}
+                  onMouseLeave={e => { if (!isUp) e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; }}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ transform: 'rotate(-90deg)' }}>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                    <polyline points="12 5 19 12 12 19"></polyline>
+                  </svg>
+                </motion.button>
+                <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '13px', fontWeight: 800, color: isUp ? step.color : 'white', transition: 'color 0.2s' }}>
+                  {score}
+                </span>
+              </div>
+
+              {/* Main content column */}
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {/* Meta details */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', fontSize: '11px', color: C.textFaint, fontFamily: 'JetBrains Mono, monospace' }}>
+                  <span style={{ color: step.color, fontWeight: 700 }}>in/{step.channel}</span>
+                  <span>•</span>
+                  <span>Posted by u/{step.author}</span>
+                  <span>•</span>
+                  <span>{step.time}</span>
+                </div>
+
+                {/* Title */}
+                <h4
+                  onClick={() => toggleUpvote(step.id)}
+                  style={{
+                    fontSize: '18px',
+                    fontWeight: 800,
+                    color: 'white',
+                    margin: 0,
+                    fontFamily: 'Outfit, sans-serif',
+                    cursor: 'pointer',
+                    lineHeight: 1.35
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.color = step.color}
+                  onMouseLeave={e => e.currentTarget.style.color = 'white'}
+                >
+                  {step.title}
+                </h4>
+
+                {/* Description */}
+                <p style={{ fontSize: '13.5px', color: C.textMuted, margin: '4px 0 10px 0', lineHeight: 1.58, fontFamily: 'Outfit, sans-serif' }}>
+                  {step.desc}
+                </p>
+
+                {/* Tags and expandable logs */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+                  {/* Hashtags list */}
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    {step.tags.map((tag) => (
+                      <span key={tag} style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '10px', color: 'rgba(255,255,255,0.4)', background: 'rgba(255,255,255,0.03)', padding: '2px 8px', borderRadius: '4px', border: `1px solid rgba(255,255,255,0.05)` }}>{tag}</span>
+                    ))}
+                  </div>
+
+                  {/* Actions buttons */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '16px', fontSize: '12px', fontFamily: 'Outfit, sans-serif', color: C.textMuted }}>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }} onMouseEnter={e => e.currentTarget.style.color = step.color} onMouseLeave={e => e.currentTarget.style.color = C.textMuted}>
+                      <span>💬</span> {step.comments} Comments
+                    </span>
+                    <button
+                      onClick={() => setExpandedLogIdx(isExpanded ? null : step.id)}
+                      style={{
+                        background: 'transparent',
+                        border: 'none',
+                        color: isExpanded ? step.color : C.textMuted,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        fontSize: '12px',
+                        fontFamily: 'Outfit, sans-serif',
+                        fontWeight: isExpanded ? 700 : 400,
+                        transition: 'color 0.2s'
+                      }}
+                      onMouseEnter={e => { if (!isExpanded) e.currentTarget.style.color = step.color; }}
+                      onMouseLeave={e => { if (!isExpanded) e.currentTarget.style.color = C.textMuted; }}
+                    >
+                      <span>⚙</span> Telemetry Logs {isExpanded ? '▲' : '▼'}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Telemetry log expand block */}
+                <AnimatePresence>
+                  {isExpanded && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                      style={{ overflow: 'hidden', marginTop: '14px' }}
+                    >
+                      <div style={{
+                        background: '#04040c',
+                        border: `1px solid ${step.color}35`,
+                        borderRadius: '16px',
+                        padding: '16px 20px',
+                        fontFamily: 'JetBrains Mono, monospace',
+                        fontSize: '11px',
+                        color: step.color,
+                        boxShadow: 'inset 0 0 15px rgba(0,0,0,0.85)',
+                        lineHeight: 1.4
+                      }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '6px' }}>
+                          <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: step.color, boxShadow: `0 0 8px ${step.color}` }} className="animate-pulse" />
+                          <span style={{ color: C.textFaint, fontSize: '9px', textTransform: 'uppercase' }}>Console Log Output</span>
+                        </div>
+                        &gt; {step.cmd}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </motion.div>
+          );
+        })}
       </div>
     </motion.section>
   );
@@ -1423,7 +2539,7 @@ export const LandingScreen: React.FC<LandingScreenProps> = ({ onStart }) => {
       <BackgroundEffects scrollYProgress={scrollYProgress} />
       <NavWithStart onStart={onStart} />
       <HeroWithStart onStart={onStart} />
-      <StatsStrip />
+      <DecoderSandbox />
       <NudgePlayground />
       <FeaturesGrid />
       <HowItWorks />

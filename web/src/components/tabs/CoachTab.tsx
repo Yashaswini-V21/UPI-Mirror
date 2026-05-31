@@ -20,12 +20,12 @@ const itemVariants = {
 };
 
 export const CoachTab: React.FC<CoachTabProps> = ({ loading: loadingProp }) => {
-  const { coachData, coachLoading, session } = useKiraStore();
+  const { coachData, coachLoading, session, loadDemoSession } = useKiraStore();
   const loading = loadingProp ?? coachLoading;
   const data = coachData;
 
-  // ── Skeleton state ───────────────────────────────────────────────────────
-  if (loading || !data) {
+  // ── Skeleton state (Only show when actively loading) ──────────────────────
+  if (loading) {
     return (
       <motion.div
         variants={containerVariants} initial="hidden" animate="show"
@@ -35,6 +35,118 @@ export const CoachTab: React.FC<CoachTabProps> = ({ loading: loadingProp }) => {
         {[140, 180, 150, 80].map((h, i) => (
           <motion.div key={i} variants={itemVariants}><KiraSkeleton height={h} variant="card" /></motion.div>
         ))}
+      </motion.div>
+    );
+  }
+
+  // ── Empty session state (Show CTA + Blurred mock preview) ──────────────────
+  if (!data) {
+    return (
+      <motion.div
+        variants={containerVariants} initial="hidden" animate="show"
+        style={{ display: 'flex', flexDirection: 'column', gap: '24px', width: '100%', position: 'relative' }}
+      >
+        {/* Absolute CTA Overlay card */}
+        <motion.div
+          variants={itemVariants}
+          style={{
+            position: 'absolute',
+            inset: 0,
+            zIndex: 10,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '24px',
+            pointerEvents: 'auto',
+          }}
+        >
+          <div style={{
+            maxWidth: '480px',
+            background: 'rgba(13, 15, 23, 0.88)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            border: '1px solid rgba(168, 85, 247, 0.35)',
+            borderRadius: '24px',
+            padding: '32px',
+            textAlign: 'center',
+            boxShadow: '0 25px 60px rgba(0,0,0,0.8), 0 0 30px rgba(168, 85, 247, 0.15)',
+          }}>
+            <div style={{
+              width: '56px',
+              height: '56px',
+              borderRadius: '50%',
+              background: 'rgba(168, 85, 247, 0.12)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '0 auto 20px',
+              fontSize: '24px',
+              border: '1px solid rgba(168, 85, 247, 0.3)'
+            }}>
+              ⚡
+            </div>
+            <h3 style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: '20px', color: 'white', margin: '0 0 12px 0' }}>
+              Personal AI Coach Offline
+            </h3>
+            <p style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 300, fontSize: '14.5px', color: 'rgba(255,255,255,0.7)', lineHeight: 1.55, margin: '0 0 24px 0' }}>
+              No statement session is currently active. Upload a bank statement inside the Upload tab to start coaching, or load our fully featured sample session instantly to see Kira-AI in action.
+            </p>
+            <KiraButton
+              variant="success"
+              size="md"
+              onClick={loadDemoSession}
+              style={{
+                background: 'linear-gradient(135deg, #a855f7, #6366f1)',
+                border: 'none',
+                color: 'white',
+                fontWeight: 700,
+                boxShadow: '0 8px 24px rgba(168, 85, 247, 0.35)',
+                width: '100%',
+                padding: '12px 24px',
+                borderRadius: '12px',
+                cursor: 'pointer'
+              }}
+            >
+              ⚡ Load Sample Coach Session
+            </KiraButton>
+          </div>
+        </motion.div>
+
+        {/* Blurred preview background */}
+        <div style={{ filter: 'blur(8px)', opacity: 0.28, pointerEvents: 'none', display: 'flex', flexDirection: 'column', gap: '24px', width: '100%' }}>
+          {/* Status badge and runway mock */}
+          <GlassCard>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', marginBottom: '10px' }}>Financial Status</div>
+                <StatusBadge status="watch" />
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ fontWeight: 800, fontSize: '3rem', color: '#f59e0b', lineHeight: 1 }}>18</div>
+                <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.45)', marginTop: '4px' }}>days of runway</div>
+              </div>
+            </div>
+          </GlassCard>
+
+          {/* Advice card mock */}
+          <GlassCard accent="purple">
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+              <div style={{ padding: '3px 8px', background: 'rgba(168,85,247,0.12)', color: '#a855f7', borderRadius: '4px', fontSize: '10px', fontWeight: 600 }}>KIRA SAYS</div>
+              <div style={{ padding: '3px 8px', background: 'rgba(34,197,94,0.1)', color: '#22c55e', borderRadius: '99px', fontSize: '10px', fontWeight: 600 }}>91% confidence</div>
+            </div>
+            <p style={{ fontSize: '15px', color: 'rgba(255,255,255,0.92)', lineHeight: 1.65, margin: 0 }}>
+              Kira detected a spike in discretionary Food Delivery transactions. At this rate, your primary runway exhausts 18 days early. Recommendation: Cap Swiggy caps immediately.
+            </p>
+          </GlassCard>
+
+          {/* Action card mock */}
+          <GlassCard accent="blue">
+            <div style={{ fontSize: '9px', color: '#38bdf8', textTransform: 'uppercase', marginBottom: '10px' }}>Today's Action</div>
+            <p style={{ fontWeight: 500, fontSize: '14px', color: 'white', margin: 0 }}>
+              Cap Swiggy at ₹2,000 this week to extend cash runway by 6 days.
+            </p>
+          </GlassCard>
+        </div>
       </motion.div>
     );
   }

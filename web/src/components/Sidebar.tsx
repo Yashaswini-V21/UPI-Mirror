@@ -23,7 +23,7 @@ interface SidebarProps {
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({ onNewSession }) => {
-  const { activeTab, setActiveTab, coachData, session } = useKiraStore();
+  const { activeTab, setActiveTab, coachData, session, exitDashboard } = useKiraStore();
   const [hoveredId, setHoveredId] = useState<TabId | null>(null);
 
   const status     = coachData?.status ?? null;
@@ -44,7 +44,16 @@ export const Sidebar: React.FC<SidebarProps> = ({ onNewSession }) => {
       }}
     >
       {/* Logo */}
-      <div style={{ padding: '24px 20px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+      <div
+        onClick={exitDashboard}
+        style={{
+          padding: '24px 20px', display: 'flex', alignItems: 'center', gap: '12px',
+          cursor: 'pointer', transition: 'opacity 0.2s'
+        }}
+        onMouseEnter={e => { e.currentTarget.style.opacity = '0.8'; }}
+        onMouseLeave={e => { e.currentTarget.style.opacity = '1'; }}
+        title="Go back to Landing Page"
+      >
         <div
           role="img"
           aria-label="Kira-AI logo"
@@ -152,6 +161,34 @@ export const Sidebar: React.FC<SidebarProps> = ({ onNewSession }) => {
             </div>
           </div>
         </div>
+
+        <button
+          onClick={exitDashboard}
+          aria-label="Return to landing screen"
+          style={{
+            padding: '8px 12px',
+            background: 'rgba(255,255,255,0.03)',
+            border: '1px solid rgba(255,255,255,0.08)',
+            borderRadius: '6px',
+            color: 'rgba(255,255,255,0.7)',
+            fontFamily: 'Outfit, sans-serif',
+            fontSize: '13px',
+            cursor: 'pointer',
+            width: '100%',
+            transition: 'background 0.15s, border-color 0.15s',
+            marginBottom: '6px',
+          }}
+          onMouseEnter={e => {
+            (e.currentTarget).style.background = 'rgba(255,255,255,0.07)';
+            (e.currentTarget).style.borderColor = 'rgba(255,255,255,0.14)';
+          }}
+          onMouseLeave={e => {
+            (e.currentTarget).style.background = 'rgba(255,255,255,0.03)';
+            (e.currentTarget).style.borderColor = 'rgba(255,255,255,0.08)';
+          }}
+        >
+          ← Go to Homepage
+        </button>
 
         <button
           onClick={onNewSession}

@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { GlassCard, KiraButton, KiraInput, StatusBadge } from '../ui';
-import { UploadCloudIcon, CheckCircleIcon } from '../ui/Icons';
+import { UploadCloudIcon, CheckCircleIcon, SparklesIcon } from '../ui/Icons';
 import { useKiraStore } from '../../store/useKiraStore';
 import toast from 'react-hot-toast';
 
@@ -18,7 +18,7 @@ const truncate = (name: string, max: number) =>
   name.length <= max ? name : `${name.slice(0, max - 3)}…`;
 
 export const UploadTab: React.FC = () => {
-  const { upload, session, uploadError, setActiveTab } = useKiraStore();
+  const { upload, session, uploadError, setActiveTab, loadDemoSession } = useKiraStore();
   const [uploadState, setUploadState] = useState<UploadState>('idle');
   const [file, setFile]   = useState<File | null>(null);
   const [budgetRaw, setBudgetRaw]   = useState('15000');
@@ -265,6 +265,29 @@ export const UploadTab: React.FC = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* DEMO SESSION EXPLORER */}
+      {!isSuccess && (
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+          <GlassCard style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', padding: '24px 20px', border: '1.5px dashed rgba(168, 85, 247, 0.28)', background: 'linear-gradient(135deg, rgba(168, 85, 247, 0.03), rgba(99, 102, 241, 0.01))' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <SparklesIcon size={16} color="#c084fc" />
+              <span style={{ fontFamily: 'Outfit, sans-serif', fontSize: '14px', fontWeight: 700, color: 'white' }}>Don't have a statement?</span>
+            </div>
+            <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: '12px', margin: 0, textAlign: 'center', lineHeight: 1.5, maxWidth: '340px', fontFamily: 'Outfit, sans-serif' }}>
+              Explore the entire Kira-AI coach dashboard instantly with our pre-loaded sample budget and transaction telemetry.
+            </p>
+            <KiraButton
+              variant="ghost"
+              size="sm"
+              onClick={(e) => { e.stopPropagation(); loadDemoSession(); }}
+              style={{ borderColor: 'rgba(168, 85, 247, 0.45)', color: '#c084fc', marginTop: '6px' }}
+            >
+              Load Sandbox Demo Data →
+            </KiraButton>
+          </GlassCard>
+        </motion.div>
+      )}
 
       {/* RECENT SESSION SUMMARY */}
       {session && !isSuccess && (

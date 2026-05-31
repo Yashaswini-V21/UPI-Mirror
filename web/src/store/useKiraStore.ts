@@ -33,6 +33,7 @@ interface KiraStore {
   activeTab: TabId;
   setActiveTab: (tab: TabId) => void;
   enterDashboard: () => void;
+  exitDashboard: () => void;
 
   // Session
   session: KiraSession | null;
@@ -53,21 +54,32 @@ interface KiraStore {
 
   // Reset
   newSession: () => void;
+
+  // Demo
+  loadDemoSession: () => void;
 }
 
 const DEFAULT_WHATSAPP = 'https://wa.me/?text=Kira+AI+coach+insight';
 
 const DEMO_COACH: CoachData = {
   status: 'watch',
-  runwayDays: 12,
-  narrative: 'Kira detected a spike in Food Delivery spending. At this burn rate, funds exhaust in 12 days. Recommend capping this category immediately.',
-  actionText: 'Cap Food Delivery at ₹2,000 this week to extend runway by 4 days.',
-  tipText: 'Most broke dates happen 3 days before payday. Pace yourself this week.',
+  runwayDays: 18,
+  narrative: 'Kira detected a spike in discretionary Food Delivery transactions. At this rate, your primary runway exhausts 18 days early. Recommendation: Cap Swiggy caps immediately.',
+  actionText: 'Cap Swiggy at ₹2,000 this week to extend cash runway by 6 days.',
+  tipText: 'Discretionary transaction spikes usually occur on weekends. Pace your weekend delivery cap.',
   suggestedCap: 2000,
   topCategory: 'Food Delivery',
   whatsappLink: DEFAULT_WHATSAPP,
-  confidence: 87,
-  burnRateDaily: 1250,
+  confidence: 91,
+  burnRateDaily: 1420,
+};
+
+const DEMO_SESSION: KiraSession = {
+  uploadId: 'DEMO_SESSION_9982',
+  filename: 'demo_bank_statement.csv',
+  rows: 42,
+  categories: ['Food Delivery', 'Micro-Transit', 'Subscriptions', 'Cafes', 'Shopping'],
+  dateRange: { start: '2026-05-01', end: '2026-05-28' },
 };
 
 function mapCoachResponse(result: CoachResponse): CoachData {
@@ -100,6 +112,14 @@ export const useKiraStore = create<KiraStore>()(
       setActiveTab: (tab) => set({ activeTab: tab }),
 
       enterDashboard: () => set({ showDashboard: true, activeTab: 'upload' }),
+
+      exitDashboard: () => set({ showDashboard: false }),
+
+      loadDemoSession: () => set({
+        session: DEMO_SESSION,
+        coachData: DEMO_COACH,
+        activeTab: 'coach',
+      }),
 
       newSession: () => set({
         showDashboard: false,

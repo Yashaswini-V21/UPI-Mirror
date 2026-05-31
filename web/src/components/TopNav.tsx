@@ -9,7 +9,7 @@ interface TopNavProps {
 }
 
 export const TopNav: React.FC<TopNavProps> = ({ onMenuOpen }) => {
-  const { activeTab, coachData, hasAlert } = useKiraStore();
+  const { activeTab, coachData, hasAlert, exitDashboard } = useKiraStore();
   const [bellOpen, setBellOpen] = useState(false);
   const showDot = hasAlert;
 
@@ -39,7 +39,18 @@ export const TopNav: React.FC<TopNavProps> = ({ onMenuOpen }) => {
         </button>
         <nav aria-label="Breadcrumb">
           <ol style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: 0, padding: 0, listStyle: 'none' }}>
-            <li style={{ fontFamily: 'Outfit, sans-serif', fontSize: '14px', color: 'rgba(255,255,255,0.4)' }}>Kira-AI</li>
+            <li
+              onClick={exitDashboard}
+              style={{
+                fontFamily: 'Outfit, sans-serif', fontSize: '14px', color: 'rgba(255,255,255,0.4)',
+                cursor: 'pointer', transition: 'color 0.2s'
+              }}
+              onMouseEnter={e => { e.currentTarget.style.color = 'white'; }}
+              onMouseLeave={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.4)'; }}
+              title="Go back to Landing Page"
+            >
+              Kira-AI
+            </li>
             <li aria-hidden="true" style={{ color: 'rgba(255,255,255,0.2)', fontSize: '12px' }}>/</li>
             <li style={{ fontFamily: 'Outfit, sans-serif', fontSize: '14px', color: 'white', fontWeight: 500 }} aria-current="page">{tabLabels[activeTab] ?? activeTab}</li>
           </ol>

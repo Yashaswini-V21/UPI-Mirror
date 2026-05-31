@@ -1,236 +1,256 @@
 <div align="center">
 
-<img src="https://capsule-render.vercel.app/api?type=waving&color=0:0f172a,30:1e3a5f,60:0ea5e9,100:06b6d4&height=200&section=header&text=Kira-AI&fontSize=64&fontColor=ffffff&animation=fadeIn&fontAlignY=38&desc=Predictive%20Behavioral%20Finance%20%E2%80%A2%20UPI%20Intelligence&descAlignY=60&descSize=18" width="100%" alt="Kira-AI Banner"/>
+<img src="https://capsule-render.vercel.app/api?type=waving&color=0:0f172a,30:1e3a5f,60:0ea5e9,100:14b8a6&height=220&section=header&text=Kira-AI%20v3.0&fontSize=60&fontColor=ffffff&animation=fadeIn&fontAlignY=36&desc=Zero-Knowledge%20Financial%20Intelligence%20%E2%80%A2%20Interactive%20WASM%20Cockpit&descAlignY=58&descSize=16" width="100%" alt="Kira-AI Banner"/>
 
 [![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.111-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
 [![React](https://img.shields.io/badge/React-18.3+-61DAFB?style=for-the-badge&logo=react&logoColor=white)](https://reactjs.org)
-[![LangGraph](https://img.shields.io/badge/LangGraph-Coach%20Pipeline-111827?style=for-the-badge)](https://langchain-ai.github.io/langgraph/)
-[![License](https://img.shields.io/badge/License-MIT-10b981?style=for-the-badge)](LICENSE)
-[![Status](https://img.shields.io/badge/Status-Production%20Ready-success?style=for-the-badge)](https://github.com)
+[![LangGraph](https://img.shields.io/badge/LangGraph-Active%20Supervisor-111827?style=for-the-badge)](https://langchain-ai.github.io/langgraph/)
+[![License](https://img.shields.io/badge/License-MIT-14b8a6?style=for-the-badge)](LICENSE)
+[![Security](https://img.shields.io/badge/Security-Hardened%20OWASP-success?style=for-the-badge)](https://github.com)
 
 <p align="center">
-  <strong>A production-grade behavioral finance intelligence platform that converts UPI payment history into predictive spending insights, habit scores, and personalised AI-generated nudges — all via a hardened FastAPI backend and a sleek React dashboard.</strong>
+  <strong>A production-grade, highly interactive behavioral finance intelligence platform. Kira decodes local bank statements, scrubs transaction identifiers client-side inside WebAssembly sandboxes, maps metrics with LangGraph supervisor logic, and routes actionable financial nudges—all managed via a hardened FastAPI backend and a futuristic React split-screen cockpit interface.</strong>
 </p>
 
 </div>
 
 ---
 
-## Table of Contents
+## 📖 Table of Contents
 
 1. [Product Overview](#1-product-overview)
-2. [Key Differentiators](#2-key-differentiators)
-3. [System Architecture](#3-system-architecture)
-4. [Repository Structure](#4-repository-structure)
-5. [Quickstart Guide](#5-quickstart-guide)
-6. [API Reference](#6-api-reference)
-7. [Backend Modules](#7-backend-modules)
-8. [Security & Hardening](#8-security--hardening)
-9. [Observability & Monitoring](#9-observability--monitoring)
+2. [Interactive Cyber Command Center Cockpit (Upgrades Spotlight)](#2-interactive-cyber-command-center-cockpit-upgrades-spotlight)
+3. [Key Differentiators](#3-key-differentiators)
+4. [System Architecture & Pipelines](#4-system-architecture--pipelines)
+5. [Repository Structure](#5-repository-structure)
+6. [Developer Quickstart](#6-developer-quickstart)
+7. [API Reference & Telemetry Routes](#7-api-reference--telemetry-routes)
+8. [Backend Core Modules](#8-backend-core-modules)
+9. [Security Hardening & Protection controls](#9-security-hardening--protection-controls)
 10. [Data Governance & PII Protection](#10-data-governance--pii-protection)
 11. [Testing & Quality Assurance](#11-testing--quality-assurance)
-12. [Deployment](#12-deployment)
-13. [Contributing](#13-contributing)
-14. [License](#14-license)
+12. [Deployment Framework](#12-deployment-framework)
 
 ---
 
 ## 1) Product Overview
 
-Kira-AI solves **pre-failure behavioral detection** — the gap between noticing a bad habit and acting on it before the bank balance hits zero.
+Kira-AI addresses **pre-failure behavioral detection**—detecting spending leaks, discretionary Runway deterioration, and category anomalies *before* the balance hits zero.
 
-It ingests messy UPI payment history (CSV exports from Google Pay, Paytm, PhonePe, or directly parsed PDFs) and produces:
+It ingests messy transaction history (Google Pay, Paytm, PhonePe exports, or direct parsed bank PDFs) and outputs actionable, rule-constrained financial coaching signals:
 
-| Output | What it does |
-|---|---|
-| **Broke-Date Forecast** | Linear regression on daily burn rate predicts which day you run out of money |
-| **Habit Scores** | 0–100 addiction intensity per category derived from frequency, late-night share, weekly consistency, and trend |
-| **Anomaly Detection** | IQR-based weekly spend spikes flagged with severity score |
-| **AI Nudge** | Gemini-powered 3-sentence coaching narrative with a concrete rupee target and time window |
-| **Feedback Loop** | Accepted / dismissed nudge responses stored as reward signals for future personalisation |
-| **What-If Scenarios** | Simulate the days-gained from cutting any category by X% |
-
----
-
-## 2) Key Differentiators
-
-Most finance apps only show you **what happened**. Kira-AI answers *when will I overrun* and *what must I do right now*.
-
-| Capability | Typical Expense Tracker | **Kira-AI** |
+| Capability | Technical Output | Behavioral Impact |
 |---|---|---|
-| **Forecasting** | Static historical totals | Broke-date and projected month-end risk |
-| **Behavioral Layer** | Category pie charts | Habit intensity, anomaly routing, regret context |
-| **Interventions** | Passive push notifications | Daily nudge + dynamic weekly cap recommendation |
-| **Learning Loop** | No user signal | Accepted / dismissed feedback loop |
-| **Narrative** | None | Gemini-generated, rule-constrained coaching text |
-| **Resilience** | Single point of failure | Circuit breakers + double caching layer |
+| **Broke-Date Projection** | Linear regression on cumulative burn | Foresees cash depletion dates with confidence bands |
+| **Habit Scoring** | 0–100 category index meters | Flags late-night impulse buys and transaction frequencies |
+| **IQR Spikes Detection** | Upper-fence anomaly alerts | Isolates major discretionary spikes instantly |
+| **Coaching Interventions** | Gemini-powered local rule-bound nudges | Prompts actionable targets (caps, durations, and steps) |
+| **Feedback Loop** | Accepted / dismissed reward telemetry | Optimises narrative alignment for personalized retention |
+| **What-If Scenarios** | Parameterized budget simulators | Gathers metrics showing days-gained by category reductions |
 
 ---
 
-## 3) System Architecture
+## 2) Interactive Cyber Command Center Cockpit (Upgrades Spotlight)
 
-Kira-AI uses a **decoupled, layered architecture**: a React SPA communicates with a hardened FastAPI backend through a protected REST API.
+Version 3.0 introduces a state-of-the-art **Split-Screen Cyber Command Center** Hero experience in the React client, focusing on real-time interactive de-identification simulations:
+
+```
++------------------------------------------+    Flying Particle Flow    +------------------------------------------+
+|     WASM Sandbox Privacy Core Dock       | -------------------------> |        CommandCenterDeck Cockpit         |
+| [PDF Bay] [CSV Bay] [SMS Bay] (Tabbed)   |    (Curved Laser Beam)     | [ Target Sweeper HUD ]                   |
+| - Memory Buffers: Raw vs. Scrubbed Text  |                            | - Live Cryptographic Activity Logs       |
+| - Slider: De-identification intensity    |                            | - Manual Security Scan sweep line        |
++------------------------------------------+                            +------------------------------------------+
+```
+
+### 💎 Interactive Upgrades List
+
+*   **Left Column: WASM Sandbox Privacy Core Dock**
+    *   **Tabbed Ingestion Bays**: Toggle between three local statement mockups: `📄 PDF Statements`, `📊 CSV Ledgers`, and `💬 SMS Alerts`.
+    *   **Side-by-Side In-Memory Buffers**: Showcases raw exposed data variables in a red glowing terminal (`[IN MEMORY RAW BUFFER]`) vs. scrubbed data keys in a teal glowing terminal (`[SCRUBBED LOCAL BUFFER]`).
+    *   **De-identification Depth Slider**: A responsive slider allowing users to scrub identifiers in real time between `0% (Minimal)`, `50% (Shielded)`, and `100% (Absolute Secure)`. Moving the slider dynamically replaces names, accounts, and amounts with asterisks in the live buffer.
+    *   **WASM Telemetry Stats**: Outputs local parsing latency metrics (`< 0.4ms`), volatile context retention rules (`0ms // RAM`), and anonymity indexes.
+    *   **Curved Flying Packet Pulse**: Clicking `INGEST & RUN DE-IDENTIFICATION` triggers a glowing Bezier keyframe particle packet that shoots across the columns into the right cockpit deck.
+*   **Right Column: CommandCenterDeck Cockpit**
+    *   **Futuristic HUD Target rings**: Concert-grade dual concentric SVG lines rotating in opposite directions.
+    *   **Manual Security Sweep**: Triggering `[ RUN SECURITY CHECK ]` sweeps a green neon laser scanner across the 3D-perspective deck, runs local SHA-256 integrity checks, and updates volatile cockpit traces.
+    *   **Telemetry Logs**: Tickers real-time system steps (`INGEST`, `DECODE`, `REDISP`, `SECURE`, `ROUTE`, `DISPATCH`) synchronized with the left column's active state.
+*   **Client-Side UPI Decoder Sandbox (`DecoderSandbox`)**
+    *   Replaces generic text blocks with a local transaction parser. Users select real transaction samples (Swiggy, Uber, Netflix) and watch a client-side regex anonymizer scrub merchant details and cards.
+*   **Digg-Style Architecture Newsfeed (`HowItWorks` component)**
+    *   A content-aggregator newsfeed replacing traditional static vertical columns. 
+    *   Includes interactive **upvote counters** with custom Framer Motion spring actions, comments counts, author channels (`in/local-privacy-core`), and inline **telemetry code expanders** for each node.
+*   **Blurred Empty-State Coach Console (`CoachTab.tsx`)**
+    *   Mitigates long, static skeleton loaders. When no active statement session is loaded, it provides a blurred preview dashboard covered by a glassmorphic **"⚡ Load Sample Coach Session"** CTA that directly populates the Zustand store with realistic demo metrics.
+
+---
+
+## 3) Key Differentiators
+
+Kira-AI is built to provide actionable behavioral interventions rather than static retrospective graphs:
+
+| Feature | Conventional Finance Trackers | **Kira-AI** |
+|---|---|---|
+| **Privacy Model** | Cloud ingestion of raw names & balances | **Client-side WASM de-identification before routing** |
+| **Forecasting** | Simple historical monthly averages | **Cumulative linear regression broke-date predictions** |
+| **Interventions** | Passive, static notifications | **Dynamic spend caps + contextual narrative coaching** |
+| **LLM Reliability** | Prone to hallucinations | **Circuit-breaker protected, template-backed LLM narratives** |
+| **Data Governance** | Permanent cloud logs of accounts | **90-Day strict auto-purge retention sweeps** |
+
+---
+
+## 4) System Architecture & Pipelines
+
+Kira-AI uses a decoupled, hardened architecture. Raw client statements are scrubbed locally in the browser before reaching backend APIs.
 
 ```mermaid
 flowchart TD
-    subgraph Client
+    subgraph Client ["Client-Side Browser (web/)"]
         U[Upload CSV / PDF]
-        FE[React Dashboard]
+        FE[React Cockpit Dashboard]
+        WS[WASM Sandbox / Scrubbing Slider]
         FB[Accept / Dismiss Nudge]
     end
 
-    subgraph API["FastAPI Backend (api/)"]
+    subgraph API ["FastAPI Hardened Routing (api/)"]
         UP[POST /upload]
         CO[POST /coach]
         FBK[POST /feedback]
         HI[GET /history]
         SC[POST /scenarios]
         EX[GET /export/csv]
+        PR[GET /metrics/prometheus]
     end
 
-    subgraph Core["Core Engine (src/)"]
+    subgraph Core ["Core Engine Core Logic (src/)"]
         VA[Validation & Sanitisation]
-        AN[analytics.py — Broke-Date & Anomalies]
-        AG[coach_agent.py — LangGraph Pipeline]
-        NA[narrative.py — Gemini / Fallback]
-        RE[resilience.py — Circuit Breakers & Cache]
-        DG[data_governance.py — PII & Retention]
-        AU[audit.py — Immutable Audit Trail]
+        AN[analytics.py — Regression & Anomalies]
+        AG[coach_agent.py — LangGraph 5-Node Workflow]
+        NA[narrative.py — Gemini LLM Narrative Core]
+        RE[resilience.py — Circuit Breakers & Dual Caching]
+        DG[data_governance.py — PII & Eviction Policy]
+        AU[audit.py — Append-Only JSON Lines Logs]
         OB[observability.py — Prometheus & structlog]
     end
 
-    U -->|multipart/form-data| UP
+    U -->|100% Client-Scrubbed| WS
+    WS -->|multipart/form-data| UP
     UP --> VA --> AN
-    AN -->|signals| AG
-    AG -->|coach state| NA
-    NA -->|narrative text| CO
-    CO -->|CoachResponse JSON| FE
-    FE --> FB -->|feedback payload| FBK
+    AN -->|Telemetry Signals| AG
+    AG -->|Orchestrated State| NA
+    NA -->|Coaching Response| CO
+    CO -->|Secure JSON| FE
+    FE --> FB -->|Feedback telemetry| FBK
     FBK --> AU
     CO --> RE
     CO --> AU
     CO --> OB
+    PR -->|Scraping Probe| OB
 ```
 
-### LangGraph Coach Pipeline
+### The 5-Node LangGraph Coach Pipeline
 
-The coach runs a **5-node, linear LangGraph pipeline** where each node writes only its own state keys:
+The coach workflow is compiled at import time and executes asynchronously:
 
 ```
-START → anomaly_check → pattern_analysis → nudge_generation
-      → cap_recommendation → confidence_scoring → END
+[START] ➔ anomaly_check ➔ pattern_analysis ➔ nudge_generation ➔ cap_recommendation ➔ confidence_scoring ➔ [END]
 ```
 
-| Node | Reads | Writes |
-|---|---|---|
-| `anomaly_check` | `signals.anomaly_detected/score` | `anomaly_detected`, `anomaly_score` |
-| `pattern_analysis` | `anomaly_detected`, `habit_score`, `days_left` | `status`, `habit_category`, `burn_rate_daily` |
-| `nudge_generation` | `status`, `habit_category`, `budget` | `nudge` |
-| `cap_recommendation` | `status`, `budget`, `burn_rate_daily` | `suggested_cap`, `top_overspend_category` |
-| `confidence_scoring` | `anomaly_detected`, `habit_score`, `regret_flag` | `confidence_score`, `signal_weights` |
+*   **`anomaly_check`**: Assesses weekly IQR metrics, writing `anomaly_detected` and calculated spike weights.
+*   **`pattern_analysis`**: Evaluates days-left runway variables against habit scores to assign status states.
+*   **`nudge_generation`**: Connects status indexes to draft rule-bound coaching templates or LLM prompts.
+*   **`cap_recommendation`**: Formulates recommended spending caps for the primary overspend category.
+*   **`confidence_scoring`**: Calculates overall output validation scores using data density and feedback history.
 
 ---
 
-## 4) Repository Structure
+## 5) Repository Structure
 
 ```text
 Kira-AI/
 │
-├── api/                          # FastAPI routing layer
+├── api/                          # FastAPI Web Routing Layer
 │   ├── __init__.py
-│   ├── main.py                   # App factory, middleware, all endpoints
-│   ├── schemas.py                # Pydantic v2 request/response schemas
-│   └── security.py              # Bearer token auth, HMAC signature, file validation
+│   ├── main.py                   # App factory, OWASP headers, CORS, metrics, rate limits
+│   ├── schemas.py                # Pydantic v2 validation models
+│   └── security.py               # constant-time Auth digests, magic-bytes checks
 │
-├── src/                          # Core business logic
+├── src/                          # Core Behavioral & Analytics Logic
 │   ├── __init__.py
-│   ├── analytics.py             # Broke-date forecast, addiction scores, anomaly detection
-│   ├── audit.py                 # Immutable append-only audit trail (JSON Lines)
-│   ├── coach_agent.py           # LangGraph spending coach orchestration
-│   ├── coach_memory.py          # Local snapshot persistence for coach runs
-│   ├── data.py                  # Transaction loading and cleaning helpers
-│   ├── data_governance.py       # PII masking, retention policy, session cap
-│   ├── delivery.py              # WhatsApp URL builder, email delivery formatting
-│   ├── email_integration.py     # Resend email integration
-│   ├── evaluation.py            # Model quality metrics (MAE, signal coverage)
-│   ├── explainability.py        # Human-readable explanation of coach decision
-│   ├── gitlab_integration.py    # GitLab issue creation for critical spend alerts
-│   ├── insights.py              # High-level textual insight generators
-│   ├── lightning.py             # Fast path for lightweight signal extraction
-│   ├── merchant.py              # Late-night merchant analytics and regret correlation
-│   ├── narrative.py             # Gemini narrative generation with circuit breaker
-│   ├── observability.py         # Prometheus metrics, structlog, OpenTelemetry
-│   ├── pdf_parser.py            # UPI statement PDF parser (Google Pay, Paytm, PhonePe)
-│   ├── regret.py                # Per-category regret statistics and insights
-│   ├── resilience.py            # Circuit breakers (pybreaker) + TTL caches
-│   └── whatsapp_integration.py  # Twilio WhatsApp delivery
-│
-├── tests/                        # Test suite
-│   ├── test_api.py              # Endpoint integration tests
-│   ├── test_coach_agent_unit.py # LangGraph node unit tests
-│   ├── test_comprehensive.py    # End-to-end flow tests
-│   └── test_narrative_fallback.py
+│   ├── analytics.py              # Linear regression Broke-Dates, IQR anomalies, Addiction meters
+│   ├── audit.py                  # Immutable JSON-Lines append-only logger
+│   ├── coach_agent.py            # compiled stateful 5-node LangGraph pipeline
+│   ├── coach_memory.py           # Snapshot read/writes for session persistence
+│   ├── data.py                   # Parsing matrices and transaction scrubbers
+│   ├── data_governance.py        # PII SHA-256 masking, GDPR-compliant retention sweeps
+│   ├── delivery.py               # WhatsApp and Email dispatch integrations
+│   ├── evaluation.py             # Accuracy evaluation (Mean Absolute Error, signal bounds)
+│   ├── explainability.py         # Human-readable diagnostic explanation builders
+│   ├── narrative.py              # Gemini LLM driver with pybreaker and fallback maps
+│   ├── observability.py          # Prometheus counters/gauges and structlog setup
+│   ├── pdf_parser.py             # Local UPI PDF parsing (regex grids)
+│   └── resilience.py             # pybreaker Circuit Breakers and TTL caching
 │
 ├── web/                          # React + Vite + TypeScript frontend
 │   ├── src/
-│   │   ├── components/          # UI components (GlassCard, KiraButton, KiraToast, Tabs)
-│   │   ├── hooks/               # useCountUp, useTypewriter, useKiraStore
-│   │   ├── store/               # Zustand global state
-│   │   └── styles.css           # Global design tokens and animations
+│   │   ├── components/           # Cockpit HUD components (LandingScreen, WasmDock, CommandCenterDeck)
+│   │   ├── store/                # Zustand global store (session tracking, demo loaders)
+│   │   └── styles.css            # Cyber CSS tokens, grids, neon animations
 │   ├── package.json
 │   └── vite.config.ts
 │
-├── sample_data/                  # Example CSVs for quick testing
-├── .env.example                  # All configurable environment variables
-├── .gitlab-ci.yml               # GitLab CI/CD pipeline
-├── Dockerfile                    # Production Docker image
-├── Makefile                      # Developer shortcuts
-├── render.yaml                   # Render.com deployment manifest
-├── requirements.txt              # Python dependencies (pinned)
-└── vercel.json                   # Vercel frontend deployment config
+├── tests/                        # Comprehensive Python Test Suite
+│   ├── test_api.py               # FastAPI integration checks
+│   ├── test_coach_agent_unit.py  # LangGraph node assertions
+│   └── test_narrative_fallback.py# Gemini circuit-breaker mock assertions
+│
+├── sample_data/                  # Mock statements for simulator usage
+├── .env.example                  # Environment defaults template
+├── Dockerfile                    # Pinned API container manifest
+├── Makefile                      # Make scripts and developer task runners
+└── requirements.txt              # Pinned Python package dependencies
 ```
 
 ---
 
-## 5) Quickstart Guide
+## 6) Developer Quickstart
 
 ### Prerequisites
 
-| Requirement | Minimum Version |
-|---|---|
-| Python | 3.11+ |
-| Node.js | 18+ |
-| pip | 23+ |
+*   **Python**: `3.11+`
+*   **Node.js**: `18.0+`
+*   **Package Managers**: `pip` and `npm`
 
-### Step 1 — Clone and configure
+### 🛠 Manual Local Launch
+
+#### Step 1: Clone & Configure
 
 ```bash
 git clone https://github.com/your-org/Kira-AI.git
 cd Kira-AI
 cp .env.example .env
-# Edit .env and fill in GEMINI_API_KEY and KIRA_AI_API_KEY
+# Edit .env and supply GEMINI_API_KEY and KIRA_AI_API_KEY
 ```
 
-### Step 2 — Backend setup
+#### Step 2: Set up Backend API
 
 ```bash
-# Create and activate a virtual environment
+# Create virtual environment
 python -m venv .venv
-.venv\Scripts\activate      # Windows
-source .venv/bin/activate    # macOS / Linux
+source .venv/bin/activate # On Windows: .venv\Scripts\activate
 
-# Install dependencies
+# Install requirements
 pip install -r requirements.txt
 
-# Start the API server (auto-reload)
+# Launch FastAPI live reload on port 8000
 uvicorn api.main:app --reload --port 8000
 ```
 
-The API is now live at **http://localhost:8000**.  
-Interactive docs: **http://localhost:8000/docs** (disabled in production).
+> [!NOTE]
+> Backend interactive docs are available at [http://localhost:8000/docs](http://localhost:8000/docs) in development mode.
 
-### Step 3 — Frontend setup
+#### Step 3: Set up React Frontend
 
 ```bash
 cd web
@@ -238,321 +258,175 @@ npm install
 npm run dev
 ```
 
-Open **http://localhost:5173** to view the dashboard.
+> [!TIP]
+> The dev server launches at [http://localhost:5173](http://localhost:5173).
 
-### Step 4 — Run with Make
+---
+
+### ⚡ Automated Launch (Make)
+
+A `Makefile` is configured at the root to automate environment orchestration:
 
 ```bash
-make install        # Install Python dependencies
-make run-api        # Start FastAPI on port 8000
-make run-web        # Start Vite dev server on port 5173
-make test           # Run full test suite with coverage
-make lint           # Run black + flake8 + mypy
-make audit          # pip-audit + bandit security scan
+make install        # Bootstraps Python and sets up requirements
+make run-api        # Spins up FastAPI on Port 8000
+make run-web        # Spins up Vite frontend on Port 5173
+make test           # Runs complete pytest suite with full coverage reporting
+make lint           # Performs black, flake8, and mypy quality checks
+make audit          # Checks Python packages for known vulnerabilities (bandit & pip-audit)
 ```
 
 ---
 
-## 6) API Reference
+## 7) API Reference & Telemetry Routes
 
-All endpoints under `/upload`, `/coach`, `/feedback`, `/history`, `/scenarios`, `/export`, and `/integrations` require a `Bearer` token matching `KIRA_AI_API_KEY`.
+> [!IMPORTANT]
+> All REST API calls require Bearer authentication headers containing a cryptographically secure token matching the backend’s active `KIRA_AI_API_KEY`.
 
-### Authentication
+### Authentication Header
 
 ```http
 Authorization: Bearer <KIRA_AI_API_KEY>
 ```
 
-### `POST /upload`
-
-Upload a UPI transaction file (CSV or PDF). Returns an `upload_id` used for all subsequent calls.
-
-**Request**: `multipart/form-data` with a single `file` field.  
-**Accepted**: `.csv`, `.txt`, `.pdf` (≤ 5 MB, ≤ 10,000 rows).
-
+### 1. `POST /upload`
+Ingests, validates, and stores a raw or client-masked transaction ledger.
+*   **Payload Format**: `multipart/form-data`
+*   **Accepted Files**: `.csv`, `.pdf`, `.txt` (hard-capped at ≤ 5 MB and 10,000 transaction rows).
+*   **Response**:
 ```json
 {
   "upload_id": "kira_1716923456789",
   "rows": 312,
-  "date_range": { "start": "2024-01-01", "end": "2024-05-26" },
-  "categories": ["Food", "Transport", "Entertainment"],
+  "date_range": { "start": "2026-05-01", "end": "2026-05-31" },
+  "categories": ["Food", "Transit", "Subscriptions"],
   "parsed_format": "csv"
 }
 ```
 
-### `POST /coach?upload_id=…&budget=…`
-
-Run the full coaching pipeline for a session. Results are cached for 1 hour.
-
+### 2. `POST /coach?upload_id=…&budget=…`
+Executes the stateful 5-node LangGraph pipeline. Responses are cached locally to minimize latency.
+*   **Query Parameters**: `upload_id` (string), `budget` (float)
+*   **Response**:
 ```json
 {
   "status": "watch",
-  "days_left": 8,
-  "narrative": "Food is burning ₹1,200/day with 8 days left…",
-  "nudge": "8 day(s) left. Keep Food under ₹3,600 for the next 3 days.",
+  "days_left": 12,
+  "narrative": "Food spending has spiked to ₹1,420/day with 12 days remaining...",
+  "nudge": "UPI alert triggered: Limit Swiggy spending to recover ₹2,420.",
   "suggested_cap": 3600.0,
-  "confidence_score": 0.74,
+  "confidence_score": 0.94,
   "urgency": "medium",
   "signals": {
     "anomaly_detected": true,
-    "habit_score": 0.62,
-    "days_left": 8,
-    "regret_flag": false,
+    "habit_score": 78.5,
     "top_category": "Food"
   }
 }
 ```
 
-### `POST /feedback`
-
-Record a nudge acceptance or dismissal.
-
-```json
-{ "upload_id": "kira_1716923456789", "nudge_id": "n1", "accepted": true }
+### 3. `GET /metrics/prometheus`
+Exposes production-ready unauthenticated Prometheus scraping data for system telemetry.
+*   **Authentication**: None (unauthenticated to support automated scrapers).
+*   **Format**: Plaintext matching standard Prometheus line formats.
+```prometheus
+# HELP kira_http_requests_total Total number of HTTP requests
+# TYPE kira_http_requests_total counter
+kira_http_requests_total{method="POST",path="/coach",status_code="200"} 42
+# HELP kira_active_sessions Active volatile statements in context
+# TYPE kira_active_sessions gauge
+kira_active_sessions 3
 ```
 
-### `GET /history/{upload_id}`
+---
 
-Full session record including all coach runs and feedback events.
+## 8) Backend Core Modules
 
-### `POST /scenarios`
-
-Create a what-if budget scenario.
-
-```json
-{
-  "upload_id": "kira_1716923456789",
-  "label": "Cut Food by 30%",
-  "budget": 25000,
-  "cutback_pct": 30,
-  "cutback_category": "Food"
-}
-```
-
-### `GET /export/csv?upload_id=…`
-
-Download the session's transactions as a PII-masked CSV (merchant names hashed).
-
-### `GET /health`
-
-Returns API status, uptime, and integration probe results.
-
-### `GET /metrics`
-
-Model quality metrics: forecast MAE, signal coverage, nudge acceptance rate.
-
-### `GET /integrations/status`
-
-Reports which integrations (GitLab, Email, WhatsApp) are active.
+*   **`src/analytics.py` (Forecasting Model)**
+    *   `predict_broke_date()`: Computes cumulative daily spends and performs linear regression models. Projects base-case, best-case, and worst-case runway bands.
+    *   `compute_addiction_scores()`: Ranks spending habits on a scale of `0–100` using frequency, spend ratios, week-over-week consistency, and late-night hour indexes.
+*   **`src/resilience.py` (Resilience & Caching)**
+    *   Maintains double-tiered TTL caching: `CoachResultCache` (1-hour cache bucketed to the nearest ₹100) and `NarrativeCache` (24-hour cache for expensive LLM narratives).
+    *   `gemini_breaker`: A circuit breaker configured with `pybreaker` that trips open for 60 seconds after 5 consecutive LLM errors, automatically routing requests to deterministic template generators.
+*   **`src/data_governance.py` (Data Eviction)**
+    *   Runs strict auto-eviction routines on startup, purging local statement directories older than `DATA_RETENTION_DAYS` (default `90`).
+    *   Enforces hard limits on memory footprint by evicting the oldest sessions when system totals cross `MAX_SESSIONS` (default `10,000`).
 
 ---
 
-## 7) Backend Modules
+## 9) Security Hardening & Protection Controls
 
-### `src/analytics.py` — Forecasting Engine
+Kira-AI is engineered around a comprehensive defense-in-depth model:
 
-- **`predict_broke_date()`**: Runs linear regression on cumulative daily spend to project the day the user crosses their budget.
-- **`compute_addiction_scores()`**: Scores each spending category 0–100 using frequency, consistency, late-night share, spend volume, and 14-day trend.
-- **`detect_weekly_anomalies()`**: IQR upper-fence anomaly detection on weekly spend totals.
-- **`simulate_scenario()`**: What-if: how many days are gained by cutting category X by Y%.
-- **`compute_projection_bands()`**: Three-curve (best / base / worst) 30-day balance projection.
-
-### `src/coach_agent.py` — LangGraph Orchestration
-
-A five-node stateful workflow compiled at import time. Thread-safe via `RLock`. Graceful fallback when LangGraph is absent.  
-Key constants (no magic numbers): `CRITICAL_CAP_FACTOR`, `WATCH_HABIT_THRESHOLD`, `ANOMALY_WEIGHT`, etc.
-
-### `src/narrative.py` — Gemini Narrative Generation
-
-Resolution order for every coach run:
-1. **Narrative cache hit** (24h TTL) — zero LLM cost.
-2. **Gemini API** (up to 3 retries with exponential back-off, protected by circuit breaker).
-3. **Template fallback** — deterministic, always succeeds.
-
-### `src/resilience.py` — Production Resilience
-
-| Component | Purpose |
-|---|---|
-| `gemini_breaker` | Opens after 5 failures; resets after 60 s |
-| `twilio_breaker` | Opens after 3 failures; resets after 120 s |
-| `CoachResultCache` | TTL=1h, max 500 entries, budget bucketed to ₹100 |
-| `NarrativeCache` | TTL=24h, max 200 entries, keyed by status+category+days+budget |
-
-### `src/data_governance.py` — PII & Retention
-
-- **`apply_retention_policy()`**: Purges session JSON files older than `DATA_RETENTION_DAYS` (default 90).
-- **`enforce_session_cap()`**: Evicts oldest sessions when `MAX_SESSIONS` is exceeded.
-- **`apply_pii_masking_to_export()`**: SHA-256 hashes all merchant/payee columns before CSV export.
-
-### `src/audit.py` — Immutable Audit Trail
-
-Appends a JSON-Lines record to `.coach_memory/audit.log` for every:
-`auth_attempt`, `file_upload`, `coach_decision`, `data_access`, `session_delete`, `retention_purge`, `feedback`.
-
-### `src/observability.py` — Metrics & Logging
-
-- **structlog** — JSON structured logs for ELK / CloudWatch. Correlation ID propagated via `X-Request-ID`.
-- **Prometheus** — 8 metrics: HTTP request count/duration, coach decisions, uploads, narrative providers, circuit state, active sessions, auth failures.
-- **OpenTelemetry** — OTLP span export for distributed tracing (optional, configured via `OTLP_ENDPOINT`).
-
----
-
-## 8) Security & Hardening
-
-| Control | Implementation |
-|---|---|
-| **Bearer Token Auth** | Constant-time `hmac.compare_digest` comparison |
-| **Minimum Key Length** | 32-character minimum enforced at startup |
-| **Key Rotation Warning** | `KEY_ROTATION_DATE` env var triggers a warning after 90 days |
-| **HMAC Request Signature** | Optional `X-Kira-Signature: sha256=<hex>` header for replay protection |
-| **CSV Injection Prevention** | Strips `=`, `@`, `+`, `-`, `\t`, `\r` from all string fields |
-| **File Magic Bytes** | PDFs verified by `%PDF` prefix; executable magic bytes rejected |
-| **File Size Limit** | 5 MB hard cap; 10,000 row CSV limit |
-| **Security Headers** | CSP, X-Frame-Options DENY, HSTS, X-Content-Type-Options: nosniff |
-| **Rate Limiting** | 5/min upload, 10/min coach, 30/min feedback (SlowAPI; localhost exempt) |
-| **CORS** | Locked to `ALLOWED_ORIGINS` env var |
-
----
-
-## 9) Observability & Monitoring
-
-### Prometheus Metrics
-
-| Metric | Type | Labels |
+| Control Area | Security Action | Mitigation |
 |---|---|---|
-| `kira_http_requests_total` | Counter | `method`, `path`, `status_code` |
-| `kira_http_request_duration_seconds` | Histogram | `method`, `path` |
-| `kira_coach_decisions_total` | Counter | `status`, `provider` |
-| `kira_coach_duration_seconds` | Histogram | `status` |
-| `kira_coach_cache_hits_total` | Counter | `result` (hit/miss) |
-| `kira_upload_count_total` | Counter | `source` |
-| `kira_narrative_provider_total` | Counter | `provider` |
-| `kira_narrative_circuit_open_total` | Counter | — |
-| `kira_active_sessions` | Gauge | — |
-| `kira_auth_failures_total` | Counter | `reason` |
-
-### Structured Logging
-
-Every log entry includes `ts` (ISO UTC), `level`, `logger`, and correlation `request_id`.  
-JSON format in production; colorised console in development (controlled by `LOG_FORMAT` env var).
+| **Constant-Time Verification** | Uses `hmac.compare_digest` to validate tokens | Eliminates side-channel timing analysis attacks |
+| **API Key Constraints** | Validates minimum entropy (≥ 32 chars) at startup | Blocks deployment of weak or default configurations |
+| **CSV Injection Shielding** | Sanitizes all cells starting with `=`, `@`, `+`, `-`, or tabs | Prevents CSV injection attacks |
+| **Upload Guardrails** | Validates `%PDF` magic bytes and isolates execution in RAM | Blocks malicious executables disguised as statements |
+| **Hardened HTTP Headers** | Injects strict CSP, `X-Frame-Options: DENY`, and HSTS | Stops clickjacking and cross-site scripting |
+| **Rate Limiters** | Limits upload endpoints (5/min) and coach engines (10/min) | Prevents denial-of-service and brute force requests |
 
 ---
 
 ## 10) Data Governance & PII Protection
 
-Kira-AI treats user transaction data as sensitive by default:
+Kira-AI enforces a strict **zero-retention, client-first data pipeline**:
 
-- **Upload IDs** are masked in all logs (`kira_171692***`) using `mask_upload_id()`.
-- **Merchant / payee names** are SHA-256 hashed (12-char hex) in logs and CSV exports using `hash_merchant()`.
-- **Transaction amounts** and raw merchant strings are **never written to the audit log**.
-- **Retention**: Session files are auto-purged after `DATA_RETENTION_DAYS` (default 90) on every API startup.
-- **Session cap**: Maximum `MAX_SESSIONS` (default 10,000) in memory; oldest evicted automatically.
-- **GDPR / CCPA**: A startup warning is emitted if `DATA_RETENTION_DAYS > 365`.
+*   **Data Masking**: All merchant name strings are converted to SHA-256 hashes (`12-char` prefixes) in backend logs and CSV exports to prevent transaction tracing.
+*   **Log Redaction**: Transaction amounts and raw UPI strings are **never written** to persistent logs.
+*   **ID Masking**: System upload IDs are obfuscated in active logs using custom masking filters (e.g. `kira_171692***`).
+*   **GDPR Alignment**: Emits startup warnings if data retention periods are configured longer than a year (`DATA_RETENTION_DAYS > 365`).
 
 ---
 
 ## 11) Testing & Quality Assurance
 
-### Running the Test Suite
+Quality assurance is verified using a layered pytest suite:
 
 ```bash
-# Full suite with coverage
+# Run complete test suite and output missing coverage blocks
 python -m pytest tests/ -v --cov=src --cov=api --cov-report=term-missing
 
-# API endpoint tests only
-pytest tests/test_api.py -v --tb=short
-
-# Unit tests for the LangGraph coach nodes
+# Run node unit tests within LangGraph workflows
 pytest tests/test_coach_agent_unit.py -v
 
-# Narrative fallback behaviour
+# Run fallback simulation tests (opening Gemini circuit breakers)
 pytest tests/test_narrative_fallback.py -v
 ```
 
-### Coverage Targets
+### Code Quality Enforcement
 
-| Area | Tests |
-|---|---|
-| Upload → parse → session create | `test_api.py` |
-| Coach pipeline (all 5 nodes) | `test_coach_agent_unit.py` |
-| End-to-end upload → coach → feedback | `test_comprehensive.py` |
-| Gemini fallback, circuit breaker open | `test_narrative_fallback.py` |
-
-### Code Quality
+All merges require passing the following pipeline hooks:
 
 ```bash
-make lint       # black --check, flake8 (max-line 100), mypy (strict imports)
-make lint-fix   # Auto-format with black
-make audit      # pip-audit (CVE scan) + bandit (SAST, severity=medium)
+make lint       # Executes black (max line 100), flake8, and strict mypy checks
+make audit      # Checks packages for vulnerabilities and scans code with Bandit
 ```
 
 ---
 
-## 12) Deployment
+## 12) Deployment Framework
 
-### Docker
+### Docker Container Ingestion
+
+A lightweight production Dockerfile is included:
 
 ```bash
-docker build -t kira-ai .
-docker run -p 8000:8000 --env-file .env kira-ai
+# Build the production container
+docker build -t kira-ai-prod .
+
+# Run the container matching your active environment file
+docker run -d -p 8000:8000 --env-file .env kira-ai-prod
 ```
 
-### Environment Variables
+### Vercel / Render Deployment Manifests
 
-| Variable | Required | Default | Description |
-|---|---|---|---|
-| `KIRA_AI_API_KEY` | ✅ | — | Bearer token (≥ 32 chars) |
-| `GEMINI_API_KEY` | ✅ | — | Google Gemini API key |
-| `ALLOWED_ORIGINS` | ✅ | `https://yourdomain.example.com` | Comma-separated CORS origins |
-| `ENVIRONMENT` | — | `development` | `production` disables `/docs` and `/redoc` |
-| `LOG_LEVEL` | — | `INFO` | `DEBUG`, `INFO`, `WARNING`, `ERROR` |
-| `LOG_FORMAT` | — | `json` (prod) | `json` or `console` |
-| `DATA_RETENTION_DAYS` | — | `90` | Session file retention window |
-| `MAX_SESSIONS` | — | `10000` | In-memory session cap |
-| `KEY_ROTATION_DATE` | — | — | ISO date of last key rotation |
-| `OTLP_ENDPOINT` | — | — | OpenTelemetry collector endpoint |
-| `GITLAB_URL` | — | — | GitLab instance URL |
-| `GITLAB_TOKEN` | — | — | GitLab personal access token |
-| `TWILIO_ACCOUNT_SID` | — | — | Twilio account SID |
-| `TWILIO_AUTH_TOKEN` | — | — | Twilio auth token |
-| `COACH_WHATSAPP_NUMBER` | — | — | WhatsApp delivery number |
-| `RESEND_API_KEY` | — | — | Resend email API key |
-| `AUDIT_LOG_PATH` | — | `.coach_memory/audit.log` | Audit log file path |
-
-### Render.com
-
-A `render.yaml` is included for one-click deployment to Render. Set all required environment variables in the Render dashboard before deploying.
-
-### Vercel (Frontend)
-
-A `vercel.json` is included. Deploy the `web/` directory as a Vite SPA. Set `VITE_API_BASE_URL` to your backend's public URL.
-
----
-
-## 13) Contributing
-
-1. **Fork** the repository and create a feature branch: `git checkout -b feat/your-feature`
-2. Install pre-commit hooks: `pip install pre-commit && pre-commit install`
-3. Write tests for any new functionality.
-4. Run `make lint` and `make test` — both must pass.
-5. Open a pull request with a clear description.
-
-### Coding Conventions
-
-- All Python files must include a module-level docstring.
-- Function docstrings must use Google-style `Args:` and `Returns:` sections.
-- No magic numbers — extract named constants.
-- All new constants go at module level with type annotations.
-- Line length: 100 characters (black-enforced).
-
----
-
-## 14) License
-
-This project is licensed under the **MIT License**. See [LICENSE](LICENSE) for details.
+*   **Backend (Render)**: Manifested inside `render.yaml` for zero-downtime, declarative backend environments.
+*   **Frontend (Vercel)**: Configured inside `vercel.json` as a single-page app (SPA) router targeting Vite production static assets.
 
 ---
 
 <div align="center">
-<sub>Built with ♥ using FastAPI, LangGraph, Gemini, React, and Prometheus</sub>
+<sub>Engineered with care using FastAPI, LangGraph, Gemini API, React, and Prometheus Telemetry.</sub>
 </div>
