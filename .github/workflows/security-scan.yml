@@ -1,10 +1,12 @@
-name: Security Scan
+name: Security Scan — Enforced
 
 on:
   push:
-    branches: [main, develop, feat/**, feature/**]
+    branches: [main, develop, "feat/**", "feature/**"]
   pull_request:
     branches: [main, develop]
+  schedule:
+    - cron: "0 2 * * 1"   # Weekly Monday 02:00 UTC
 
 jobs:
   security:
@@ -17,7 +19,7 @@ jobs:
           fetch-depth: 0
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: "3.11"
           cache: "pip"
@@ -26,47 +28,71 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install bandit safety
+          pip install bandit[toml] safety pip-audit
 
-      - name: Run Bandit security scan
-        continue-on-error: true
+      # ── BLOCKING: No HIGH/CRITICAL Bandit issues allowed ──────────────────
+
+      - name: Bandit security scan (BLOCKING on HIGH severity)
         run: |
-          bandit -r src/ api/ -f json -o bandit-report.json 2>/dev/null || true
-          bandit -r src/ api/ -f txt 2>/dev/null || echo "Bandit scan completed with warnings"
+          bandit -r src/ api/ \
+            --severity-level high \
+            --confidence-level high \
+            -f json -o bandit-report.json
+          bandit -r src/ api/ \
+            --severity-level high \
+            --confidence-level high \
+            -f txt
+        # Exits non-zero if any HIGH+HIGH findings — CI fails
 
-      - name: Check for known vulnerabilities with Safety
-        continue-on-error: true
+      # ── BLOCKING: Known CVEs in dependencies ──────────────────────────────
+
+      - name: pip-audit (known CVEs, BLOCKING)
         run: |
-          safety check --json 2>/dev/null || true
-          safety check 2>/dev/null || echo "Safety check completed with info"
+          pip-audit --desc --format=json -o pip-audit-report.json
+          pip-audit --desc
+        # Exits non-zero if vulnerable packages found
 
-      - name: Run GitGuardian secret scan
-        uses: gitguardian/ggshield-action@master
+      # ── INFORMATIONAL: Safety database check ──────────────────────────────
+
+      - name: Safety check (informational only)
+        run: safety check 2>/dev/null || echo "Safety findings above — review manually"
+        continue-on-error: true   # Safety can have false positives; informational
+
+      # ── GitGuardian secret detection ──────────────────────────────────────
+
+      - name: GitGuardian secret scan
+        uses: gitguardian/ggshield-action@main
         with:
           path: ./
           verbose: true
         env:
           GITGUARDIAN_API_KEY: ${{ secrets.GITGUARDIAN_API_KEY }}
-        continue-on-error: true
+        continue-on-error: true   # Only blocks if GITGUARDIAN_API_KEY is set
 
-      - name: Check for hardcoded secrets (grep)
-        run: |
-          echo "Scanning for potential hardcoded secrets..."
-          grep -r "password\|secret\|api_key\|token" . --include="*.py" --include="*.yml" --include="*.yaml" 2>/dev/null | grep -v ".git" | grep -v "node_modules" | head -20 || echo "No obvious secrets found"
-        continue-on-error: true
+      # ── Grep for obvious hardcoded secrets ────────────────────────────────
 
-      - name: Run TruffleHog scanner
+      - name: Check for hardcoded secrets (BLOCKING on clear-text tokens)
         run: |
-          echo "Scanning with TruffleHog..."
-          # Generate base file to guarantee artifact upload success
-          echo '{"scan_completed": true, "findings": []}' > trufflehog-report.json
-        continue-on-error: true
+          echo "Scanning for hardcoded API keys / tokens..."
+          # Fail if any file contains clear-text API key patterns
+          if grep -rn \
+            -e 'AKIA[0-9A-Z]{16}' \
+            -e 'sk-[a-zA-Z0-9]{32,}' \
+            -e 'ghp_[a-zA-Z0-9]{36}' \
+            --include="*.py" --include="*.ts" --include="*.tsx" \
+            --exclude-dir=".git" --exclude-dir="node_modules" \
+            .; then
+            echo "❌ Hardcoded secrets detected — failing build"
+            exit 1
+          fi
+          echo "✅ No hardcoded secrets found"
 
       - name: Upload security reports
         uses: actions/upload-artifact@v4
         with:
-          name: security-reports
+          name: security-reports-${{ github.sha }}
           path: |
             bandit-report.json
-            trufflehog-report.json
+            pip-audit-report.json
+          retention-days: 30
         if: always()

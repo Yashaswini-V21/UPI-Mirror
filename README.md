@@ -395,10 +395,26 @@ pytest tests/test_coach_agent_unit.py -v
 pytest tests/test_narrative_fallback.py -v
 ```
 
-### Code Quality Enforcement
+### Code Quality & Continuous Integration (CI/CD)
 
-All merges require passing the following pipeline hooks:
+The codebase is hardened with comprehensive continuous integration pipelines for both **GitHub Actions** and **GitLab CI/CD**.
 
+#### 🐙 GitHub Actions Pipelines
+Managed via `.github/workflows/`:
+- **Backend Tests & Quality Gates** (`backend-tests.yml`): Runs pytest (requiring &ge; 70% coverage), runs MyPy type checking, and Flake8 linting.
+- **Frontend Quality Gates** (`frontend-tests.yml`): Validates TypeScript (`tsc --noEmit`) and ESLint.
+- **Security Scan** (`security-scan.yml`): Scans for security vulnerabilities using Bandit, audits Python dependencies with pip-audit, and checks for hardcoded secrets.
+
+#### 🦊 GitLab CI/CD Pipelines
+Managed via `.gitlab-ci.yml`:
+- **`test` Stage**: Runs unit and API integration tests (enforcing a 70% coverage floor via `--cov-fail-under`), and runs frontend type checking and builds.
+- **`lint` Stage**: Runs Python code checkers (Black, Flake8, MyPy) and frontend linting.
+- **`security` Stage**: Validates Python packages against known CVEs (pip-audit), scans Python logic (Bandit), and audits npm packages for security risks (npm audit).
+- **`build` Stage**: Builds production-ready Docker containers (`Dockerfile`).
+- **`deploy` Stage**: Automates production deployment via webhooks to the environment platform.
+
+#### 🛠 Local Quality Check Hooks
+You can run standard checks locally prior to committing:
 ```bash
 make lint       # Executes black (max line 100), flake8, and strict mypy checks
 make audit      # Checks packages for vulnerabilities and scans code with Bandit
