@@ -28,6 +28,8 @@ from threading import RLock
 from typing import Any, TypedDict
 import logging
 
+from src.utils import coerce_float, coerce_int, clamp, normalize_unit
+
 import pandas as pd
 
 from src.narrative import DEFAULT_GEMINI_MODEL, generate_narrative
@@ -139,36 +141,11 @@ REWARD_GEMINI_BONUS: float = 1.0
 
 
 
-def _coerce_float(value: Any, default: float = 0.0) -> float:
-    try:
-        if value is None:
-            return default
-        return float(value)
-    except (TypeError, ValueError):
-        return default
-
-
-def _coerce_int(value: Any, default: int = 0) -> int:
-    try:
-        if value is None:
-            return default
-        return int(float(value))
-    except (TypeError, ValueError):
-        return default
-
-
-def _clamp(value: float, low: float = 0.0, high: float = 1.0) -> float:
-    return max(low, min(high, value))
-
-
-def _normalize_unit(value: Any) -> float:
-    score = _coerce_float(value, 0.0)
-    if score > 1.0:
-        if score <= 100.0:
-            score = score / 100.0
-        else:
-            score = score / max(score, 100.0)
-    return _clamp(score)
+# Backward-compat aliases — all logic lives in src.utils now
+_coerce_float = coerce_float
+_coerce_int = coerce_int
+_clamp = clamp
+_normalize_unit = normalize_unit
 
 
 def _legacy_signal_bundle(state: CoachState) -> dict[str, Any]:

@@ -330,8 +330,8 @@ def configure_tracing(service_name: str = "kira-ai") -> None:
 
             exporter = OTLPSpanExporter(endpoint=otlp_endpoint)
             provider.add_span_processor(BatchSpanProcessor(exporter))
-        except Exception:  # pragma: no cover
-                logging.getLogger(__name__).warning("Tracing disabled: %s", exc)
+        except Exception as exc:  # pragma: no cover
+            logging.getLogger(__name__).warning("Tracing disabled: %s", exc)
 
     trace.set_tracer_provider(provider)
     _TRACER = trace.get_tracer(service_name)
@@ -343,3 +343,52 @@ def get_tracer() -> Any:
     if _TRACER is None and _OTEL_AVAILABLE:
         configure_tracing()
     return _TRACER
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# SPAN HELPERS — instrument key code paths without polluting business logic
+# ─────────────────────────────────────────────────────────────────────────────
+
+class _NoOpSpan:
+    """Context manager that does nothing when tracing is unavailable."""
+
+    def __enter__(self) -> "_NoOpSpan":
+        return self
+
+    def __exit__(self, *_: Any) -> None:
+        pass
+
+    def set_attribute(self, key: str, value: Any) -> None:  # noqa: ANN401
+        pass
+
+    def set_status(self, *_: Any) -> None:
+        pass
+
+    def record_exception(self, exc: BaseException) -> None:
+        pass
+
+
+def start_span(name: str, attributes: dict[str, Any] | None = None) -> Any:
+    """Start a new tracing span, or return a no-op context if tracing is off.
+
+    Usage::
+
+        with start_span("coach_pipeline", {"upload_id": uid}) as span:
+            result = run_coach(...)
+            span.set_attribute("coach.status", result.status)
+
+    Args:
+        name:       Span name (e.g. ``"coach_pipeline"``, ``"upload_csv"``).
+        attributes: Optional dict of initial span attributes.
+
+    Returns:
+        A context manager that yields a span (or a no-op).
+    """
+    tracer = get_tracer()
+    if tracer is None:
+        return _NoOpSpan()
+    span = tracer.start_span(name)
+    if attributes:
+        for key, value in attributes.items():
+            span.set_attribute(key, value)
+    return span

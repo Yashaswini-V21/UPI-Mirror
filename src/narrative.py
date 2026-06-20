@@ -8,6 +8,8 @@ import time
 from dataclasses import dataclass
 from typing import Any
 
+from src.utils import coerce_float, coerce_int, money, money_per_day
+
 DEFAULT_GEMINI_MODEL = "gemini-1.5-flash"
 LOGGER = logging.getLogger(__name__)
 
@@ -49,31 +51,11 @@ def _log_structured(level: int, event: str, **fields: Any) -> None:
     LOGGER.log(level, json.dumps(payload, ensure_ascii=False, default=str, sort_keys=True))
 
 
-def _coerce_float(value: Any, default: float = 0.0) -> float:
-    try:
-        if value is None:
-            return default
-        return float(value)
-    except (TypeError, ValueError):
-        return default
-
-
-def _coerce_int(value: Any, default: int = 0) -> int:
-    try:
-        if value is None:
-            return default
-        return int(float(value))
-    except (TypeError, ValueError):
-        return default
-
-
-def _money(value: Any) -> str:
-    amount = round(_coerce_float(value, 0.0))
-    return f"₹{amount:,}"
-
-
-def _money_per_day(value: Any) -> str:
-    return f"{_money(value)}/day"
+# Backward-compat aliases — all logic lives in src.utils now
+_coerce_float = coerce_float
+_coerce_int = coerce_int
+_money = money
+_money_per_day = money_per_day
 
 
 def _habit_score_out_of_ten(state: dict[str, Any]) -> float:

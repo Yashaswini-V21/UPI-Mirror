@@ -66,7 +66,7 @@ from src.pdf_parser import parse_upi_pdf
 from src.regret import compute_regret_stats
 
 # Enterprise modules
-from src.observability import METRICS, configure_logging, get_logger
+from src.observability import METRICS, configure_logging, configure_tracing, start_span, get_logger
 from src.audit import (
     log_file_upload, log_coach_decision, log_data_access, log_session_delete,
     log_retention_purge, log_feedback
@@ -89,7 +89,7 @@ from .schemas import (
     SignalData,
     UploadResponse,
 )
-from .security import validate_api_token, validate_startup_security
+from .security import validate_api_token, validate_startup_security, validate_upload_file
 
 try:
     from nanoid import generate as _nanoid_generate
@@ -213,6 +213,7 @@ def _rate_limit_handler(request: Request, exc: RateLimitExceeded) -> JSONRespons
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     configure_logging()
+    configure_tracing()
     validate_startup_security()
     validate_retention_config()
     
@@ -813,33 +814,47 @@ async def upload_file(request: Request, file: UploadFile = File(...)) -> UploadR
     if not content:
         raise HTTPException(status_code=400, detail="Upload file is empty.")
 
-    frame, source = _load_uploaded_frame(content, file.filename)
-    upload_id = f"kira_{int(time.time() * 1000):013d}"
-    session = _build_session_record(upload_id, frame, file.filename, source)
-    session["csv_path"] = str(_session_csv_path(upload_id))
-    csv_path = _session_csv_path(upload_id)
-    frame.to_csv(csv_path, index=False)
-    _persist_session(session)
+    # Enterprise: validate file type, size, magic bytes, and row count
+    validate_upload_file(file.filename or "upload.csv", content)
 
-    parsed_format = "generic_pdf" if source == "pdf" else "csv"
-    
-    METRICS.upload_count_total.labels(source=source).inc()
-    log_file_upload(
-        upload_id=upload_id,
-        rows=session["meta"]["rows"],
-        source=source,
-        size_bytes=len(content),
-        ip=get_remote_address(request),
-        request_id=getattr(request.state, "request_id", "unknown")
-    )
-    
-    return UploadResponse(
-        upload_id=upload_id,
-        rows=session["meta"]["rows"],
-        date_range=session["meta"]["date_range"],
-        categories=session["meta"]["categories"],
-        parsed_format=parsed_format,
-    )
+    span = start_span("upload_file", {"upload.filename": file.filename or "unknown"})
+    try:
+        frame, source = _load_uploaded_frame(content, file.filename)
+        upload_id = f"kira_{int(time.time() * 1000):013d}"
+        session = _build_session_record(upload_id, frame, file.filename, source)
+        session["csv_path"] = str(_session_csv_path(upload_id))
+        csv_path = _session_csv_path(upload_id)
+        frame.to_csv(csv_path, index=False)
+        _persist_session(session)
+
+        parsed_format = "generic_pdf" if source == "pdf" else "csv"
+        
+        METRICS.upload_count_total.labels(source=source).inc()
+        log_file_upload(
+            upload_id=upload_id,
+            rows=session["meta"]["rows"],
+            source=source,
+            size_bytes=len(content),
+            ip=get_remote_address(request),
+            request_id=getattr(request.state, "request_id", "unknown")
+        )
+
+        span.set_attribute("upload.id", upload_id)
+        span.set_attribute("upload.rows", session["meta"]["rows"])
+        span.set_attribute("upload.source", source)
+
+        return UploadResponse(
+            upload_id=upload_id,
+            rows=session["meta"]["rows"],
+            date_range=session["meta"]["date_range"],
+            categories=session["meta"]["categories"],
+            parsed_format=parsed_format,
+        )
+    except Exception as exc:
+        span.record_exception(exc)
+        raise
+    finally:
+        span.__exit__(None, None, None)
 
 
 @protected_router.post("/coach", response_model=CoachResponse)
@@ -851,6 +866,7 @@ async def coach(
 ) -> CoachResponse:
     csv_path = _session_csv_path(upload_id)
     session = _require_session(upload_id)
+    span = start_span("coach_pipeline", {"coach.upload_id": upload_id, "coach.budget": budget})
     try:
         transactions = _load_session_transports(upload_id)
         if transactions.empty:
@@ -925,9 +941,17 @@ async def coach(
         # 3. Store in cache
         if coach_cache is not None:
             coach_cache.set(upload_id, budget, response)
-            
+
+        span.set_attribute("coach.status", coach_result.status)
+        span.set_attribute("coach.provider", coach_result.narrative_provider)
+        span.set_attribute("coach.confidence", response.confidence_score)
+
         return response
+    except Exception as exc:
+        span.record_exception(exc)
+        raise
     finally:
+        span.__exit__(None, None, None)
         _safe_remove(csv_path)
 
 
