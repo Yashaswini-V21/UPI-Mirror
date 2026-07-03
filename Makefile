@@ -43,10 +43,10 @@ verify:
 # ────────────────────────────────────────────────────────────────
 
 run-api:
-	uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload
+	uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload
 
 run-web:
-	cd web && npm run dev
+	cd frontend && npm run dev
 
 run-all:
 	@echo "Starting API and frontend..."
@@ -62,7 +62,7 @@ run-all:
 # ────────────────────────────────────────────────────────────────
 
 test:
-	pytest tests/ -v --cov=src --cov=api --cov-report=term-missing --cov-report=html
+	pytest tests/ -v --cov=core_logic --cov=backend --cov-report=term-missing --cov-report=html
 
 test-api:
 	pytest tests/test_api.py -v --tb=short
@@ -79,10 +79,10 @@ lint:
 	black . --check --diff
 	@echo ""
 	@echo "Running flake8..."
-	flake8 src api tests --max-line-length=100 --extend-ignore=E203,W503
+	flake8 core_logic backend tests --max-line-length=100 --extend-ignore=E203,W503
 	@echo ""
 	@echo "Running mypy..."
-	mypy src api --ignore-missing-imports
+	mypy core_logic backend --ignore-missing-imports
 	@echo ""
 	@echo "✓ All linters passed"
 
@@ -99,7 +99,7 @@ audit:
 	pip-audit --desc
 	@echo ""
 	@echo "Running bandit on src/ and api/..."
-	bandit -r src api --severity-level medium
+	bandit -r core_logic backend --severity-level medium
 	@echo ""
 	@echo "✓ Security audit complete"
 

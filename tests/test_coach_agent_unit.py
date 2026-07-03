@@ -6,8 +6,8 @@ from unittest.mock import patch
 import pandas as pd
 import pytest
 
-from src.coach_agent import _detect_anomaly, _route_after_detection, _suggest_limit, confidence_scoring
-from src.analytics import detect_weekly_anomalies
+from core_logic.coach_agent import _detect_anomaly, _route_after_detection, _suggest_limit, confidence_scoring
+from core_logic.analytics import detect_weekly_anomalies
 
 
 def _base_state() -> dict:
@@ -63,7 +63,7 @@ def test_suggest_limit_and_reward_scoring_for_stable_fallback() -> None:
 
 
 def test_detect_weekly_anomalies_small_series_returns_no_anomaly() -> None:
-    from src.analytics import detect_weekly_anomalies
+    from core_logic.analytics import detect_weekly_anomalies
 
     tx = pd.DataFrame(
         {

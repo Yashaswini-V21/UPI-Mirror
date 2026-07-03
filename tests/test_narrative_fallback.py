@@ -8,7 +8,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from src.narrative import (
+from core_logic.narrative import (
     SpendingNarrative,
     generate_narrative,
     generate_spending_narrative,
@@ -19,8 +19,8 @@ from src.narrative import (
 class TestGenerateNarrative:
     """Test basic narrative generation with Gemini."""
 
-    @patch("src.narrative._get_api_key", return_value="test-key")
-    @patch("src.narrative._create_model")
+    @patch("core_logic.narrative._get_api_key", return_value="test-key")
+    @patch("core_logic.narrative._create_model")
     def test_generate_narrative_with_gemini(self, mock_create_model, mock_api_key):
         """Generate narrative should use Gemini LLM when available."""
         mock_model = MagicMock()
@@ -42,7 +42,7 @@ class TestGenerateNarrative:
         assert isinstance(result, str)
         assert len(result) > 20
 
-    @patch("src.narrative._get_api_key", return_value=None)
+    @patch("core_logic.narrative._get_api_key", return_value=None)
     def test_generate_narrative_fallback_when_model_none(self, mock_api_key):
         """Generate narrative should use fallback template when API key is missing."""
         state = {
@@ -59,8 +59,8 @@ class TestGenerateNarrative:
         assert len(result) > 20
         assert "Food Delivery" in result
 
-    @patch("src.narrative._get_api_key", return_value="test-key")
-    @patch("src.narrative._create_model")
+    @patch("core_logic.narrative._get_api_key", return_value="test-key")
+    @patch("core_logic.narrative._create_model")
     def test_generate_narrative_critical_status(self, mock_create_model, mock_api_key):
         """Narrative for critical status should convey urgency."""
         mock_model = MagicMock()
@@ -85,8 +85,8 @@ class TestGenerateNarrative:
 class TestGenerateStructuredNarrative:
     """Test structured narrative generation with all fields."""
 
-    @patch("src.narrative._get_api_key", return_value="test-key")
-    @patch("src.narrative._create_model")
+    @patch("core_logic.narrative._get_api_key", return_value="test-key")
+    @patch("core_logic.narrative._create_model")
     def test_structured_returns_all_keys(self, mock_create_model, mock_api_key):
         """Structured narrative should include all required keys."""
         mock_model = MagicMock()
@@ -113,8 +113,8 @@ class TestGenerateStructuredNarrative:
         assert "tip" in result
         assert "confidence_source" in result
 
-    @patch("src.narrative._get_api_key", return_value="test-key")
-    @patch("src.narrative._create_model")
+    @patch("core_logic.narrative._get_api_key", return_value="test-key")
+    @patch("core_logic.narrative._create_model")
     def test_structured_handles_markdown_fences(self, mock_create_model, mock_api_key):
         """Structured narrative should parse JSON from markdown fences."""
         mock_model = MagicMock()
@@ -136,8 +136,8 @@ class TestGenerateStructuredNarrative:
         assert result["narrative"] == "You spent too much"
         assert result["confidence_source"] == "gemini"
 
-    @patch("src.narrative._get_api_key", return_value="test-key")
-    @patch("src.narrative._create_model")
+    @patch("core_logic.narrative._get_api_key", return_value="test-key")
+    @patch("core_logic.narrative._create_model")
     def test_structured_fallback_on_bad_json(self, mock_create_model, mock_api_key):
         """Structured narrative should fall back when JSON is invalid."""
         mock_model = MagicMock()
@@ -161,7 +161,7 @@ class TestGenerateStructuredNarrative:
         assert isinstance(result["narrative"], str)
         assert len(result["narrative"]) > 0
 
-    @patch("src.narrative._get_api_key", return_value=None)
+    @patch("core_logic.narrative._get_api_key", return_value=None)
     def test_structured_fallback_when_model_none(self, mock_api_key):
         """Structured narrative should use deterministic fallback when API key missing."""
         state = {
@@ -181,8 +181,8 @@ class TestGenerateStructuredNarrative:
 class TestGenerateSpendingNarrative:
     """Test backward-compatible spending narrative wrapper."""
 
-    @patch("src.narrative._get_api_key", return_value="test-key")
-    @patch("src.narrative._create_model")
+    @patch("core_logic.narrative._get_api_key", return_value="test-key")
+    @patch("core_logic.narrative._create_model")
     def test_spending_narrative_returns_obj_with_gemini(self, mock_create_model, mock_api_key):
         """Spending narrative should return SpendingNarrative object with Gemini provider."""
         mock_model = MagicMock()
@@ -204,10 +204,10 @@ class TestGenerateSpendingNarrative:
         assert isinstance(result, SpendingNarrative)
         assert result.provider == "Gemini"
         assert result.used_fallback is False
-        assert result.model == "gemini-1.5-flash"
+        assert result.model == "gemini-2.0-flash"
         assert "Watch your spending" in result.text
 
-    @patch("src.narrative._get_api_key", return_value=None)
+    @patch("core_logic.narrative._get_api_key", return_value=None)
     def test_spending_narrative_uses_fallback_without_model(self, mock_api_key):
         """Spending narrative should use fallback provider when model is unavailable."""
         context = {
@@ -239,8 +239,8 @@ class TestGenerateSpendingNarrative:
 class TestNarrativeEdgeCases:
     """Test narrative generation edge cases."""
 
-    @patch("src.narrative._get_api_key", return_value="test-key")
-    @patch("src.narrative._create_model")
+    @patch("core_logic.narrative._get_api_key", return_value="test-key")
+    @patch("core_logic.narrative._create_model")
     def test_narrative_with_zero_days_left(self, mock_create_model, mock_api_key):
         """Narrative should handle zero days left."""
         mock_model = MagicMock()
@@ -261,8 +261,8 @@ class TestNarrativeEdgeCases:
 
         assert len(result) > 0
 
-    @patch("src.narrative._get_api_key", return_value="test-key")
-    @patch("src.narrative._create_model")
+    @patch("core_logic.narrative._get_api_key", return_value="test-key")
+    @patch("core_logic.narrative._create_model")
     def test_narrative_with_special_characters_in_category(self, mock_create_model, mock_api_key):
         """Narrative should handle special characters in category."""
         mock_model = MagicMock()

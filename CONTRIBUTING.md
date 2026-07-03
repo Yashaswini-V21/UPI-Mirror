@@ -9,7 +9,7 @@ Thank you for your interest in contributing! This guide covers everything you ne
 ### 1. Fork and clone
 
 ```bash
-git clone https://github.com/your-org/Kira-AI.git
+git clone https://github.com/Yashaswini-V21/Kira-AI.git
 cd Kira-AI
 ```
 
@@ -58,6 +58,17 @@ cp .env.example .env
 - **Constants**: No magic numbers. All thresholds and factors must be named constants at module level with type annotations.
 - **Type hints**: All function signatures must be fully type-annotated.
 - **Imports**: `from __future__ import annotations` at the top of every module.
+
+### LangGraph Pipeline & State Rules
+
+- **Linear Topology**: The pipeline executes linearly. When adding a new node, register it in `_build_coach()` inside `src/coach_agent.py`.
+- **Merge-Safe Updates**: Nodes must only return the specific keys they write. Never return a full dictionary that overwrites unrelated state keys.
+- **Agent Memory**: Always load memory context via `src/agent_memory.py` prior to compiling the graph invocation to maintain multi-turn context.
+
+### De-identification & PII Rules
+
+- **Zero Exposure**: Raw identifiers (bank account numbers, UPI IDs, raw merchant details) must never be passed to backend logger, prometheus metrics, or persistent files.
+- **Client-Side First**: De-identification must happen client-side before upload payload generation. The backend functions act as second-tier validators.
 
 ### Directory conventions
 

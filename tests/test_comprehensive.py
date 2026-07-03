@@ -6,21 +6,21 @@ from unittest.mock import MagicMock, patch
 import pandas as pd
 import pytest
 
-from api.security import (
+from backend.security import (
     make_upload_id,
     sanitize_dataframe,
     validate_upload_file,
 )
-from src.analytics import (
+from core_logic.analytics import (
     compute_addiction_scores,
     compute_projection_bands,
     detect_weekly_anomalies,
     simulate_scenario,
 )
-from src.coach_agent import _detect_anomaly, _route_after_detection, _suggest_limit, confidence_scoring, run_spending_coach_agent
-from src.data import load_transactions
-from src.pdf_parser import _detect_statement_source, parse_upi_pdf
-from src.narrative import generate_spending_narrative
+from core_logic.coach_agent import _detect_anomaly, _route_after_detection, _suggest_limit, confidence_scoring, run_spending_coach_agent
+from core_logic.data import load_transactions
+from core_logic.pdf_parser import _detect_statement_source, parse_upi_pdf
+from core_logic.narrative import generate_spending_narrative
 
 
 @pytest.fixture
@@ -142,7 +142,7 @@ class TestDataIngestion:
         from io import StringIO
 
         csv_content = "datetime,amount,category,merchant\n2026-01-01,invalid_amount,Food,Zomato\n"
-        from src.data import EXPECTED_COLUMNS
+        from core_logic.data import EXPECTED_COLUMNS
 
         with pytest.raises(ValueError, match="no valid rows after cleaning"):
             from unittest.mock import Mock
@@ -494,8 +494,8 @@ class TestPdfParsing:
         fake_page.extract_text.return_value = ""
         fake_reader.pages = [fake_page]
 
-        with patch("src.pdf_parser.PDF_AVAILABLE", True), patch(
-            "src.pdf_parser.PdfReader", return_value=fake_reader, create=True
+        with patch("core_logic.pdf_parser.PDF_AVAILABLE", True), patch(
+            "core_logic.pdf_parser.PdfReader", return_value=fake_reader, create=True
         ):
             with pytest.raises(ValueError, match="No transactions found in PDF"):
                 parse_upi_pdf(b"fake-pdf-bytes")

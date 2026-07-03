@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "kira-ai"
-version = "1.0.0"
-description = "AI-powered spending coach using LangGraph for behavioral nudges"
+version = "3.1.0"
+description = "AI-powered spending coach using LangGraph for adaptive behavioral nudges with Gemini 2.0"
 requires-python = ">=3.11"
 authors = [
     {name = "Kira-AI Team", email = "dev@kira-ai.local"}

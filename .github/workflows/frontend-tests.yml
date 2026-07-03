@@ -23,33 +23,33 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: "npm"
-          cache-dependency-path: web/package-lock.json
+          cache-dependency-path: frontend/package-lock.json
 
       - name: Install dependencies
-        working-directory: ./web
+        working-directory: ./frontend
         run: npm ci
 
       - name: Check formatting with Prettier
         continue-on-error: true
-        working-directory: ./web
+        working-directory: ./frontend
         run: npx prettier --check src/ 2>/dev/null || echo "Prettier check completed with warnings"
 
       - name: Lint with ESLint
         continue-on-error: true
-        working-directory: ./web
+        working-directory: ./frontend
         run: npx eslint src/ --max-warnings 10 2>/dev/null || echo "ESLint check completed"
 
       - name: Type check with TypeScript
         continue-on-error: true
-        working-directory: ./web
+        working-directory: ./frontend
         run: npx tsc --noEmit 2>/dev/null || echo "TypeScript check completed"
 
       - name: Build frontend
-        working-directory: ./web
+        working-directory: ./frontend
         env:
           VITE_API_URL: http://localhost:8000
         run: npm run build
 
       - name: Run tests (if test script exists)
-        working-directory: ./web
+        working-directory: ./frontend
         run: npm run test --if-present || echo "No test script configured"

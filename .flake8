@@ -6,12 +6,12 @@ max-line-length = 120
 
 # Ignore certain error codes
 ignore = 
-    E203,    # whitespace before ':'
-    E501,    # line too long (handled by black)
-    W503,    # line break before binary operator
-    W504,    # line break after binary operator
-    F841,    # local variable assigned but never used
-    E701,    # multiple statements on one line (colon)
+    E203,
+    E501,
+    W503,
+    W504,
+    F841,
+    E701
 
 # Exclude paths
 exclude =
@@ -35,4 +35,4 @@ max-complexity = 12
 per-file-ignores =
     __init__.py:F401,F403
     tests/*:F401,F403,F811
-    src/narrative.py:F401
+    core_logic/narrative.py:F401

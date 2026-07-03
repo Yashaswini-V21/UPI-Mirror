@@ -11,7 +11,7 @@ from datetime import datetime
 import pandas as pd
 import pytest
 
-from src.analytics import (
+from core_logic.analytics import (
     compute_projection_bands,
     detect_weekly_anomalies,
     month_to_date_spend,

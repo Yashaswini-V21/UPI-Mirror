@@ -34,11 +34,11 @@ jobs:
 
       - name: Bandit security scan (BLOCKING on HIGH severity)
         run: |
-          bandit -r src/ api/ \
+          bandit -r core_logic/ backend/ \
             --severity-level high \
             --confidence-level high \
             -f json -o bandit-report.json
-          bandit -r src/ api/ \
+          bandit -r core_logic/ backend/ \
             --severity-level high \
             --confidence-level high \
             -f txt
@@ -61,7 +61,7 @@ jobs:
       # ── GitGuardian secret detection ──────────────────────────────────────
 
       - name: GitGuardian secret scan
-        uses: gitguardian/ggshield-action@main
+        uses: gitguardian/ggshield-action@master
         with:
           path: ./
           verbose: true
