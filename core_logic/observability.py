@@ -339,7 +339,6 @@ def configure_tracing(service_name: str = "kira-ai") -> None:
 
 def get_tracer() -> Any:
     """Return the global OpenTelemetry tracer (or a no-op if not configured)."""
-    global _TRACER
     if _TRACER is None and _OTEL_AVAILABLE:
         configure_tracing()
     return _TRACER

@@ -97,7 +97,7 @@ markers = [
 ]
 
 [tool.coverage.run]
-source = ["src", "api"]
+source = ["core_logic", "backend"]
 omit = [
     "*/tests/*",
     "*/site-packages/*",
