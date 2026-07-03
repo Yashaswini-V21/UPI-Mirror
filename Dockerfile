@@ -22,8 +22,8 @@ RUN addgroup --system kira && \
 
 # Setup application directory
 WORKDIR /app
-COPY src/ ./src/
-COPY api/ ./api/
+COPY core_logic/ ./core_logic/
+COPY backend/ ./backend/
 
 # Create and set permissions for coach_memory directory
 RUN mkdir -p .coach_memory && \
@@ -40,4 +40,4 @@ HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
     CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')" || exit 1
 
 # Start application
-CMD ["python", "-m", "uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1"]
+CMD ["python", "-m", "uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1"]

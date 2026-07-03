@@ -10,7 +10,7 @@ stages:
 variables:
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
   PYTHONPATH: "$CI_PROJECT_DIR"
-  COVERAGE_MINIMUM: "70"
+  COVERAGE_MINIMUM: "80"
 
 cache:
   key: "$CI_COMMIT_REF_SLUG-python"
@@ -32,7 +32,7 @@ test-unit:
   script:
     - pip install -q pytest pytest-cov pytest-asyncio
     - pytest tests/ -q --tb=short
-        --cov=src --cov=api
+        --cov=core_logic --cov=backend
         --cov-report=term-missing
         --cov-fail-under=${COVERAGE_MINIMUM}
         --ignore=tests/test_api.py
@@ -57,10 +57,10 @@ test-frontend:
   cache:
     key: "$CI_COMMIT_REF_SLUG-node"
     paths:
-      - web/node_modules/
+      - frontend/node_modules/
   before_script: []
   script:
-    - cd web
+    - cd frontend
     - npm ci --prefer-offline
     - npx tsc --noEmit        # type check — BLOCKING
     - npm run build            # build — BLOCKING
@@ -73,17 +73,17 @@ lint-python:
   stage: lint
   script:
     - pip install -q black flake8 mypy
-    - black --check src/ api/
-    - flake8 src/ api/ --max-line-length=100 --extend-ignore=E501,W503
+    - black --check core_logic/ backend/
+    - flake8 core_logic/ backend/ --max-line-length=100 --extend-ignore=E501,W503
         --select=E9,F63,F7,F82,W  # critical + warnings
-    - mypy src/ api/ --ignore-missing-imports --no-strict-optional
+    - mypy core_logic/ backend/ --ignore-missing-imports --no-strict-optional
 
 lint-frontend:
   stage: lint
   image: node:20-alpine
   before_script: []
   script:
-    - cd web
+    - cd frontend
     - npm ci --prefer-offline
     - npx eslint src/ --ext .ts,.tsx --max-warnings 0 || true
 
@@ -96,7 +96,7 @@ security-python:
   script:
     - pip install -q pip-audit bandit[toml]
     - pip-audit --desc            # BLOCKING on CVEs
-    - bandit -r src/ api/ -ll -f txt   # BLOCKING on HIGH severity
+    - bandit -r core_logic/ backend/ -ll -f txt   # BLOCKING on HIGH severity
   artifacts:
     paths:
       - bandit-report.json
@@ -108,7 +108,7 @@ security-frontend:
   image: node:20-alpine
   before_script: []
   script:
-    - cd web
+    - cd frontend
     - npm audit --audit-level=high   # Block on HIGH npm vulnerabilities
   allow_failure: false   # ← was true — now blocks
 

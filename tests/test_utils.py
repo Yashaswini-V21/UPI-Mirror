@@ -6,7 +6,7 @@ Covers: coerce_float, coerce_int, clamp, normalize_unit, money, money_per_day.
 from __future__ import annotations
 
 import pytest
-from src.utils import clamp, coerce_float, coerce_int, money, money_per_day, normalize_unit
+from core_logic.utils import clamp, coerce_float, coerce_int, money, money_per_day, normalize_unit
 
 
 class TestCoerceFloat:

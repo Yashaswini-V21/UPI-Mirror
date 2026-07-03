@@ -22,7 +22,7 @@ os.environ["GITLAB_TOKEN"] = ""
 os.environ["GITLAB_PROJECT_ID"] = ""
 
 # Import app AFTER env setup
-from api.main import app
+from backend.main import app
 
 
 # ════════════════════════════════════════════════════════════════════════════════

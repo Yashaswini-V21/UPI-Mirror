@@ -9,7 +9,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from src.observability import (
+from core_logic.observability import (
     _NoOpSpan,
     configure_logging,
     get_logger,
@@ -17,7 +17,7 @@ from src.observability import (
     mask_upload_id,
     start_span,
 )
-from src.resilience import (
+from core_logic.resilience import (
     CoachResultCache,
     NarrativeCache,
     _NoOpBreaker,
@@ -90,8 +90,8 @@ class TestNoOpSpan:
 
     def test_start_span_returns_noop_without_tracer(self) -> None:
         """When tracing is not configured, start_span returns _NoOpSpan."""
-        with patch("src.observability._TRACER", None), \
-             patch("src.observability._OTEL_AVAILABLE", False):
+        with patch("core_logic.observability._TRACER", None), \
+             patch("core_logic.observability._OTEL_AVAILABLE", False):
             span = start_span("test_span", {"key": "val"})
         assert isinstance(span, _NoOpSpan)
 
