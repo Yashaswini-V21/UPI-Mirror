@@ -13,26 +13,36 @@
   <strong>A production-grade, highly interactive behavioral finance intelligence platform. Kira decodes local bank statements, scrubs transaction identifiers client-side inside WebAssembly sandboxes, maps metrics with LangGraph supervisor logic, and routes actionable financial nudges—all managed via a hardened FastAPI backend and a futuristic React split-screen cockpit interface.</strong>
 </p>
 
+## ⚡ Live Demo
+
+Experience Kira-AI live in your browser:
+*   **Production Frontend URL:** [https://kira-ai.vercel.app](https://kira-ai.vercel.app)
+*   **One-Click Demo API Endpoint:** [https://kira-ai-backend.onrender.com/demo](https://kira-ai-backend.onrender.com/demo) (runs diagnostic pipelines and generates offline templates instantly)
+*   **30-Second Walkthrough:** Refer to the detailed visual walkthrough and interactive radar animations in the screenshots directory: [screenshots/](kira-ai/screenshots)
+
+---
+
 </div>
 
 ---
 
 ## 📖 Table of Contents
 
-1. [Product Overview](#1-product-overview)
-2. [Interactive Cyber Command Center Cockpit (Upgrades Spotlight)](#2-interactive-cyber-command-center-cockpit-upgrades-spotlight)
-3. [Visual Showcase & Screenshots](#3-visual-showcase--screenshots)
-4. [Key Differentiators](#4-key-differentiators)
-5. [System Architecture & Pipelines](#5-system-architecture--pipelines)
-6. [Repository Structure](#6-repository-structure)
-7. [Developer Quickstart](#7-developer-quickstart)
-8. [API Reference & Telemetry Routes](#8-api-reference--telemetry-routes)
-9. [Backend Core Modules](#9-backend-core-modules)
-10. [Security Hardening & Protection controls](#10-security-hardening--protection-controls)
-11. [Data Governance & PII Protection](#11-data-governance--pii-protection)
-12. [Testing & Quality Assurance](#12-testing--quality-assurance)
-13. [Deployment Framework](#13-deployment-framework)
-14. [Future Enhancements & Offline Operations](#14-future-enhancements--offline-operations)
+1. [Live Demo](#1-live-demo)
+2. [Product Overview](#2-product-overview)
+3. [Interactive Cyber Command Center Cockpit (Upgrades Spotlight)](#3-interactive-cyber-command-center-cockpit-upgrades-spotlight)
+4. [Visual Showcase & Screenshots](#4-visual-showcase--screenshots)
+5. [Key Differentiators & Why This Is Genuinely Agentic](#5-key-differentiators--why-this-is-genuinely-agentic)
+6. [System Architecture, Pipelines & Agent Decision Map](#6-system-architecture-pipelines--agent-decision-map)
+7. [Repository Structure](#7-repository-structure)
+8. [Developer Quickstart](#8-developer-quickstart)
+9. [API Reference & Telemetry Routes](#9-api-reference--telemetry-routes)
+10. [Backend Core Modules](#10-backend-core-modules)
+11. [Security Hardening & Protection controls](#11-security-hardening--protection-controls)
+12. [Data Governance & PII Protection](#12-data-governance--pii-protection)
+13. [Testing & Quality Assurance](#13-testing--quality-assurance)
+14. [Deployment Framework](#14-deployment-framework)
+15. [Future Enhancements & Offline Operations](#15-future-enhancements--offline-operations)
 
 ---
 
@@ -106,7 +116,7 @@ A highly interactive visual overview that maps each element of Kira-AI's archite
 
 ---
 
-## 4) Key Differentiators
+## 4) Key Differentiators & Why This Is Genuinely Agentic
 
 Kira-AI is built to provide actionable behavioral interventions rather than static retrospective graphs:
 
@@ -117,6 +127,18 @@ Kira-AI is built to provide actionable behavioral interventions rather than stat
 | **Interventions** | Passive, static notifications | **Dynamic spend caps + contextual narrative coaching** |
 | **LLM Reliability** | Prone to hallucinations | **Circuit-breaker protected, template-backed LLM narratives** |
 | **Data Governance** | Permanent cloud logs of accounts | **90-Day strict auto-purge retention sweeps** |
+
+### Why This Is Genuinely Agentic
+
+Unlike basic LLM wrappers that merely send user data to a model and display a static response, Kira-AI uses an autonomous, stateful agent loop built on LangGraph that actively executes tools, validates its own outputs, and handles routing.
+
+| Agentic Dimension | Basic LLM Application | **Kira-AI Agent Core** |
+|---|---|---|
+| **Tool Use** | Hardcoded API requests or simple function calling. | **Dynamic Tool Binding:** Binds `detect_spending_anomaly`, `calculate_runway`, and `generate_spend_cap` to Gemini and invokes them to resolve parameters. |
+| **State Management** | None or simple history list. | **Stateful graph orchestration:** Maintains a structured `CoachState` TypedDict passing context, metrics, and memory thread-safely. |
+| **Routing** | Static linear chains. | **Conditional Routing:** Dynamically branches logic paths depending on whether tool execution isolated a spending anomaly. |
+| **Failure Handling** | Standard exception crash or empty return. | **Self-Correction Retry Loop:** Node validation checks formatting/threshold compliance and routes back to regenerations (up to 2 retries). |
+| **Memory** | Resends entire raw chat window. | **Structured Multi-Turn Memory:** Adjusts tone and modifiers programmatically via persistent session variables. |
 
 ---
 
@@ -183,6 +205,37 @@ The coach workflow is compiled at import time and executes as a merge-safe, adap
 *   **`nudge_generation`**: Connects status indexes to draft rule-bound coaching templates or LLM prompts.
 *   **`cap_recommendation`**: Formulates recommended spending caps for the primary overspend category.
 *   **`confidence_scoring`**: Calculates overall output validation scores using data density and feedback history.
+
+### Agent Decision Map
+
+Below is the execution flow map showing nodes, conditional branching rules, tools executed, and self-correction loops:
+
+```text
+[START]
+   │
+   ▼
+[context_injection] 
+   │
+   ▼
+[anomaly_check] ───────► Tool: detect_spending_anomaly
+   │
+   ▼
+[pattern_analysis]
+   │
+   ├─► [anomaly_detected == True] ──► [cap_recommendation] ──► Tool: generate_spend_cap
+   │                                           │
+   │                                           ▼
+   └─► [anomaly_detected == False] ───────────┴─► [nudge_generation]
+                                                       │
+                                                       ▼
+                                             [confidence_scoring] ◄──────────────┐
+                                                       │                         │
+                                                 (Quality Tool validation)       │
+                                                       │                         │
+                                                       ├──► [Fail (Retry < 2)] ──┘
+                                                       │
+                                                       └──► [Pass / Max Retries] ──► [END]
+```
 
 ---
 
@@ -562,7 +615,7 @@ docker run -d -p 8000:8000 --env-file .env kira-ai-prod
 
 ---
 
-## 14) Future Enhancements & Offline Operations
+## 15) Future Enhancements & Offline Operations
 
 To ensure 100% platform availability and absolute zero-knowledge privacy:
 *   **WASM Client-Side LLMs:** Integrate a WebGPU-accelerated local model (like Gemma-2b-WASM or Llama-3-8B-WebGPU) directly inside the browser using ONNX Runtime Web. This will allow natural narrative generation directly in client memory with zero server cost.

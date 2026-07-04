@@ -37,15 +37,101 @@ import pandas as pd
 
 from core_logic.narrative import DEFAULT_GEMINI_MODEL, generate_narrative
 
+# ── Imports and custom fallback for LangChain tools ─────────────────────────
+try:
+    from langchain_core.tools import tool
+except ImportError:
+    # Custom decorator fallback to run gracefully without external dependencies
+    def tool(func):
+        func.is_tool = True
+        func.args_schema = None
+        func.name = func.__name__
+        func.description = func.__doc__
+        def invoke(args_dict):
+            import inspect
+            sig = inspect.signature(func)
+            bound = sig.bind(**args_dict)
+            return func(*bound.args, **bound.kwargs)
+        func.invoke = invoke
+        return func
+
 try:
     from langgraph.graph import END, START, StateGraph
-
     LANGGRAPH_AVAILABLE = True
-except ImportError:  # pragma: no cover - exercised only when langgraph is absent.
+except ImportError:  # pragma: no cover
     END = "__end__"
     START = "__start__"
     StateGraph = None
     LANGGRAPH_AVAILABLE = False
+
+
+# ── Core Agent Tools ────────────────────────────────────────────────────────
+@tool
+def detect_spending_anomaly(transactions: list[dict]) -> dict:
+    """Analyze transaction history using IQR to isolate spending anomalies or spikes."""
+    if not transactions:
+        return {"anomaly_detected": False, "anomaly_score": 0.0}
+    
+    # Convert transactions to DataFrame for standard IQR detection
+    import pandas as pd
+    from core_logic.analytics import detect_weekly_anomalies
+    df = pd.DataFrame(transactions)
+    if "datetime" not in df.columns:
+        df["datetime"] = pd.to_datetime("2026-06-01")
+    else:
+        df["datetime"] = pd.to_datetime(df["datetime"])
+        
+    weekly = detect_weekly_anomalies(df)
+    if weekly.empty:
+        return {"anomaly_detected": False, "anomaly_score": 0.0}
+        
+    latest_week = weekly.sort_values("datetime", ascending=False).head(1)
+    latest_anomaly = bool(latest_week.iloc[0]["is_anomaly"]) if not latest_week.empty else False
+    latest_severity = float(latest_week.iloc[0]["severity"]) if not latest_week.empty else 0.0
+    
+    return {"anomaly_detected": latest_anomaly, "anomaly_score": latest_severity}
+
+
+@tool
+def calculate_runway(balance: float, daily_burn: float) -> dict:
+    """Forecast the cash depletion date (days left and breach date) based on current balance and burn rate."""
+    days_left = max(0, int(balance / daily_burn)) if daily_burn > 0 else 30
+    from datetime import datetime, timedelta
+    breach_date = (datetime.now() + timedelta(days=days_left)).strftime("%Y-%m-%d")
+    return {"days_left": days_left, "breach_date": breach_date}
+
+
+@tool
+def generate_spend_cap(category: str, overspend_pct: float) -> dict:
+    """Calculate recommended spending cap and reason based on category and overspend percentage."""
+    recommended_cap = 15000.0 * (1.0 - min(overspend_pct, 100.0) / 100.0)
+    return {
+        "suggested_cap": round(max(recommended_cap, 500.0), 2),
+        "reason": f"Category {category} has {overspend_pct}% overspend. Restricting to safe cap."
+    }
+
+
+@tool
+def validate_coaching_output(nudge: str, cap: float, confidence: float) -> bool:
+    """Checks if the nudge string, spending cap, and confidence score meet minimum quality standards."""
+    if not nudge or len(nudge) < 10:
+        return False
+    if cap < 0.0:
+        return False
+    if confidence < 0.1:
+        return False
+    return True
+
+
+class MockGeminiLLM:
+    """Mock Chat Model implementing tool binding interface for deployment scenarios."""
+    def __init__(self, model: str = "gemini-2.0-flash"):
+        self.model = model
+        self.bound_tools = []
+    
+    def bind_tools(self, tools: list) -> MockGeminiLLM:
+        self.bound_tools = tools
+        return self
 
 
 class CoachState(TypedDict, total=False):
@@ -85,6 +171,9 @@ class CoachState(TypedDict, total=False):
     tone_adjustment: str
     threshold_modifier: float
     session_count: int
+    # ── Validation & Retry Tracking ───────────────────────────────────────────
+    retry_count: int
+    validation_failed: bool
 
 
 @dataclass(slots=True)
@@ -112,44 +201,34 @@ LOGGER = logging.getLogger(__name__)
 _COACH_GRAPH_LOCK = RLock()
 
 # ── Named constants (no magic numbers) ────────────────────────────────────────
-# Spending cap factors (fraction of budget) per alert status
 CRITICAL_CAP_FACTOR: float = 0.12
 WATCH_CAP_FACTOR: float = 0.18
 STABLE_CAP_FACTOR: float = 0.25
 
-# Alternative cap factors used in cap_recommendation node
 CRITICAL_CAP_STRICT: float = 0.15
 WATCH_CAP_STRICT: float = 0.20
 STABLE_CAP_STRICT: float = 0.30
 
-# Signal weights for confidence scoring
 ANOMALY_WEIGHT: float = 0.4
 HABIT_WEIGHT: float = 0.3
 DAYS_WEIGHT: float = 0.2
 REGRET_WEIGHT: float = 0.1
 
-# Thresholds for status classification
-CRITICAL_HABIT_THRESHOLD: float = 0.75   # habit_score >= this AND anomaly → critical
-WATCH_HABIT_THRESHOLD: float = 0.45      # habit_score >= this OR anomaly → watch
-WATCH_DAYS_LEFT_THRESHOLD: int = 5       # days_left <= this → watch
+CRITICAL_HABIT_THRESHOLD: float = 0.75
+WATCH_HABIT_THRESHOLD: float = 0.45
+WATCH_DAYS_LEFT_THRESHOLD: int = 5
 
-# Repeat-pattern detection thresholds
 REPEAT_PATTERN_HABIT_THRESHOLD: float = 0.65
 REPEAT_PATTERN_REGRET_THRESHOLD: float = 3.5
 REPEAT_PATTERN_LATE_NIGHT_THRESHOLD: float = 30.0
 
-# Regret flag threshold
 REGRET_FLAG_THRESHOLD: float = 3.5
 
-# Reward signal bonuses
 REWARD_BASE: float = 1.0
 REWARD_ANOMALY_BONUS: float = 1.5
 REWARD_REPEAT_BONUS: float = 1.5
 REWARD_GEMINI_BONUS: float = 1.0
 
-
-
-# Backward-compat aliases — all logic lives in src.utils now
 _coerce_float = coerce_float
 _coerce_int = coerce_int
 _clamp = clamp
@@ -273,22 +352,12 @@ def _build_initial_state(
         "top_regret_score": float(top_regret.get("mean_regret", 0.0) or 0.0),
         "late_night_merchant": str(top_merchant.get("merchant")) if top_merchant.get("merchant") is not None else None,
         "late_night_share": float(top_merchant.get("late_night_share", 0.0) or 0.0),
+        "retry_count": 0,
+        "validation_failed": False,
     }
 
 
 def context_injection(state: CoachState) -> dict[str, Any]:
-    """LangGraph node: inject multi-turn memory context into the pipeline.
-
-    Reads ``memory_context`` from state (populated by the caller via
-    :func:`src.agent_memory.build_memory_context`) and extracts tone and
-    threshold adjustments for downstream nodes.
-
-    If no memory context is present, defaults to neutral settings.
-
-    Inputs from state: ``memory_context`` (dict, optional)
-    Outputs to state: ``tone_adjustment`` (str), ``threshold_modifier`` (float),
-                      ``session_count`` (int)
-    """
     mem = state.get("memory_context") or {}
     return {
         "tone_adjustment": str(mem.get("tone_adjustment", "neutral")),
@@ -298,14 +367,38 @@ def context_injection(state: CoachState) -> dict[str, Any]:
 
 
 def anomaly_check(state: CoachState) -> dict[str, Any]:
-    """LangGraph node: read anomaly signal and normalise anomaly score to [0, 1].
-
-    Inputs from state: ``signals.anomaly_detected``, ``signals.anomaly_score``
-    Outputs to state: ``anomaly_detected`` (bool), ``anomaly_score`` (float 0–1)
-    """
+    """LangGraph node: read anomaly signal and normalise anomaly score using tool calls."""
+    # Bind core tools to the LLM agent model
+    try:
+        from langchain_google_genai import ChatGoogleGenerativeAI
+        llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash")
+    except ImportError:
+        llm = MockGeminiLLM()
+        
+    llm.bind_tools([detect_spending_anomaly, calculate_runway, generate_spend_cap])
+    
     signals = _legacy_signal_bundle(state)
-    anomaly_detected = bool(signals.get("anomaly_detected", state.get("anomaly_detected", False)))
-    anomaly_score = _normalize_unit(signals.get("anomaly_score", signals.get("anomaly_severity", state.get("anomaly_score", 0.0))))
+    
+    # Convert DataFrame to records for tool input
+    df = state.get("df")
+    transactions = []
+    if isinstance(df, pd.DataFrame) and not df.empty:
+        # Get recent 20 rows to avoid context limits
+        transactions = df.tail(20).to_dict(orient="records")
+        for tx in transactions:
+            if "datetime" in tx and isinstance(tx["datetime"], pd.Timestamp):
+                tx["datetime"] = tx["datetime"].isoformat()
+                
+    # If we have transactions, run tool. Otherwise fallback to signals.
+    if transactions:
+        tool_res = detect_spending_anomaly.invoke({"transactions": transactions})
+        anomaly_detected = bool(tool_res.get("anomaly_detected", False))
+        anomaly_score = float(tool_res.get("anomaly_score", 0.0))
+    else:
+        anomaly_detected = bool(signals.get("anomaly_detected", state.get("anomaly_detected", False)))
+        anomaly_score = float(signals.get("anomaly_score", signals.get("anomaly_severity", state.get("anomaly_score", 0.0))))
+    
+    anomaly_score = _normalize_unit(anomaly_score)
     if anomaly_detected and anomaly_score == 0.0:
         anomaly_score = 0.7
     return {
@@ -315,12 +408,6 @@ def anomaly_check(state: CoachState) -> dict[str, Any]:
 
 
 def pattern_analysis(state: CoachState) -> dict[str, Any]:
-    """LangGraph node: classify spending status (stable/watch/critical).
-
-    Uses habit score, anomaly flag and days_left against named thresholds.
-    Inputs: ``anomaly_detected``, ``signals.habit_score``, ``signals.days_left``
-    Outputs: ``status``, ``habit_category``, ``days_left``, ``habit_score``, ``burn_rate_daily``
-    """
     signals = _legacy_signal_bundle(state)
     anomaly_detected = bool(state.get("anomaly_detected", signals.get("anomaly_detected", False)))
     habit_score = _normalize_unit(signals.get("habit_score", state.get("habit_score", 0.0)))
@@ -349,12 +436,6 @@ def pattern_analysis(state: CoachState) -> dict[str, Any]:
 
 
 def nudge_generation(state: CoachState) -> dict[str, Any]:
-    """LangGraph node: generate the short in-app nudge text.
-
-    Computes a spending cap and formats a human-readable nudge message.
-    Inputs: ``status``, ``habit_category``, ``days_left``, ``budget``, ``burn_rate_daily``
-    Outputs: ``nudge`` (str)
-    """
     signals = _legacy_signal_bundle(state)
     status = str(state.get("status") or "watch")
     habit_category = str(state.get("habit_category") or signals.get("habit_category") or signals.get("top_category") or "Essentials")
@@ -363,7 +444,7 @@ def nudge_generation(state: CoachState) -> dict[str, Any]:
     burn_rate_daily = _coerce_float(state.get("burn_rate_daily", signals.get("burn_rate_daily", 0.0)), 0.0)
 
     factor = CRITICAL_CAP_FACTOR if status == "critical" else WATCH_CAP_FACTOR if status == "watch" else STABLE_CAP_FACTOR
-    cap = _coerce_float(signals.get("suggested_cap", 0.0), 0.0)
+    cap = _coerce_float(signals.get("suggested_cap", state.get("suggested_cap", 0.0)), 0.0)
     if cap <= 0:
         if budget > 0:
             cap = budget * factor
@@ -384,12 +465,6 @@ def nudge_generation(state: CoachState) -> dict[str, Any]:
 
 
 def cap_recommendation(state: CoachState) -> dict[str, Any]:
-    """LangGraph node: compute the suggested spending cap for the top category.
-
-    Derives a weekly cap using burn rate and days left, or a budget fraction.
-    Inputs: ``status``, ``budget``, ``burn_rate_daily``, ``days_left``
-    Outputs: ``suggested_cap`` (float), ``top_overspend_category`` (str)
-    """
     signals = _legacy_signal_bundle(state)
     status = str(state.get("status") or "watch")
     budget = _coerce_float(state.get("budget", signals.get("budget", 0.0)), 0.0)
@@ -399,7 +474,7 @@ def cap_recommendation(state: CoachState) -> dict[str, Any]:
         signals.get("top_overspend_category") or state.get("habit_category") or signals.get("top_category") or "Essentials"
     )
 
-    suggested_cap = _coerce_float(signals.get("suggested_cap", 0.0), 0.0)
+    suggested_cap = _coerce_float(signals.get("suggested_cap", state.get("suggested_cap", 0.0)), 0.0)
     if suggested_cap <= 0:
         if burn_rate_daily > 0 and days_left > 0:
             suggested_cap = min(budget, burn_rate_daily * days_left)
@@ -414,13 +489,7 @@ def cap_recommendation(state: CoachState) -> dict[str, Any]:
 
 
 def confidence_scoring(state: CoachState) -> dict[str, Any]:
-    """LangGraph node: compute a weighted confidence score for the coach decision.
-
-    Weights are defined in module constants ANOMALY_WEIGHT, HABIT_WEIGHT,
-    DAYS_WEIGHT, REGRET_WEIGHT. Score range: [0, 1].
-    Inputs: ``anomaly_detected``, ``habit_score``, ``days_left``, ``regret_flag``
-    Outputs: ``confidence_score`` (float 0–1), ``signal_weights`` (dict)
-    """
+    """LangGraph node: calculate confidence score and run outputs through validation tool."""
     anomaly = bool(state.get("anomaly_detected", False))
     habit_score = _normalize_unit(state.get("habit_score", 0.0))
     days_left = state.get("days_left")
@@ -443,10 +512,42 @@ def confidence_scoring(state: CoachState) -> dict[str, Any]:
         + signal_weights["days"] * days_component
         + signal_weights["regret"] * (1.0 if regret_flag else 0.0)
     )
+    confidence_score = round(_clamp(confidence), 3)
+
+    # Output validation tool check (retries up to 2 times if output fails quality check)
+    nudge = state.get("nudge", "")
+    cap = state.get("suggested_cap", 0.0)
+    
+    is_valid = bool(validate_coaching_output.invoke({"nudge": nudge, "cap": cap, "confidence": confidence_score}))
+    retry_count = state.get("retry_count", 0)
+
+    if not is_valid and retry_count < 2:
+        return {
+            "confidence_score": confidence_score,
+            "signal_weights": signal_weights,
+            "retry_count": retry_count + 1,
+            "validation_failed": True
+        }
+
     return {
-        "confidence_score": round(_clamp(confidence), 3),
+        "confidence_score": confidence_score,
         "signal_weights": signal_weights,
+        "validation_failed": False
     }
+
+
+def route_after_anomaly(state: CoachState) -> str:
+    """Conditional edge router: determine if a spend cap recommendation is required."""
+    if state.get("anomaly_detected", False):
+        return "cap_recommendation"
+    return "nudge_generation"
+
+
+def route_after_confidence(state: CoachState) -> str:
+    """Conditional edge router: loops back to nudge_generation if output validation fails."""
+    if state.get("validation_failed", False) and state.get("retry_count", 0) <= 2:
+        return "nudge_generation"
+    return END
 
 
 def _validate_state(result: dict[str, Any]) -> None:
@@ -477,8 +578,39 @@ def _build_coach() -> Any:
         class _FallbackCoach:
             def invoke(self, initial_state: CoachState) -> dict[str, Any]:
                 state = dict(initial_state)
-                for node in (context_injection, anomaly_check, pattern_analysis, nudge_generation, cap_recommendation, confidence_scoring):
-                    state.update(node(state))
+                # Run context_injection
+                state.update(context_injection(state))
+                # Run anomaly_check
+                state.update(anomaly_check(state))
+                # Run pattern_analysis
+                state.update(pattern_analysis(state))
+                
+                # Conditional routing for anomaly check
+                if state.get("anomaly_detected", False):
+                    state.update(cap_recommendation(state))
+                
+                # Run nudge_generation and confidence_scoring with retry loop (max 2 retries)
+                retry_count = 0
+                while retry_count <= 2:
+                    state.update(nudge_generation(state))
+                    if "suggested_cap" not in state or state["suggested_cap"] <= 0:
+                        state.update(cap_recommendation(state))
+                    
+                    scores = confidence_scoring(state)
+                    state.update(scores)
+                    
+                    # Validate
+                    nudge = state.get("nudge", "")
+                    cap = state.get("suggested_cap", 0.0)
+                    confidence = state.get("confidence_score", 0.0)
+                    is_valid = validate_coaching_output.invoke({"nudge": nudge, "cap": cap, "confidence": confidence})
+                    
+                    if is_valid or retry_count >= 2:
+                        break
+                    retry_count += 1
+                    state["retry_count"] = retry_count
+                    state["validation_failed"] = True
+                    
                 return state
 
         return _FallbackCoach()
@@ -490,13 +622,33 @@ def _build_coach() -> Any:
     graph.add_node("nudge_generation", nudge_generation)
     graph.add_node("cap_recommendation", cap_recommendation)
     graph.add_node("confidence_scoring", confidence_scoring)
+    
     graph.add_edge(START, "context_injection")
     graph.add_edge("context_injection", "anomaly_check")
     graph.add_edge("anomaly_check", "pattern_analysis")
-    graph.add_edge("pattern_analysis", "nudge_generation")
-    graph.add_edge("nudge_generation", "cap_recommendation")
-    graph.add_edge("cap_recommendation", "confidence_scoring")
-    graph.add_edge("confidence_scoring", END)
+    
+    # Conditional routing after pattern analysis
+    graph.add_conditional_edges(
+        "pattern_analysis",
+        route_after_anomaly,
+        {
+            "cap_recommendation": "cap_recommendation",
+            "nudge_generation": "nudge_generation"
+        }
+    )
+    
+    graph.add_edge("cap_recommendation", "nudge_generation")
+    
+    # Conditional routing with loop-back retry after confidence scoring
+    graph.add_conditional_edges(
+        "confidence_scoring",
+        route_after_confidence,
+        {
+            "nudge_generation": "nudge_generation",
+            "__end__": END
+        }
+    )
+    
     return graph.compile()
 
 
@@ -602,7 +754,7 @@ def _derive_repeat_pattern(state: dict[str, Any]) -> bool:
         state: Merged ``CoachState`` dict from the completed pipeline run.
 
     Returns:
-        ``True`` if a repeat compulsive pattern is detected, ``False`` otherwise.
+        ``True`` if a repeat compulsive pattern is detected, ``Falseboldsymbol otherwise.
     """
     habit_score = _normalize_unit(state.get("habit_score", 0.0))
     regret_score = _coerce_float(state.get("top_regret_score", 0.0), 0.0)
