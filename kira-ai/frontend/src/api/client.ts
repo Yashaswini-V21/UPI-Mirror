@@ -1,6 +1,6 @@
 /** Kira-AI API client — typed, with error handling and auth header injection. */
 
-const BASE_URL: string = import.meta.env.VITE_API_URL ?? 'http://localhost:8000';
+const BASE_URL: string = import.meta.env.VITE_API_URL ?? '';
 const API_TOKEN: string = import.meta.env.VITE_API_TOKEN ?? '';
 
 // ─── Internal fetch wrapper ───────────────────────────────────────────────────
@@ -37,14 +37,18 @@ export interface UploadResponse {
   rows: number;
   categories: string[];
   date_range: { start: string | null; end: string | null };
-  source: string;
+  parsed_format: string;
 }
 
 export interface SignalData {
   anomaly_detected: boolean;
+  anomaly_weight: number;
   habit_score: number;
+  habit_weight: number;
   days_left: number;
+  days_weight: number;
   regret_flag: boolean;
+  regret_weight: number;
   top_category: string;
   burn_rate_daily: number;
   suggested_cap: number;
@@ -85,8 +89,16 @@ export interface HealthResponse {
 
 export interface ScenarioRequest {
   upload_id: string;
+  label: string;
   budget: number;
-  cut_percent: number;
+  cutback_pct: number;
+  cutback_category: string;
+}
+
+export interface FeedbackRequest {
+  upload_id: string;
+  nudge_id: string;
+  accepted: boolean;
 }
 
 // ─── API Client ────────────────────────────────────────────────────────────────
@@ -102,13 +114,16 @@ export const apiClient = {
   },
 
   coach: (uploadId: string, budget: number = 15000): Promise<CoachResponse> =>
-    request<CoachResponse>(`/coach/${uploadId}?budget=${budget}`),
+    request<CoachResponse>(`/coach?upload_id=${encodeURIComponent(uploadId)}&budget=${budget}`),
 
   metrics: (): Promise<MetricsResponse> =>
     request<MetricsResponse>('/metrics'),
 
-  scenario: (body: ScenarioRequest): Promise<CoachResponse> =>
-    request<CoachResponse>('/scenario', {
+  scenarios: (uploadId: string): Promise<{ upload_id: string; scenarios: unknown[] }> =>
+    request<{ upload_id: string; scenarios: unknown[] }>(`/scenarios/${encodeURIComponent(uploadId)}`),
+
+  createScenario: (body: ScenarioRequest): Promise<unknown> =>
+    request<unknown>('/scenarios', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
@@ -121,6 +136,20 @@ export const apiClient = {
       body: JSON.stringify({ upload_id: uploadId, nudge_id: nudgeId, accepted }),
     }),
 
+  history: (uploadId: string): Promise<unknown> =>
+    request<unknown>(`/history/${encodeURIComponent(uploadId)}`),
+
+  exportCsv: (uploadId: string): Promise<Blob> =>
+    fetch(`${BASE_URL}/export/csv?upload_id=${encodeURIComponent(uploadId)}`, {
+      headers: API_TOKEN ? { Authorization: `Bearer ${API_TOKEN}` } : {},
+    }).then(r => {
+      if (!r.ok) throw new Error(`Export failed: HTTP ${r.status}`);
+      return r.blob();
+    }),
+
   deleteSession: (uploadId: string): Promise<void> =>
-    request<void>(`/sessions/${uploadId}`, { method: 'DELETE' }),
+    request<void>(`/session/${encodeURIComponent(uploadId)}`, { method: 'DELETE' }),
+
+  integrations: (): Promise<unknown> =>
+    request<unknown>('/integrations/status'),
 };

@@ -1,7 +1,7 @@
 {
-  "installCommand": "cd web && npm install",
-  "buildCommand": "cd web && npm run build",
-  "outputDirectory": "web/dist",
+  "installCommand": "cd frontend && npm install",
+  "buildCommand": "cd frontend && npm run build",
+  "outputDirectory": "frontend/dist",
   "framework": "vite",
   "rewrites": [
     {
@@ -24,6 +24,14 @@
         {
           "key": "X-XSS-Protection",
           "value": "1; mode=block"
+        },
+        {
+          "key": "Strict-Transport-Security",
+          "value": "max-age=31536000; includeSubDomains"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
         }
       ]
     }

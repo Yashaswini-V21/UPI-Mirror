@@ -1,54 +1,50 @@
-# Environment Variables (NEVER commit .env files with secrets)
+# Environment Variables
 .env
 .env.local
 .env.*
 !.env.example
-!web/.env.local.example
 
-# Python
-__pycache__/
-*.py[cod]
+# Python / Virtual Environments
 .venv/
 venv/
+__pycache__/
+*.py[cod]
 *.egg-info/
-dist/
 build/
 .pytest_cache/
 .mypy_cache/
 .coverage
 htmlcov/
 
-# IDE
+# IDE / Editor Configs
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
 
-# OS
+# OS Files
 .DS_Store
 Thumbs.db
 
-# Kira-AI Specific
-.streamlit/
-.coach_memory/
-docs/screenshots/
-data/
+# Project-specific Runtime & Build Files inside kira-ai
+kira-ai/.coach_memory/
+kira-ai/.streamlit/
+kira-ai/frontend/node_modules/
+kira-ai/frontend/dist/
+kira-ai/frontend/.turbo/
+kira-ai/node_modules/
+kira-ai/__pycache__/
+kira-ai/backend/__pycache__/
+kira-ai/core_logic/__pycache__/
+kira-ai/tests/__pycache__/
 
-# Frontend
-web/node_modules/
-web/dist/
-web/.turbo/
-node_modules/
-dist/
-
-# Build artifacts
+# Logs / Build artifacts
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Deployment
-render.yaml
-.railway.json
-
+# Security reports
+bandit-report.json
+pip-audit-report.json

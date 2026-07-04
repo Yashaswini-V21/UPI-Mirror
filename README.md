@@ -21,16 +21,18 @@
 
 1. [Product Overview](#1-product-overview)
 2. [Interactive Cyber Command Center Cockpit (Upgrades Spotlight)](#2-interactive-cyber-command-center-cockpit-upgrades-spotlight)
-3. [Key Differentiators](#3-key-differentiators)
-4. [System Architecture & Pipelines](#4-system-architecture--pipelines)
-5. [Repository Structure](#5-repository-structure)
-6. [Developer Quickstart](#6-developer-quickstart)
-7. [API Reference & Telemetry Routes](#7-api-reference--telemetry-routes)
-8. [Backend Core Modules](#8-backend-core-modules)
-9. [Security Hardening & Protection controls](#9-security-hardening--protection-controls)
-10. [Data Governance & PII Protection](#10-data-governance--pii-protection)
-11. [Testing & Quality Assurance](#11-testing--quality-assurance)
-12. [Deployment Framework](#12-deployment-framework)
+3. [Visual Showcase & Screenshots](#3-visual-showcase--screenshots)
+4. [Key Differentiators](#4-key-differentiators)
+5. [System Architecture & Pipelines](#5-system-architecture--pipelines)
+6. [Repository Structure](#6-repository-structure)
+7. [Developer Quickstart](#7-developer-quickstart)
+8. [API Reference & Telemetry Routes](#8-api-reference--telemetry-routes)
+9. [Backend Core Modules](#9-backend-core-modules)
+10. [Security Hardening & Protection controls](#10-security-hardening--protection-controls)
+11. [Data Governance & PII Protection](#11-data-governance--pii-protection)
+12. [Testing & Quality Assurance](#12-testing--quality-assurance)
+13. [Deployment Framework](#13-deployment-framework)
+14. [Future Enhancements & Offline Operations](#14-future-enhancements--offline-operations)
 
 ---
 
@@ -86,7 +88,25 @@ Version 3.1 introduces a state-of-the-art **Split-Screen Cyber Command Center** 
 
 ---
 
-## 3) Key Differentiators
+## 3) Visual Showcase & Screenshots
+
+Below are screenshots showing the interactive elements of Kira-AI:
+
+### 📄 Zero-Knowledge Ingestion & Sandbox
+The dashboard splits to allow local WASM de-identification alongside a real-time CommandCenterDeck cockpit displaying live cryptographic updates and audit telemetry:
+![Zero-Knowledge Sandbox](kira-ai/screenshots/landing_page.png)
+
+### 📈 Live Telemetry Metrics Ticker
+Directly visible below the landing page hero, the metrics ticker keeps track of analyzed transactions, overall platform latency, and user savings:
+![Live Telemetry Ticker](kira-ai/screenshots/live_metrics_ticker.png)
+
+### 🧠 Interactive Technology Radar
+A highly interactive visual overview that maps each element of Kira-AI's architecture (Gemini 2.0, LangGraph, FastAPI, WASM) as hovering nodes on concentric rings:
+![Technology Radar](kira-ai/screenshots/tech_radar.png)
+
+---
+
+## 4) Key Differentiators
 
 Kira-AI is built to provide actionable behavioral interventions rather than static retrospective graphs:
 
@@ -100,7 +120,7 @@ Kira-AI is built to provide actionable behavioral interventions rather than stat
 
 ---
 
-## 4) System Architecture & Pipelines
+## 5) System Architecture & Pipelines
 
 Kira-AI uses a decoupled, hardened architecture. Raw client statements are scrubbed locally in the browser before reaching backend APIs.
 
@@ -166,154 +186,154 @@ The coach workflow is compiled at import time and executes as a merge-safe, adap
 
 ---
 
-## 5) Repository Structure
+## 6) Repository Structure
 
 ```text
 Kira-AI/
 │
-├── backend/                                # FastAPI Web Routing Layer
-│   ├── __init__.py
-│   ├── main.py                             # App factory, OWASP headers, CORS, metrics, rate limits
-│   ├── schemas.py                          # Pydantic v2 validation models
-│   └── security.py                         # Constant-time auth digests, magic-bytes checks
-│
-├── core_logic/                             # Core Behavioral & Analytics Engine
-│   ├── __init__.py
-│   ├── agent_memory.py                     # Multi-turn adaptive coaching memory (per-session)
-│   ├── analytics.py                        # Linear regression broke-dates, IQR anomalies, addiction meters
-│   ├── audit.py                            # Immutable JSON-Lines append-only logger
-│   ├── coach_agent.py                      # Compiled stateful 6-node LangGraph pipeline
-│   ├── coach_memory.py                     # Snapshot read/writes for session persistence
-│   ├── data.py                             # Parsing matrices and transaction scrubbers
-│   ├── data_governance.py                  # PII SHA-256 masking, GDPR-compliant retention sweeps
-│   ├── delivery.py                         # WhatsApp and Email dispatch router
-│   ├── email_integration.py                # Resend email delivery integration
-│   ├── evaluation.py                       # Accuracy evaluation (MAE, signal bounds)
-│   ├── explainability.py                   # Human-readable diagnostic explanation builders
-│   ├── gitlab_integration.py               # GitLab Issues API auto-logging
-│   ├── insights.py                         # Category insight generators
-│   ├── lightning.py                        # Fast-path lightweight coaching endpoint
-│   ├── merchant.py                         # Merchant name normalization and mapping
-│   ├── narrative.py                        # Gemini 2.0 LLM driver with pybreaker and fallback maps
-│   ├── observability.py                    # Prometheus counters/gauges and structlog setup
-│   ├── pdf_parser.py                       # Local UPI PDF parsing (regex grids)
-│   ├── regret.py                           # Regret probability scoring engine
-│   ├── resilience.py                       # pybreaker circuit breakers and TTL caching
-│   ├── smart_categorizer.py                # Gemini-powered merchant categorization engine
-│   ├── utils.py                            # Shared helpers (coerce, clamp, money formatters)
-│   └── whatsapp_integration.py             # WhatsApp / Twilio nudge dispatcher
-│
-├── frontend/                               # React 18 + Vite + TypeScript Frontend
-│   ├── public/
-│   │   ├── favicon.svg                     # App icon
-│   │   └── manifest.json                   # PWA manifest
-│   ├── src/
-│   │   ├── api/
-│   │   │   └── client.ts                   # Axios HTTP client with interceptors
-│   │   ├── components/
-│   │   │   ├── landing/                    # Landing page modules
-│   │   │   │   ├── primitives/
-│   │   │   │   │   ├── DecryptedText.tsx    # Scramble-reveal text animation
-│   │   │   │   │   ├── MagneticButton.tsx   # Magnetic hover button effect
-│   │   │   │   │   ├── SpotlightCard.tsx    # Mouse-tracked spotlight card
-│   │   │   │   │   └── WordReveal.tsx       # Word-by-word reveal animation
-│   │   │   │   ├── sections/
-│   │   │   │   │   ├── DecoderSandbox.tsx   # Client-side UPI decoder demo
-│   │   │   │   │   ├── FeaturesGrid.tsx     # Interactive feature cards grid
-│   │   │   │   │   ├── FooterSection.tsx    # Site footer
-│   │   │   │   │   ├── HeroSection.tsx      # Split-screen WASM Command Center hero
-│   │   │   │   │   ├── HowItWorks.tsx       # Digg-style architecture newsfeed
-│   │   │   │   │   ├── NudgePlayground.tsx  # Live persona simulation playground
-│   │   │   │   │   ├── PricingSection.tsx   # Pricing tiers display
-│   │   │   │   │   └── SecuritySection.tsx  # Privacy & security showcase
-│   │   │   │   ├── BackgroundEffects.tsx    # Ambient particle effects
-│   │   │   │   ├── DesignTokens.ts          # Shared color/spacing constants
-│   │   │   │   ├── hooks.ts                # Landing-specific hooks
-│   │   │   │   ├── index.ts                # Barrel export
-│   │   │   │   ├── NavBar.tsx              # Top navigation bar
-│   │   │   │   └── Starfield.tsx            # Canvas starfield background
-│   │   │   ├── tabs/
-│   │   │   │   ├── AgentPipelineVisualizer.tsx  # Animated LangGraph pipeline display
-│   │   │   │   ├── ArtifactsTab.tsx         # WASM Command Center cockpit tab
-│   │   │   │   ├── CoachTab.tsx             # AI coach narrative + action cards
-│   │   │   │   ├── ExplainTab.tsx           # Signal explainability dashboard
-│   │   │   │   ├── ForecastTab.tsx          # 3-band scenario projection charts
-│   │   │   │   ├── ImpactTab.tsx            # Compound savings + achievements
-│   │   │   │   └── UploadTab.tsx            # Drag-and-drop file upload
-│   │   │   ├── ui/
-│   │   │   │   ├── GlassCard.tsx            # Glassmorphism card primitive
-│   │   │   │   ├── Icons.tsx               # Custom SVG icon library
-│   │   │   │   ├── KiraButton.tsx           # Branded button variants
-│   │   │   │   ├── KiraInput.tsx            # Styled input fields
-│   │   │   │   ├── KiraSkeleton.tsx         # Shimmer loading skeleton
-│   │   │   │   ├── KiraToast.tsx            # Toast notification component
-│   │   │   │   ├── StatusBadge.tsx          # Status indicator badges
-│   │   │   │   ├── index.ts                # Barrel export
-│   │   │   │   └── variants.ts             # Shared style variants
-│   │   │   ├── ErrorBoundary.tsx            # React error boundary
-│   │   │   ├── LandingScreen.tsx            # Landing page compositor
-│   │   │   ├── Sidebar.tsx                  # Desktop navigation sidebar
-│   │   │   ├── SplashScreen.tsx             # Neural particles splash loader
-│   │   │   ├── TabBar.tsx                   # Mobile bottom tab bar
-│   │   │   └── TopNav.tsx                   # Dashboard top navigation
-│   │   ├── hooks/
-│   │   │   ├── useCountUp.ts               # Animated number counter hook
-│   │   │   ├── useDebounce.ts              # Input debounce hook
-│   │   │   └── useTypewriter.ts            # Typewriter text animation hook
-│   │   ├── store/
-│   │   │   └── useKiraStore.ts             # Zustand global state (session, demo, tabs)
-│   │   ├── styles/
-│   │   │   ├── animations.css              # Keyframe animation definitions
-│   │   │   ├── globals.css                 # Global CSS resets and utilities
-│   │   │   └── tokens.css                  # CSS custom property design tokens
-│   │   ├── App.tsx                         # Root application component
-│   │   ├── main.tsx                        # Vite entry point
-│   │   ├── styles.css                      # Primary stylesheet
-│   │   └── vite-env.d.ts                   # Vite type declarations
-│   ├── index.html                          # HTML entry with SEO, OG, structured data
-│   ├── package.json                        # Frontend dependencies (v3.1.0)
-│   ├── postcss.config.js                   # PostCSS configuration
-│   ├── tailwind.config.js                  # Tailwind CSS configuration
-│   ├── tsconfig.json                       # TypeScript compiler options
-│   └── vite.config.ts                      # Vite build configuration
-│
-├── tests/                                  # Comprehensive Python Test Suite (197 tests)
-│   ├── conftest.py                         # Shared pytest fixtures
-│   ├── test_agent_memory.py                # Multi-turn memory persistence and analytics
-│   ├── test_analytics_edge_cases.py        # Analytics boundary condition tests
-│   ├── test_api.py                         # FastAPI endpoint integration tests
-│   ├── test_coach_agent_unit.py            # LangGraph node-level unit tests
-│   ├── test_comprehensive.py               # Cross-module comprehensive tests
-│   ├── test_full_pipeline.py               # End-to-end CSV → pipeline → response tests
-│   ├── test_narrative_fallback.py          # Gemini circuit-breaker mock assertions
-│   ├── test_observability_resilience.py    # Cache, breaker, and logging tests
-│   └── test_utils.py                       # Utility function unit tests
-│
-├── docs/                                   # Architecture Decision Records
-│   ├── ADR-001-langgraph-pipeline.md       # Pipeline design rationale
-│   ├── ADR-002-privacy-model.md            # Privacy model decisions
-│   └── examples/                           # API usage examples
-│
-├── sample_data/                            # Mock transaction statements
-├── .github/                                # GitHub Actions CI/CD workflows
-├── .env.example                            # Environment variable template
-├── .gitlab-ci.yml                          # GitLab CI/CD pipeline config
-├── CHANGELOG.md                            # Version history (Keep a Changelog format)
-├── CONTRIBUTING.md                         # Contribution guidelines
-├── Dockerfile                              # Production container manifest
-├── ENTERPRISE_REVIEW.md                    # Enterprise security & architecture review
-├── LICENSE                                 # MIT License
-├── Makefile                                # Developer task automation scripts
-├── pyproject.toml                          # Python project metadata (v3.1.0)
-├── pytest.ini                              # Pytest configuration
-├── render.yaml                             # Render backend deployment manifest
-├── requirements.txt                        # Pinned Python dependencies
-└── vercel.json                             # Vercel frontend deployment config
+└── kira-ai/                                # Root project folder
+    ├── backend/                            # FastAPI Web Routing Layer
+    │   ├── __init__.py
+    │   ├── main.py                             # App factory, OWASP headers, CORS, metrics, rate limits
+    │   ├── schemas.py                          # Pydantic v2 validation models
+    │   └── security.py                         # Constant-time auth digests, magic-bytes checks
+    │
+    ├── core_logic/                         # Core Behavioral & Analytics Engine
+    │   ├── __init__.py
+    │   ├── agent_memory.py                     # Multi-turn adaptive coaching memory (per-session)
+    │   ├── analytics.py                        # Linear regression broke-dates, IQR anomalies, addiction meters
+    │   ├── audit.py                            # Immutable JSON-Lines append-only logger
+    │   ├── coach_agent.py                      # Compiled stateful 6-node LangGraph pipeline
+    │   ├── coach_memory.py                     # Snapshot read/writes for session persistence
+    │   ├── data.py                             # Parsing matrices and transaction scrubbers
+    │   ├── data_governance.py                  # PII SHA-256 masking, GDPR-compliant retention sweeps
+    │   ├── delivery.py                         # WhatsApp and Email dispatch router
+    │   ├── email_integration.py                # Resend email delivery integration
+    │   ├── evaluation.py                       # Accuracy evaluation (MAE, signal bounds)
+    │   ├── explainability.py                   # Human-readable diagnostic explanation builders
+    │   ├── gitlab_integration.py               # GitLab Issues API auto-logging
+    │   ├── insights.py                         # Category insight generators
+    │   ├── lightning.py                        # Fast-path lightweight coaching endpoint
+    │   ├── merchant.py                         # Merchant name normalization and mapping
+    │   ├── narrative.py                        # Gemini 2.0 LLM driver with pybreaker and fallback maps
+    │   ├── observability.py                    # Prometheus counters/gauges and structlog setup
+    │   ├── pdf_parser.py                       # Local UPI PDF parsing (regex grids)
+    │   ├── regret.py                           # Regret probability scoring engine
+    │   ├── resilience.py                       # pybreaker circuit breakers and TTL caching
+    │   ├── smart_categorizer.py                # Gemini-powered merchant categorization engine
+    │   ├── utils.py                            # Shared helpers (coerce, clamp, money formatters)
+    │   └── whatsapp_integration.py             # WhatsApp / Twilio nudge dispatcher
+    │
+    ├── frontend/                           # React 18 + Vite + TypeScript Frontend
+    │   ├── public/
+    │   │   ├── favicon.svg                     # App icon
+    │   │   └── manifest.json                   # PWA manifest
+    │   ├── src/
+    │   │   ├── api/
+    │   │   │   └── client.ts                   # Axios HTTP client with interceptors
+    │   │   ├── components/
+    │   │   │   ├── landing/                    # Landing page modules
+    │   │   │   │   ├── primitives/
+    │   │   │   │   │   ├── DecryptedText.tsx    # Scramble-reveal text animation
+    │   │   │   │   │   ├── MagneticButton.tsx   # Magnetic hover button effect
+    │   │   │   │   │   ├── SpotlightCard.tsx    # Mouse-tracked spotlight card
+    │   │   │   │   │   └── WordReveal.tsx       # Word-by-word reveal animation
+    │   │   │   │   ├── sections/
+    │   │   │   │   │   ├── DecoderSandbox.tsx   # Client-side UPI decoder demo
+    │   │   │   │   │   ├── FeaturesGrid.tsx     # Interactive feature cards grid
+    │   │   │   │   │   ├── FooterSection.tsx    # Site footer
+    │   │   │   │   │   ├── HeroSection.tsx      # Split-screen WASM Command Center hero
+    │   │   │   │   │   ├── HowItWorks.tsx       # Digg-style architecture newsfeed
+    │   │   │   │   │   ├── NudgePlayground.tsx  # Live persona simulation playground
+    │   │   │   │   │   ├── PricingSection.tsx   # Pricing tiers display
+    │   │   │   │   │   └── SecuritySection.tsx  # Privacy & security showcase
+    │   │   │   │   ├── BackgroundEffects.tsx    # Ambient particle effects
+    │   │   │   │   ├── DesignTokens.ts          # Shared color/spacing constants
+    │   │   │   │   ├── hooks.ts                # Landing-specific hooks
+    │   │   │   │   ├── index.ts                # Barrel export
+    │   │   │   │   ├── NavBar.tsx              # Top navigation bar
+    │   │   │   │   └── Starfield.tsx            # Canvas starfield background
+    │   │   │   ├── tabs/
+    │   │   │   │   ├── AgentPipelineVisualizer.tsx  # Animated LangGraph pipeline display
+    │   │   │   │   ├── ArtifactsTab.tsx         # WASM Command Center cockpit tab
+    │   │   │   │   ├── CoachTab.tsx             # AI coach narrative + action cards
+    │   │   │   │   ├── ExplainTab.tsx           # Signal explainability dashboard
+    │   │   │   │   ├── ForecastTab.tsx          # 3-band scenario projection charts
+    │   │   │   │   ├── ImpactTab.tsx            # Compound savings + achievements
+    │   │   │   │   └── UploadTab.tsx            # Drag-and-drop file upload
+    │   │   │   ├── ui/
+    │   │   │   │   ├── GlassCard.tsx            # Glassmorphism card primitive
+    │   │   │   │   ├── Icons.tsx               # Custom SVG icon library
+    │   │   │   │   ├── KiraButton.tsx           # Branded button variants
+    │   │   │   │   ├── KiraInput.tsx            # Styled input fields
+    │   │   │   │   ├── KiraSkeleton.tsx         # Shimmer loading skeleton
+    │   │   │   │   ├── KiraToast.tsx            # Toast notification component
+    │   │   │   │   ├── StatusBadge.tsx          # Status indicator badges
+    │   │   │   │   ├── index.ts                # Barrel export
+    │   │   │   │   └── variants.ts             # Shared style variants
+    │   │   │   ├── ErrorBoundary.tsx            # React error boundary
+    │   │   │   ├── LandingScreen.tsx            # Landing page compositor
+    │   │   │   ├── Sidebar.tsx                  # Desktop navigation sidebar
+    │   │   │   ├── SplashScreen.tsx             # Neural particles splash loader
+    │   │   │   ├── TabBar.tsx                   # Mobile bottom tab bar
+    │   │   │   └── TopNav.tsx                   # Dashboard top navigation
+    │   │   ├── hooks/
+    │   │   │   ├── useCountUp.ts               # Animated number counter hook
+    │   │   │   ├── useDebounce.ts              # Input debounce hook
+    │   │   │   └── useTypewriter.ts            # Typewriter text animation hook
+    │   │   ├── store/
+    │   │   │   └── useKiraStore.ts             # Zustand global state (session, demo, tabs)
+    │   │   ├── styles/
+    │   │   │   ├── animations.css              # Keyframe animation definitions
+    │   │   │   ├── globals.css                 # Global CSS resets and utilities
+    │   │   │   └── tokens.css                  # CSS custom property design tokens
+    │   │   ├── App.tsx                         # Root application component
+    │   │   ├── main.tsx                        # Vite entry point
+    │   │   ├── styles.css                      # Primary stylesheet
+    │   │   └── vite-env.d.ts                   # Vite type declarations
+    │   ├── index.html                          # HTML entry with SEO, OG, structured data
+    │   ├── package.json                        # Frontend dependencies (v3.1.0)
+    │   ├── postcss.config.js                   # PostCSS configuration
+    │   ├── tailwind.config.js                  # Tailwind CSS configuration
+    │   ├── tsconfig.json                       # TypeScript compiler options
+    │   └── vite.config.ts                      # Vite build configuration
+    │
+    ├── tests/                              # Comprehensive Python Test Suite (197 tests)
+    │   ├── conftest.py                         # Shared pytest fixtures
+    │   ├── test_agent_memory.py                # Multi-turn memory persistence and analytics
+    │   ├── test_analytics_edge_cases.py        # Analytics boundary condition tests
+    │   ├── test_api.py                         # FastAPI endpoint integration tests
+    │   ├── test_coach_agent_unit.py            # LangGraph node-level unit tests
+    │   ├── test_comprehensive.py               # Cross-module comprehensive tests
+    │   ├── test_full_pipeline.py               # End-to-end CSV → pipeline → response tests
+    │   ├── test_narrative_fallback.py          # Gemini circuit-breaker mock assertions
+    │   ├── test_observability_resilience.py    # Cache, breaker, and logging tests
+    │   └── test_utils.py                       # Utility function unit tests
+    │
+    ├── docs/                               # Architecture Decision Records
+    │   ├── ADR-001-langgraph-pipeline.md       # Pipeline design rationale
+    │   └── ADR-002-privacy-model.md            # Privacy model decisions
+    │
+    ├── sample_data/                        # Mock transaction statements
+    ├── .github/                            # GitHub Actions CI/CD workflows
+    ├── .env.example                        # Environment variable template
+    ├── .gitlab-ci.yml                      # GitLab CI/CD pipeline config
+    ├── CHANGELOG.md                        # Version history
+    ├── CONTRIBUTING.md                     # Contribution guidelines
+    ├── Dockerfile                          # Production container manifest
+    ├── LICENSE                             # MIT License
+    ├── Makefile                            # Developer task automation scripts
+    ├── pyproject.toml                      # Python project metadata (v3.1.0)
+    ├── pytest.ini                          # Pytest configuration
+    ├── render.yaml                         # Render backend deployment manifest
+    ├── requirements.txt                    # Pinned Python dependencies
+    └── vercel.json                         # Vercel frontend deployment config
+```
 ```
 
 ---
 
-## 6) Developer Quickstart
+## 7) Developer Quickstart
 
 ### Prerequisites
 
@@ -327,7 +347,7 @@ Kira-AI/
 
 ```bash
 git clone https://github.com/Yashaswini-V21/Kira-AI.git
-cd Kira-AI
+cd Kira-AI/kira-ai
 cp .env.example .env
 # Edit .env and supply GEMINI_API_KEY and KIRA_AI_API_KEY
 ```
@@ -377,7 +397,7 @@ make audit          # Checks Python packages for known vulnerabilities (bandit &
 
 ---
 
-## 7) API Reference & Telemetry Routes
+## 8) API Reference & Telemetry Routes
 
 > [!IMPORTANT]
 > All REST API calls require Bearer authentication headers containing a cryptographically secure token matching the backend’s active `KIRA_AI_API_KEY`.
@@ -439,21 +459,21 @@ kira_active_sessions 3
 
 ---
 
-## 8) Backend Core Modules
+## 9) Backend Core Modules
 
-*   **`src/analytics.py` (Forecasting Model)**
+*   **`core_logic/analytics.py` (Forecasting Model)**
     *   `predict_broke_date()`: Computes cumulative daily spends and performs linear regression models. Projects base-case, best-case, and worst-case runway bands.
     *   `compute_addiction_scores()`: Ranks spending habits on a scale of `0–100` using frequency, spend ratios, week-over-week consistency, and late-night hour indexes.
-*   **`src/resilience.py` (Resilience & Caching)**
+*   **`core_logic/resilience.py` (Resilience & Caching)**
     *   Maintains double-tiered TTL caching: `CoachResultCache` (1-hour cache bucketed to the nearest ₹100) and `NarrativeCache` (24-hour cache for expensive LLM narratives).
     *   `gemini_breaker`: A circuit breaker configured with `pybreaker` that trips open for 60 seconds after 5 consecutive LLM errors, automatically routing requests to deterministic template generators.
-*   **`src/data_governance.py` (Data Eviction)**
+*   **`core_logic/data_governance.py` (Data Eviction)**
     *   Runs strict auto-eviction routines on startup, purging local statement directories older than `DATA_RETENTION_DAYS` (default `90`).
     *   Enforces hard limits on memory footprint by evicting the oldest sessions when system totals cross `MAX_SESSIONS` (default `10,000`).
 
 ---
 
-## 9) Security Hardening & Protection Controls
+## 10) Security Hardening & Protection Controls
 
 Kira-AI is engineered around a comprehensive defense-in-depth model:
 
@@ -468,7 +488,7 @@ Kira-AI is engineered around a comprehensive defense-in-depth model:
 
 ---
 
-## 10) Data Governance & PII Protection
+## 11) Data Governance & PII Protection
 
 Kira-AI enforces a strict **zero-retention, client-first data pipeline**:
 
@@ -479,7 +499,7 @@ Kira-AI enforces a strict **zero-retention, client-first data pipeline**:
 
 ---
 
-## 11) Testing & Quality Assurance
+## 12) Testing & Quality Assurance
 
 Quality assurance is verified using a layered pytest suite:
 
@@ -521,7 +541,7 @@ make audit      # Checks packages for vulnerabilities and scans code with Bandit
 
 ---
 
-## 12) Deployment Framework
+## 13) Deployment Framework
 
 ### Docker Container Ingestion
 
@@ -539,6 +559,14 @@ docker run -d -p 8000:8000 --env-file .env kira-ai-prod
 
 *   **Backend (Render)**: Manifested inside `render.yaml` for zero-downtime, declarative backend environments.
 *   **Frontend (Vercel)**: Configured inside `vercel.json` as a single-page app (SPA) router targeting Vite production static assets.
+
+---
+
+## 14) Future Enhancements & Offline Operations
+
+To ensure 100% platform availability and absolute zero-knowledge privacy:
+*   **WASM Client-Side LLMs:** Integrate a WebGPU-accelerated local model (like Gemma-2b-WASM or Llama-3-8B-WebGPU) directly inside the browser using ONNX Runtime Web. This will allow natural narrative generation directly in client memory with zero server cost.
+*   **Offline Fallback Engine (Implemented):** In the event of backend network issues or if the user switches to offline mode, the application automatically triggers the client-side parsing and regression model to output active broke-date estimates and custom action tips entirely offline.
 
 ---
 

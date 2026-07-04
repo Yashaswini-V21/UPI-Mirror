@@ -4,6 +4,7 @@ import { ResponsiveContainer, AreaChart, XAxis, YAxis, CartesianGrid, Area, Tool
 import { GlassCard, StatusBadge, KiraButton } from '../ui';
 import { useCountUp } from '../../hooks/useCountUp';
 import { useKiraStore } from '../../store/useKiraStore';
+import { RegretHeatmap } from './RegretHeatmap';
 
 // ── Custom Tooltip for Savings Chart ───────────────────────────────────────
 const SavingsTooltip = ({ active, payload, label }: any) => {
@@ -139,6 +140,9 @@ export const ImpactTab = () => {
           </ResponsiveContainer>
         </div>
       </GlassCard>
+
+      {/* REGRET HEATMAP */}
+      <RegretHeatmap />
 
       {/* ACHIEVEMENT BADGES */}
       <GlassCard>
