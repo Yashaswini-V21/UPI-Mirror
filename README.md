@@ -13,36 +13,26 @@
   <strong>A production-grade, highly interactive behavioral finance intelligence platform. Kira decodes local bank statements, scrubs transaction identifiers client-side inside WebAssembly sandboxes, maps metrics with LangGraph supervisor logic, and routes actionable financial nudges—all managed via a hardened FastAPI backend and a futuristic React split-screen cockpit interface.</strong>
 </p>
 
-## ⚡ Live Demo
-
-Experience Kira-AI live in your browser:
-*   **Production Frontend URL:** [https://kira-ai.vercel.app](https://kira-ai.vercel.app)
-*   **One-Click Demo API Endpoint:** [https://kira-ai-backend.onrender.com/demo](https://kira-ai-backend.onrender.com/demo) (runs diagnostic pipelines and generates offline templates instantly)
-*   **30-Second Walkthrough:** Refer to the detailed visual walkthrough and interactive radar animations in the screenshots directory: [screenshots/](kira-ai/screenshots)
-
----
-
 </div>
 
 ---
 
 ## 📖 Table of Contents
 
-1. [Live Demo](#1-live-demo)
-2. [Product Overview](#2-product-overview)
-3. [Interactive Cyber Command Center Cockpit (Upgrades Spotlight)](#3-interactive-cyber-command-center-cockpit-upgrades-spotlight)
-4. [Visual Showcase & Screenshots](#4-visual-showcase--screenshots)
-5. [Key Differentiators & Why This Is Genuinely Agentic](#5-key-differentiators--why-this-is-genuinely-agentic)
-6. [System Architecture, Pipelines & Agent Decision Map](#6-system-architecture-pipelines--agent-decision-map)
-7. [Repository Structure](#7-repository-structure)
-8. [Developer Quickstart](#8-developer-quickstart)
-9. [API Reference & Telemetry Routes](#9-api-reference--telemetry-routes)
-10. [Backend Core Modules](#10-backend-core-modules)
-11. [Security Hardening & Protection controls](#11-security-hardening--protection-controls)
-12. [Data Governance & PII Protection](#12-data-governance--pii-protection)
-13. [Testing & Quality Assurance](#13-testing--quality-assurance)
-14. [Deployment Framework](#14-deployment-framework)
-15. [Future Enhancements & Offline Operations](#15-future-enhancements--offline-operations)
+1. [Product Overview](#1-product-overview)
+2. [Interactive Cyber Command Center Cockpit (Upgrades Spotlight)](#2-interactive-cyber-command-center-cockpit-upgrades-spotlight)
+3. [Visual Showcase & Screenshots](#3-visual-showcase--screenshots)
+4. [Key Differentiators & Why This Is Genuinely Agentic](#4-key-differentiators--why-this-is-genuinely-agentic)
+5. [System Architecture, Pipelines & Agent Decision Map](#5-system-architecture-pipelines--agent-decision-map)
+6. [Repository Structure](#6-repository-structure)
+7. [Developer Quickstart](#7-developer-quickstart)
+8. [API Reference & Telemetry Routes](#8-api-reference--telemetry-routes)
+9. [Backend Core Modules](#9-backend-core-modules)
+10. [Security Hardening & Protection controls](#10-security-hardening--protection-controls)
+11. [Data Governance & PII Protection](#11-data-governance--pii-protection)
+12. [Testing & Quality Assurance](#12-testing--quality-assurance)
+13. [Deployment Framework](#13-deployment-framework)
+14. [Future Enhancements & Offline Operations](#14-future-enhancements--offline-operations)
 
 ---
 

@@ -638,6 +638,7 @@ def _build_coach() -> Any:
     )
     
     graph.add_edge("cap_recommendation", "nudge_generation")
+    graph.add_edge("nudge_generation", "confidence_scoring")
     
     # Conditional routing with loop-back retry after confidence scoring
     graph.add_conditional_edges(
