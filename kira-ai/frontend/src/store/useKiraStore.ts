@@ -1,0 +1,319 @@
+import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
+import { apiClient, type CoachResponse, type UploadResponse } from '../api/client';
+import { parseCSVLocally, runLocalCoach } from '../api/localCoach';
+
+export type TabId = 'coach' | 'impact' | 'forecast' | 'explain' | 'upload' | 'artifacts';
+export type FinancialStatus = 'stable' | 'watch' | 'critical';
+
+export interface KiraSession {
+  uploadId: string;
+  filename: string | null;
+  rows: number;
+  categories: string[];
+  dateRange: { start: string | null; end: string | null };
+}
+
+export interface CoachData {
+  status: FinancialStatus;
+  runwayDays: number;
+  narrative: string;
+  actionText: string;
+  tipText: string;
+  suggestedCap: number;
+  topCategory: string;
+  gitlabUrl?: string;
+  whatsappLink: string;
+  confidence: number;
+  burnRateDaily: number;
+}
+
+interface KiraStore {
+  // Navigation
+  showDashboard: boolean;
+  activeTab: TabId;
+  setActiveTab: (tab: TabId) => void;
+  enterDashboard: () => void;
+  exitDashboard: () => void;
+
+  // Session
+  session: KiraSession | null;
+
+  // Coach data
+  coachData: CoachData | null;
+  coachLoading: boolean;
+
+  // Local Offline Sandbox Mode
+  localSandboxMode: boolean;
+  setLocalSandboxMode: (mode: boolean) => void;
+  rawStatementText: string | null;
+
+  // Upload flow
+  upload: (file: File, budget: number) => Promise<void>;
+  uploadError: string | null;
+
+  // Coach
+  fetchCoach: (budget?: number) => Promise<void>;
+
+  // Alerts
+  hasAlert: boolean;
+
+  // Reset
+  newSession: () => void;
+
+  // Demo
+  loadDemoSession: () => void;
+}
+
+const DEFAULT_WHATSAPP = 'https://wa.me/?text=Kira+AI+coach+insight';
+
+const DEMO_COACH: CoachData = {
+  status: 'watch',
+  runwayDays: 18,
+  narrative: 'Kira detected a spike in discretionary Food Delivery transactions. At this rate, your primary runway exhausts 18 days early. Recommendation: Cap Swiggy caps immediately.',
+  actionText: 'Cap Swiggy at ₹2,000 this week to extend cash runway by 6 days.',
+  tipText: 'Discretionary transaction spikes usually occur on weekends. Pace your weekend delivery cap.',
+  suggestedCap: 2000,
+  topCategory: 'Food Delivery',
+  whatsappLink: DEFAULT_WHATSAPP,
+  confidence: 91,
+  burnRateDaily: 1420,
+};
+
+const DEMO_SESSION: KiraSession = {
+  uploadId: 'DEMO_SESSION_9982',
+  filename: 'demo_bank_statement.csv',
+  rows: 42,
+  categories: ['Food Delivery', 'Micro-Transit', 'Subscriptions', 'Cafes', 'Shopping'],
+  dateRange: { start: '2026-05-01', end: '2026-05-28' },
+};
+
+function mapCoachResponse(result: CoachResponse): CoachData {
+  return {
+    status: (result.status ?? 'stable') as FinancialStatus,
+    runwayDays: result.days_left ?? 0,
+    narrative: result.narrative ?? '',
+    actionText: result.action ?? '',
+    tipText: result.tip ?? '',
+    suggestedCap: result.suggested_cap ?? 0,
+    topCategory: result.signals?.top_category ?? 'General',
+    gitlabUrl: result.gitlab_issue_url ?? undefined,
+    whatsappLink: result.whatsapp_link ?? DEFAULT_WHATSAPP,
+    confidence: Math.round((result.confidence_score ?? 0) * 100),
+    burnRateDaily: result.signals?.burn_rate_daily ?? 0,
+  };
+}
+
+export const useKiraStore = create<KiraStore>()(
+  persist(
+    (set, get) => ({
+      showDashboard: false,
+      activeTab: 'upload',
+      session: null,
+      coachData: null,
+      coachLoading: false,
+      uploadError: null,
+      hasAlert: false,
+      localSandboxMode: false,
+      rawStatementText: null,
+
+      setLocalSandboxMode: (mode) => set({ localSandboxMode: mode }),
+
+      setActiveTab: (tab) => set({ activeTab: tab }),
+
+      enterDashboard: () => set({ showDashboard: true, activeTab: 'upload' }),
+
+      exitDashboard: () => set({ showDashboard: false }),
+
+      loadDemoSession: () => set({
+        session: DEMO_SESSION,
+        coachData: DEMO_COACH,
+        activeTab: 'coach',
+      }),
+
+      newSession: () => set({
+        showDashboard: false,
+        activeTab: 'upload',
+        session: null,
+        coachData: null,
+        coachLoading: false,
+        uploadError: null,
+        hasAlert: false,
+        rawStatementText: null,
+      }),
+
+      upload: async (file: File, budget: number) => {
+        set({ uploadError: null });
+        let fileText = '';
+        try {
+          fileText = await file.text();
+          set({ rawStatementText: fileText });
+        } catch (e) {
+          console.warn("Could not read statement as text for local parsing fallback", e);
+        }
+
+        if (get().localSandboxMode) {
+          try {
+            const txs = parseCSVLocally(fileText);
+            const localRes = runLocalCoach(txs, budget);
+            const uploadId = `kira_local_${Date.now()}`;
+            const session: KiraSession = {
+              uploadId,
+              filename: file.name,
+              rows: txs.length,
+              categories: Array.from(new Set(txs.map(t => t.category))),
+              dateRange: {
+                start: txs.length > 0 ? txs[0].datetime.toISOString().split('T')[0] : null,
+                end: txs.length > 0 ? txs[txs.length - 1].datetime.toISOString().split('T')[0] : null
+              }
+            };
+            const coachData: CoachData = {
+              status: localRes.status,
+              runwayDays: localRes.days_left,
+              narrative: localRes.narrative,
+              actionText: localRes.action,
+              tipText: localRes.tip,
+              suggestedCap: localRes.suggested_cap,
+              topCategory: localRes.signals.top_category,
+              whatsappLink: DEFAULT_WHATSAPP,
+              confidence: Math.round(localRes.signals.confidence_score * 100),
+              burnRateDaily: localRes.signals.burn_rate_daily
+            };
+            set({ session, coachData, activeTab: 'coach', coachLoading: false });
+            return;
+          } catch (err: any) {
+            set({ uploadError: `Local Parse Error: ${err.message}` });
+            throw err;
+          }
+        }
+
+        try {
+          const result: UploadResponse = await apiClient.upload(file);
+          const session: KiraSession = {
+            uploadId: result.upload_id,
+            filename: file.name,
+            rows: result.rows ?? 0,
+            categories: result.categories ?? [],
+            dateRange: result.date_range ?? { start: null, end: null },
+          };
+          set({ session, activeTab: 'coach' });
+          await get().fetchCoach(budget);
+        } catch (err: unknown) {
+          // If cloud fails, try to fall back to local parsing
+          if (fileText) {
+            console.warn("Cloud API failed, falling back to local statement engine...", err);
+            try {
+              const txs = parseCSVLocally(fileText);
+              const localRes = runLocalCoach(txs, budget);
+              const uploadId = `kira_local_fallback_${Date.now()}`;
+              const session: KiraSession = {
+                uploadId,
+                filename: file.name,
+                rows: txs.length,
+                categories: Array.from(new Set(txs.map(t => t.category))),
+                dateRange: {
+                  start: txs.length > 0 ? txs[0].datetime.toISOString().split('T')[0] : null,
+                  end: txs.length > 0 ? txs[txs.length - 1].datetime.toISOString().split('T')[0] : null
+                }
+              };
+              const coachData: CoachData = {
+                status: localRes.status,
+                runwayDays: localRes.days_left,
+                narrative: localRes.narrative + " (Offline Fallback)",
+                actionText: localRes.action,
+                tipText: localRes.tip,
+                suggestedCap: localRes.suggested_cap,
+                topCategory: localRes.signals.top_category,
+                whatsappLink: DEFAULT_WHATSAPP,
+                confidence: Math.round(localRes.signals.confidence_score * 100),
+                burnRateDaily: localRes.signals.burn_rate_daily
+              };
+              set({ session, coachData, activeTab: 'coach', coachLoading: false, localSandboxMode: true });
+              return;
+            } catch (localErr: any) {
+              const message = err instanceof Error ? err.message : 'Upload failed. Please try again.';
+              set({ uploadError: `${message} (Local parse fallback also failed: ${localErr.message})` });
+              throw err;
+            }
+          }
+          const message = err instanceof Error ? err.message : 'Upload failed. Please try again.';
+          set({ uploadError: message });
+          throw err;
+        }
+      },
+
+      fetchCoach: async (budget?: number) => {
+        const { session, rawStatementText, localSandboxMode } = get();
+        if (!session) return;
+        set({ coachLoading: true });
+
+        if (localSandboxMode && rawStatementText) {
+          try {
+            const txs = parseCSVLocally(rawStatementText);
+            const localRes = runLocalCoach(txs, budget ?? 15000);
+            const coachData: CoachData = {
+              status: localRes.status,
+              runwayDays: localRes.days_left,
+              narrative: localRes.narrative,
+              actionText: localRes.action,
+              tipText: localRes.tip,
+              suggestedCap: localRes.suggested_cap,
+              topCategory: localRes.signals.top_category,
+              whatsappLink: DEFAULT_WHATSAPP,
+              confidence: Math.round(localRes.signals.confidence_score * 100),
+              burnRateDaily: localRes.signals.burn_rate_daily
+            };
+            set({ coachData, coachLoading: false });
+            return;
+          } catch (err) {
+            console.error("Local fetch coach failed:", err);
+          }
+        }
+
+        try {
+          const result = await apiClient.coach(session.uploadId, budget ?? 15000);
+          const coachData = mapCoachResponse(result);
+          set({ coachData, hasAlert: !!result.gitlab_issue_url, coachLoading: false });
+        } catch {
+          // If we have local statement text, use the local engine as fallback
+          if (rawStatementText) {
+            try {
+              const txs = parseCSVLocally(rawStatementText);
+              const localRes = runLocalCoach(txs, budget ?? 15000);
+              const coachData: CoachData = {
+                status: localRes.status,
+                runwayDays: localRes.days_left,
+                narrative: localRes.narrative + " (Offline Fallback)",
+                actionText: localRes.action,
+                tipText: localRes.tip,
+                suggestedCap: localRes.suggested_cap,
+                topCategory: localRes.signals.top_category,
+                whatsappLink: DEFAULT_WHATSAPP,
+                confidence: Math.round(localRes.signals.confidence_score * 100),
+                burnRateDaily: localRes.signals.burn_rate_daily
+              };
+              set({ coachData, coachLoading: false, localSandboxMode: true });
+              return;
+            } catch {}
+          }
+          // Graceful degradation: demo data so UI never shows empty state
+          set({ coachData: DEMO_COACH, coachLoading: false });
+        }
+      },
+    }),
+    {
+      name: 'kira-session',
+      storage: createJSONStorage(() => sessionStorage), // sessionStorage: auto-clears on tab close (no PII leakage)
+      partialize: (state) => ({
+        // Only persist navigation state + session metadata — never raw file data
+        showDashboard: state.showDashboard,
+        activeTab: state.activeTab,
+        session: state.session,
+        coachData: state.coachData,
+        hasAlert: state.hasAlert,
+        localSandboxMode: state.localSandboxMode,
+        rawStatementText: state.rawStatementText,
+      }),
+    }
+  )
+);

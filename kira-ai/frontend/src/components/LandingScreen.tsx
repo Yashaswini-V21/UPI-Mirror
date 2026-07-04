@@ -13,11 +13,13 @@ import { BackgroundEffects } from './landing/BackgroundEffects';
 import { NavBar } from './landing/NavBar';
 
 // Page sections
+import { LiveMetricsTicker } from './landing/sections/LiveMetricsTicker';
 import { HeroSection }      from './landing/sections/HeroSection';
 import { FeaturesGrid }     from './landing/sections/FeaturesGrid';
 import { DecoderSandbox }   from './landing/sections/DecoderSandbox';
 import { NudgePlayground }  from './landing/sections/NudgePlayground';
 import { HowItWorks }       from './landing/sections/HowItWorks';
+import { TechRadar }        from './landing/sections/TechRadar';
 import { SecuritySection }  from './landing/sections/SecuritySection';
 import { PricingSection }   from './landing/sections/PricingSection';
 import { FooterSection }    from './landing/sections/FooterSection';
@@ -81,10 +83,12 @@ const LandingScreen: React.FC<LandingScreenProps> = ({ onStart }) => {
       {/* ── Page Content ─────────────────────────────────────────── */}
       <main style={{ position: 'relative', zIndex: 1 }}>
         <HeroSection    onStart={onStart} />
+        <LiveMetricsTicker />
         <FeaturesGrid   />
         <DecoderSandbox />
         <NudgePlayground />
         <HowItWorks     />
+        <TechRadar      />
         <SecuritySection />
         <PricingSection  onStart={onStart} />
         <FooterSection   onStart={onStart} />

@@ -461,6 +461,24 @@ export const SplashScreen: React.FC = () => {
           >
             Behavioral Finance Intelligence
           </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 0.3 }}
+            transition={{ delay: 1.0 }}
+            style={{
+              fontFamily: 'JetBrains Mono, monospace',
+              fontSize: '9px',
+              color: 'rgba(168, 85, 247, 0.9)',
+              letterSpacing: '2px',
+              marginTop: '8px',
+              padding: '3px 10px',
+              border: '1px solid rgba(168, 85, 247, 0.25)',
+              borderRadius: '6px',
+            }}
+          >
+            v3.1.0
+          </motion.div>
         </div>
 
       </div>

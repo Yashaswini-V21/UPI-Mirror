@@ -24,6 +24,7 @@ RUN addgroup --system kira && \
 WORKDIR /app
 COPY core_logic/ ./core_logic/
 COPY backend/ ./backend/
+COPY sample_data/ ./sample_data/
 
 # Create and set permissions for coach_memory directory
 RUN mkdir -p .coach_memory && \
